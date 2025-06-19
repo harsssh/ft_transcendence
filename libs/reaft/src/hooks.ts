@@ -1,16 +1,19 @@
 import { Hook } from './types';
 import { getWorkLoop } from './fiber';
 import { renderElement } from './reconciler';
+import { startWorkLoop } from './scheduler';
 
 export function useState<T>(initial: T): [T, (action: T | ((prev: T) => T)) => void] {
   const workLoop = getWorkLoop();
   const oldHook = workLoop.wipFiber?.alternate?.hooks?.[workLoop.hookIndex];
   const hook: Hook = {
     state: oldHook ? oldHook.state : initial,
-    queue: [],
+    queue: oldHook ? oldHook.queue : [],
   };
 
-  const actions = oldHook ? oldHook.queue : [];
+  // Process queued actions
+  const actions = hook.queue.slice();
+  hook.queue = []; // Clear the queue
   actions.forEach((action: any) => {
     hook.state = typeof action === 'function' ? action(hook.state) : action;
   });
@@ -18,6 +21,7 @@ export function useState<T>(initial: T): [T, (action: T | ((prev: T) => T)) => v
   const setState = (action: T | ((prev: T) => T)) => {
     hook.queue.push(action);
     
+    // Trigger re-render
     if (workLoop.currentRoot) {
       const children = workLoop.currentRoot.props.children;
       const firstChild = Array.isArray(children) ? children[0] : children;
@@ -26,16 +30,8 @@ export function useState<T>(initial: T): [T, (action: T | ((prev: T) => T)) => v
           firstChild as any,
           workLoop.currentRoot.dom as HTMLElement
         );
+        startWorkLoop();
       }
-
-      // Start the concurrent work loop
-      requestIdleCallback((deadline) => {
-        let shouldYield = false;
-        while (workLoop.nextUnitOfWork && !shouldYield) {
-          workLoop.nextUnitOfWork = workLoop.nextUnitOfWork;
-          shouldYield = deadline.timeRemaining() < 1;
-        }
-      });
     }
   };
 

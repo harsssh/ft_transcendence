@@ -1,4 +1,4 @@
-import { Fiber, Props, ReaftElement } from './types';
+import { Fiber, Props } from './types';
 
 export function createDom(fiber: Fiber): HTMLElement | Text {
   const dom =
@@ -108,11 +108,4 @@ function commitDeletion(fiber: Fiber, domParent: HTMLElement | Text) {
   }
 }
 
-export function render(element: ReaftElement, container: HTMLElement) {
-  const { renderElement } = require('./reconciler');
-  const { startWorkLoop } = require('./scheduler');
-  
-  renderElement(element, container);
-  startWorkLoop();
-}
 

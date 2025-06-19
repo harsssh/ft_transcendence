@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "A React-like library built with TypeScript",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",

@@ -1,5 +1,5 @@
 import { createElement, Fragment } from './createElement';
-import { render } from './renderer';
+import { render } from './render';
 import { useState, useEffect, useMemo, useCallback } from './hooks';
 import { ReaftElement, ReaftFC, Props, ReaftNode } from './types';
 
