@@ -17,9 +17,9 @@ function App() {
           </a>
           <a href="https://react.dev" target="_blank" rel="noopener noreferrer">
             <img 
-              src="/src/assets/react.svg" 
+              src="/src/assets/reaft.svg" 
               className="h-24 w-24 animate-spin-slow hover:animate-spin transition-all duration-300" 
-              alt="React logo" 
+              alt="Reaft logo" 
             />
           </a>
         </div>
