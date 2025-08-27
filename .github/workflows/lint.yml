@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - ./.github/workflows/lint.yml
+      - biome.json
       - "frontend/**/*.js"
       - "frontend/**/*.ts"
       - "frontend/**/*.css"
