@@ -15,4 +15,5 @@ runs:
         version: 10
 
     - name: Install Dependencies
+      shell: bash
       run: pnpm i --frozen-lockfile
