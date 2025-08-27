@@ -26,10 +26,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
-
-      - name: Install Dependencies
-        run: npm i --frozen-lockfile
+        uses: ./.github/actions/setup-node
 
       - name: Run Script
-        run: npm run lint:${{ matrix.lint-target }}
+        run: pnpm lint:${{ matrix.lint-target }}
