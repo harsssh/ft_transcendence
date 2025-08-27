@@ -10,6 +10,7 @@
 		"includes": [
 			"frontend/**/*.js",
 			"frontend/**/*.ts",
+			"frontend/**/*.css",
 			"backend/**/*.js",
 			"backend/**/*.ts"
 		]

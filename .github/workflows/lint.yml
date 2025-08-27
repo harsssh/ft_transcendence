@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - ./.github/workflows/lint.yml
+      - "frontend/**/*.js"
+      - "frontend/**/*.ts"
+      - "frontend/**/*.css"
+      - "backend/**/*.js"
+      - "backend/**/*.ts"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    strategy:
+      matrix:
+        lint-target: [codestyle]
+    name: Check ${{ matrix.lint-target }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Run Script
+        run: bun lint:${{ matrix.lint-target }}
