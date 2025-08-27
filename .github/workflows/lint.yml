@@ -28,5 +28,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
 
+      - name: Install Dependencies
+        run: npm i --frozen-lockfile
+
       - name: Run Script
-        run: bun lint:${{ matrix.lint-target }}
+        run: npm run lint:${{ matrix.lint-target }}
