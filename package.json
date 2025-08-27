@@ -6,8 +6,8 @@
 		"backend"
 	],
 	"scripts": {
-		"lint:codestyle": "npx @biomejs/biome check",
-		"lint:codestyle:fix": "npx @biomejs/biome check --write"
+		"lint:codestyle": "biome check",
+		"lint:codestyle:fix": "biome check --write"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.0"
