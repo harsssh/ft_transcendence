@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         lint-target: [codestyle, buf]
-    name: ${{ matrix.lint-target }}
+    name: "${{ matrix.lint-target }}"
 	runs-on: ubuntu-latest
     steps:
       - name: Checkout
