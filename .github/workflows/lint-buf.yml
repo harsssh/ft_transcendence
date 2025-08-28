@@ -11,7 +11,7 @@ on:
       - ./.github/workflows/lint-buf.yml
       - buf.yaml
       - buf.gen.yaml
-      - "*.proto"
+      - "**/*.proto"
 
 permissions:
   contents: read
@@ -30,4 +30,3 @@ jobs:
         with:
           push: false
           push_disable_create: true
-          input: proto
