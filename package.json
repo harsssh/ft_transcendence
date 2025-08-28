@@ -6,10 +6,19 @@
 		"backend"
 	],
 	"scripts": {
-		"lint": "biome check",
-		"lint:fix": "biome check --write"
+		"lint": "$npm_execpath run lint:codestyle && $npm_execpath run lint:buf",
+		"lint:fix": "$npm_execpath run lint:codestyle:fix",
+		"lint:codestyle": "biome check",
+		"lint:codestyle:fix": "biome check --write",
+		"lint:buf": "buf lint",
+		"lint:buf:fix": "buf format -w && buf lint",
+		"gen:buf": "buf generate"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.0"
+	},
+	"dependencies": {
+		"@bufbuild/buf": "^1.57.0",
+		"@bufbuild/protoc-gen-es": "^2.7.0"
 	}
 }
