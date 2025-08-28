@@ -12,7 +12,8 @@
       "frontend/**/*.ts",
       "frontend/**/*.css",
       "backend/**/*.js",
-      "backend/**/*.ts"
+      "backend/**/*.ts",
+      "!**/generated/**/*"
     ]
   },
   "formatter": {
