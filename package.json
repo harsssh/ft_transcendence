@@ -10,7 +10,7 @@
 		"lint:fix": "$npm_execpath run lint:codestyle:fix",
 		"lint:codestyle": "biome check",
 		"lint:codestyle:fix": "biome check --write",
-		"lint:buf": "buf lint"
+		"lint:buf": "buf lint",
 		"buf:gen": "buf generate"
 	},
 	"devDependencies": {
