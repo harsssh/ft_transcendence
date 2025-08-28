@@ -11,7 +11,8 @@
 		"lint:codestyle": "biome check",
 		"lint:codestyle:fix": "biome check --write",
 		"lint:buf": "buf lint",
-		"buf:gen": "buf generate"
+		"lint:buf:fix": "buf format -w && buf lint",
+		"gen:buf": "buf generate"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.0"

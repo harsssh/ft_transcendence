@@ -1,9 +1,13 @@
-name: Lint
+name: Lint Codestyle
 
 on:
+  push:
+    branches:
+      - main
+
   pull_request:
     paths:
-      - ./.github/workflows/lint.yml
+      - ./.github/workflows/lint-codestyle.yml
       - biome.json
       - "frontend/**/*.js"
       - "frontend/**/*.ts"
@@ -11,16 +15,15 @@ on:
       - "backend/**/*.js"
       - "backend/**/*.ts"
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   lint:
-    strategy:
-      matrix:
-        lint-target: [codestyle, buf]
-    name: "${{ matrix.lint-target }}"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,4 +33,4 @@ jobs:
         uses: ./.github/actions/setup-node
 
       - name: Run Script
-        run: pnpm lint:${{ matrix.lint-target }}
+        run: pnpm lint:codestyle
