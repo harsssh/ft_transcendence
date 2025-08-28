@@ -17,10 +17,6 @@ concurrency:
 
 jobs:
   lint:
-    strategy:
-      matrix:
-        lint-target: [codestyle]
-    name: Check ${{ matrix.lint-target }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,4 +26,4 @@ jobs:
         uses: ./.github/actions/setup-node
 
       - name: Run Script
-        run: pnpm lint:${{ matrix.lint-target }}
+        run: pnpm lint
