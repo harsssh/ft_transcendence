@@ -1,0 +1,29 @@
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - ./.github/workflows/lint.yml
+      - biome.json
+      - "frontend/**/*.js"
+      - "frontend/**/*.ts"
+      - "frontend/**/*.css"
+      - "backend/**/*.js"
+      - "backend/**/*.ts"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
+
+      - name: Run Script
+        run: pnpm lint
