@@ -3,7 +3,7 @@ syntax = "proto3";
 package connectrpc.hello.v1;
 
 message SayRequest {
-  string sentence = 1;
+  string sentence = 2;
 }
 
 message SayResponse {
