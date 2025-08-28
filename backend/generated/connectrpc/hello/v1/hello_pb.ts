@@ -10,14 +10,14 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file connectrpc/hello/v1/hello.proto.
  */
 export const file_connectrpc_hello_v1_hello: GenFile = /*@__PURE__*/
-  fileDesc("Ch9jb25uZWN0cnBjL2hlbGxvL3YxL2hlbGxvLnByb3RvEhNjb25uZWN0cnBjLmhlbGxvLnYxIh4KClNheVJlcXVlc3QSEAoIc2VudGVuY2UYAiABKAkiHwoLU2F5UmVzcG9uc2USEAoIc2VudGVuY2UYASABKAkyWgoMSGVsbG9TZXJ2aWNlEkoKA1NheRIfLmNvbm5lY3RycGMuaGVsbG8udjEuU2F5UmVxdWVzdBogLmNvbm5lY3RycGMuaGVsbG8udjEuU2F5UmVzcG9uc2UiAGIGcHJvdG8z");
+  fileDesc("Ch9jb25uZWN0cnBjL2hlbGxvL3YxL2hlbGxvLnByb3RvEhNjb25uZWN0cnBjLmhlbGxvLnYxIh4KClNheVJlcXVlc3QSEAoIc2VudGVuY2UYASABKAkiHwoLU2F5UmVzcG9uc2USEAoIc2VudGVuY2UYASABKAkyWgoMSGVsbG9TZXJ2aWNlEkoKA1NheRIfLmNvbm5lY3RycGMuaGVsbG8udjEuU2F5UmVxdWVzdBogLmNvbm5lY3RycGMuaGVsbG8udjEuU2F5UmVzcG9uc2UiAGIGcHJvdG8z");
 
 /**
  * @generated from message connectrpc.hello.v1.SayRequest
  */
 export type SayRequest = Message<"connectrpc.hello.v1.SayRequest"> & {
   /**
-   * @generated from field: string sentence = 2;
+   * @generated from field: string sentence = 1;
    */
   sentence: string;
 };
