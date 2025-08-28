@@ -21,6 +21,12 @@ importers:
 
   backend:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: ^2.7.0
+        version: 2.7.0
+      '@connectrpc/connect':
+        specifier: ^2.1.0
+        version: 2.1.0(@bufbuild/protobuf@2.7.0)
       fastify:
         specifier: ^5.5.0
         version: 5.5.0
@@ -154,6 +160,11 @@ packages:
 
   '@bufbuild/protoplugin@2.7.0':
     resolution: {integrity: sha512-yUdg8hXzFGR6K8ren7aXly2hT9BxClId814VB142YeZPatY0wqD3c0D8KfIz5nIeMdoPt0/Pm/RycFJCNGMD6w==}
+
+  '@connectrpc/connect@2.1.0':
+    resolution: {integrity: sha512-xhiwnYlJNHzmFsRw+iSPIwXR/xweTvTw8x5HiwWp10sbVtd4OpOXbRgE7V58xs1EC17fzusF1f5uOAy24OkBuA==}
+    peerDependencies:
+      '@bufbuild/protobuf': ^2.7.0
 
   '@fastify/ajv-compiler@4.0.2':
     resolution: {integrity: sha512-Rkiu/8wIjpsf46Rr+Fitd3HRP+VsxUFDDeag0hs9L0ksfnwx2g7SPQQTFL0E8Qv+rfXzQOxBJnjUB9ITUDjfWQ==}
@@ -433,6 +444,10 @@ snapshots:
       typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
+
+  '@connectrpc/connect@2.1.0(@bufbuild/protobuf@2.7.0)':
+    dependencies:
+      '@bufbuild/protobuf': 2.7.0
 
   '@fastify/ajv-compiler@4.0.2':
     dependencies:
