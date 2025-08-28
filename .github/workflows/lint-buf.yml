@@ -8,7 +8,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
     paths:
-      - ./.github/workflows/lint-buf.yml
+      - .github/workflows/lint-buf.yml
       - buf.yaml
       - buf.gen.yaml
       - "**/*.proto"
