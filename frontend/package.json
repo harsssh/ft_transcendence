@@ -13,5 +13,9 @@
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.5",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@connectrpc/connect": "^2.1.0",
+    "@connectrpc/connect-web": "^2.1.0"
   }
 }

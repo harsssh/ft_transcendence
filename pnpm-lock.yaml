@@ -41,6 +41,13 @@ importers:
         version: 5.9.2
 
   frontend:
+    dependencies:
+      '@connectrpc/connect':
+        specifier: ^2.1.0
+        version: 2.1.0(@bufbuild/protobuf@2.7.0)
+      '@connectrpc/connect-web':
+        specifier: ^2.1.0
+        version: 2.1.0(@bufbuild/protobuf@2.7.0)(@connectrpc/connect@2.1.0(@bufbuild/protobuf@2.7.0))
     devDependencies:
       '@tsconfig/strictest':
         specifier: ^2.0.5
@@ -179,6 +186,12 @@ packages:
   '@connectrpc/connect-node@2.1.0':
     resolution: {integrity: sha512-6akCXZSX5uWHLR654ne9Tnq7AnPUkLS65NvgsI5885xBkcuVy2APBd8sA4sLqaplUt84cVEr6LhjEFNx6W1KtQ==}
     engines: {node: '>=20'}
+    peerDependencies:
+      '@bufbuild/protobuf': ^2.7.0
+      '@connectrpc/connect': 2.1.0
+
+  '@connectrpc/connect-web@2.1.0':
+    resolution: {integrity: sha512-4IBFeMeXS1RVtmmFE/MwH+vWq/5vDRKys70va+DAaWDh83Rdy0iUQOJbITUDzvonlY5as3vwfs5yy9Yp2miHSw==}
     peerDependencies:
       '@bufbuild/protobuf': ^2.7.0
       '@connectrpc/connect': 2.1.0
@@ -475,6 +488,11 @@ snapshots:
       fastify: 5.5.0
 
   '@connectrpc/connect-node@2.1.0(@bufbuild/protobuf@2.7.0)(@connectrpc/connect@2.1.0(@bufbuild/protobuf@2.7.0))':
+    dependencies:
+      '@bufbuild/protobuf': 2.7.0
+      '@connectrpc/connect': 2.1.0(@bufbuild/protobuf@2.7.0)
+
+  '@connectrpc/connect-web@2.1.0(@bufbuild/protobuf@2.7.0)(@connectrpc/connect@2.1.0(@bufbuild/protobuf@2.7.0))':
     dependencies:
       '@bufbuild/protobuf': 2.7.0
       '@connectrpc/connect': 2.1.0(@bufbuild/protobuf@2.7.0)
