@@ -30,3 +30,4 @@ jobs:
         with:
           push: false
           push_disable_create: true
+          input: proto
