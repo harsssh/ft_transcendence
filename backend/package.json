@@ -1,22 +1,23 @@
 {
 	"name": "backend",
 	"version": "1.0.0",
-	"description": "",
-	"main": "server.js",
+	"type": "module",
 	"scripts": {
-		"start": "node server.js",
+		"build": "tsup",
+		"dev": "tsup --watch --onSuccess \"node dist/server.js\"",
+		"start": "node dist/server.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"type": "module",
 	"dependencies": {
-		"@bufbuild/protobuf": "^2.7.0",
 		"@connectrpc/connect": "^2.1.0",
 		"@connectrpc/connect-fastify": "^2.1.0",
 		"@connectrpc/connect-node": "^2.1.0",
-		"fastify": "^5.5.0",
+		"@workspace/generated": "workspace:*",
+		"fastify": "^5.5.0"
+	},
+	"devDependencies": {
+		"@tsconfig/strictest": "^2.0.5",
+		"tsup": "^8.5.0",
 		"typescript": "^5.9.2"
 	}
 }
