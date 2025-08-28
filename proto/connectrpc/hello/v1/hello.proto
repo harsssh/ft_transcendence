@@ -4,6 +4,7 @@ package connectrpc.hello.v1;
 
 message SayRequest {
   string sentence = 1;
+  string hoge = 2;
 }
 
 message SayResponse {
