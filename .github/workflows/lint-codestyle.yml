@@ -7,7 +7,7 @@ on:
 
   pull_request:
     paths:
-      - ./.github/workflows/lint-codestyle.yml
+      - .github/workflows/lint-codestyle.yml
       - biome.json
       - "frontend/**/*.js"
       - "frontend/**/*.ts"
