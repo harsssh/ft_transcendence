@@ -24,7 +24,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  backend:
+  build:
+    strategy:
+      matrix:
+        target-dir: [frontend, backend]
+    name: ${{ matrix.target-dir }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,5 +38,5 @@ jobs:
         uses: ./.github/actions/setup-node
 
       - name: Build
-        working-directory: ./backend
+        working-directory: ${{ matrix.target-dir }}
         run: pnpm build
