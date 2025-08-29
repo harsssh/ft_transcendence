@@ -12,7 +12,6 @@
     "lint:codestyle:fix": "biome check --write",
     "lint:buf": "buf lint",
     "lint:buf:fix": "buf format -w && buf lint",
-    "typecheck": "tsc -b",
     "gen:buf": "buf generate"
   },
   "devDependencies": {

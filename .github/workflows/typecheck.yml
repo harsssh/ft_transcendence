@@ -20,7 +20,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tsc:
+  typecheck:
+    strategy:
+      matrix:
+        target-dir: [frontend, backend]
+    name: ${{ matrix.target-dir }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,4 +34,5 @@ jobs:
         uses: ./.github/actions/setup-node
 
       - name: Typecheck
+        working-directory: ${{ matrix.target-dir }}
         run: pnpm typecheck
