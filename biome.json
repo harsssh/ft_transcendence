@@ -8,12 +8,11 @@
   "files": {
     "ignoreUnknown": false,
     "includes": [
-      "frontend/**/*.js",
-      "frontend/**/*.ts",
-      "frontend/**/*.css",
-      "frontend/**/*.html",
-      "backend/**/*.js",
-      "backend/**/*.ts",
+      "**/*.js",
+      "**/*.ts",
+      "**/*.css",
+      "**/*.html",
+      "!**/node_modules/**/*",
       "!**/generated/**/*",
       "**/*.json"
     ]
