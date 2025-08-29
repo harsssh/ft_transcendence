@@ -14,5 +14,8 @@
     "@connectrpc/connect": "^2.1.0",
     "@connectrpc/connect-web": "^2.1.0",
     "@workspace/generated": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
   }
 }
