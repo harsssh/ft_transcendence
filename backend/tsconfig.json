@@ -4,10 +4,7 @@
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "bundler",
-    "composite": true,
-    "declaration": true,
-    "declarationDir": "./dist",
-    "emitDeclarationOnly": true
+    "noEmit": true
   },
   "include": ["src/**/*.ts"]
 }
