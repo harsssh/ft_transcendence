@@ -6,7 +6,7 @@
     "backend"
   ],
   "scripts": {
-    "dev": "concurrently \"$npm_execpath -C frontend dev\" \"$npm_execpath -C backend dev\"",
+    "dev": "$npm_execpath --parallel --filter frontend --filter backend dev",
     "lint": "$npm_execpath run lint:codestyle && $npm_execpath run lint:buf",
     "lint:fix": "$npm_execpath run lint:codestyle:fix",
     "lint:codestyle": "biome check",
@@ -19,7 +19,6 @@
     "@biomejs/biome": "2.2.0",
     "@bufbuild/buf": "^1.57.0",
     "@bufbuild/protoc-gen-es": "^2.7.0",
-    "@tsconfig/strictest": "^2.0.5",
-    "concurrently": "^9.2.1"
+    "@tsconfig/strictest": "^2.0.5"
   }
 }
