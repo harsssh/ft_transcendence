@@ -8,13 +8,13 @@ on:
   pull_request:
     paths:
       - .github/workflows/build.yml
-      - "backend/**/*"
-      - "frontend/**/*"
-      - "packages/**/*"
-      - "proto/**/*"
-      - "package.json"
-      - "*.yaml"
       - ".nvmrc"
+      - "**/*.ts"
+      - "**/*.js"
+      - "**/*.yaml"
+      - "**/*.proto"
+      - "**/*.json"
+      - "!**/biome.json"
 
 permissions:
   contents: read

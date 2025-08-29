@@ -6,7 +6,7 @@
     "moduleResolution": "bundler",
     "composite": true,
     "declaration": true,
-    "declarationDir": "../dist/types/backend",
+    "declarationDir": "./dist",
     "emitDeclarationOnly": true
   },
   "include": ["src/**/*.ts"]
