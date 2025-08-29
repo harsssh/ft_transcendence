@@ -1,6 +1,6 @@
 import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
-import { HelloService } from '@workspace/generated/connectrpc/hello/v1/hello_pb'
+import { HealthService } from '@workspace/generated/connectrpc/health/v1/health_pb'
 
 const transport = createConnectTransport({
   // TODO: ハードコードやめたい
@@ -8,5 +8,5 @@ const transport = createConnectTransport({
 })
 
 export const client = {
-  helloService: createClient(HelloService, transport),
+  healthService: createClient(HealthService, transport),
 }
