@@ -1,8 +1,13 @@
+import { client } from '../shared/api/client'
 import './style.css'
 
-document
-  .querySelector('#app')
-  ?.insertAdjacentHTML(
-    'afterend',
-    `<h1 class="text-3xl underline">Hello 42!</h1>`,
-  )
+document.addEventListener('DOMContentLoaded', async () => {
+  const res = await client.helloService.say({ sentence: 'hello' })
+
+  document
+    .querySelector('#app')
+    ?.insertAdjacentHTML(
+      'afterend',
+      `<h1 class="text-3xl underline">${res.sentence}</h1>`,
+    )
+})
