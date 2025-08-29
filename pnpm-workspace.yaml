@@ -4,4 +4,6 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
+  - '@bufbuild/buf'
+  - '@tailwindcss/oxide'
   - esbuild
