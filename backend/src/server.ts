@@ -1,8 +1,8 @@
+import { cors as connectCors } from '@connectrpc/connect'
 import { fastifyConnectPlugin } from '@connectrpc/connect-fastify'
+import fastifyCors from '@fastify/cors'
 import { fastify } from 'fastify'
 import routes from './connect'
-import fastifyCors from '@fastify/cors'
-import { cors as connectCors } from '@connectrpc/connect'
 
 const server = fastify()
 await server.register(fastifyCors, {
