@@ -34,4 +34,3 @@ export const registerHealthService = (router: ConnectRouter) =>
   router.service(HealthService, {
     checkHealth: createCheckHealthFn(healthApplicationService),
   })
-
