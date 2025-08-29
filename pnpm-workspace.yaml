@@ -1,4 +1,7 @@
 packages:
-  - "frontend"
-  - "backend"
-  - "packages/*"
+  - frontend
+  - backend
+  - packages/*
+
+onlyBuiltDependencies:
+  - esbuild
