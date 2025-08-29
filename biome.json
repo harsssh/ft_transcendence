@@ -13,7 +13,8 @@
       "frontend/**/*.css",
       "backend/**/*.js",
       "backend/**/*.ts",
-      "!**/generated/**/*"
+      "!**/generated/**/*",
+      "**/*.json"
     ]
   },
   "formatter": {
