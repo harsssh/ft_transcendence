@@ -3,6 +3,10 @@
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "composite": true,
+    "declaration": true,
+    "declarationDir": "../dist/types/frontend",
+    "emitDeclarationOnly": true
   }
 }

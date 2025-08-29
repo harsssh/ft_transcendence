@@ -12,11 +12,14 @@
     "lint:codestyle:fix": "biome check --write",
     "lint:buf": "buf lint",
     "lint:buf:fix": "buf format -w && buf lint",
+    "typecheck": "tsc -b",
     "gen:buf": "buf generate"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
     "@bufbuild/buf": "^1.57.0",
-    "@bufbuild/protoc-gen-es": "^2.7.0"
+    "@bufbuild/protoc-gen-es": "^2.7.0",
+    "@tsconfig/strictest": "^2.0.5",
+    "typescript": "^5.9.2"
   }
 }
