@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "noEmit": true
   },
   "include": ["src/**/*.ts"]
 }

@@ -17,6 +17,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
     "@bufbuild/buf": "^1.57.0",
-    "@bufbuild/protoc-gen-es": "^2.7.0"
+    "@bufbuild/protoc-gen-es": "^2.7.0",
+    "@tsconfig/strictest": "^2.0.5"
   }
 }

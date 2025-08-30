@@ -17,6 +17,9 @@ importers:
       '@bufbuild/protoc-gen-es':
         specifier: ^2.7.0
         version: 2.7.0(@bufbuild/protobuf@2.7.0)
+      '@tsconfig/strictest':
+        specifier: ^2.0.5
+        version: 2.0.5
 
   backend:
     dependencies:
@@ -36,9 +39,6 @@ importers:
         specifier: ^5.5.0
         version: 5.5.0
     devDependencies:
-      '@tsconfig/strictest':
-        specifier: ^2.0.5
-        version: 2.0.5
       tsup:
         specifier: ^8.5.0
         version: 8.5.0(typescript@5.9.2)
@@ -58,9 +58,6 @@ importers:
         specifier: workspace:*
         version: link:../packages/generated
     devDependencies:
-      '@tsconfig/strictest':
-        specifier: ^2.0.5
-        version: 2.0.5
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
