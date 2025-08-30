@@ -4,17 +4,17 @@ import {
   HealthStatus,
 } from '@workspace/generated/connectrpc/health/v1/health_pb'
 import {
-  healthApplicationService,
-  type IHealthApplicationService,
+  createGetHealthStatusUseCase,
+  type IHealthStatusUseCase,
 } from '../../../core/health/application'
 
 // DI することで Request -> Response の関数をテストできる
-export const createCheckHealthFn =
+export const createCheckHealthMethod =
   (
-    healthApplicationService: IHealthApplicationService,
+    getHealthStatusUseCase: IHealthStatusUseCase,
   ): MethodImpl<typeof HealthService.method.checkHealth> =>
   () => {
-    const status = healthApplicationService.getHealthStatus()
+    const status = getHealthStatusUseCase()
     switch (status) {
       case 'healthy':
         return {
@@ -32,5 +32,5 @@ export const createCheckHealthFn =
 // 必要なら IHealthApplicationService を注入してもよい
 export const registerHealthService = (router: ConnectRouter) =>
   router.service(HealthService, {
-    checkHealth: createCheckHealthFn(healthApplicationService),
+    checkHealth: createCheckHealthMethod(createGetHealthStatusUseCase()),
   })

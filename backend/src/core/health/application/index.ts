@@ -1,9 +1,6 @@
 export type HealthStatus = 'healthy' | 'unhealthy'
 
-export interface IHealthApplicationService {
-  getHealthStatus: () => HealthStatus
-}
+export type IHealthStatusUseCase = () => HealthStatus
 
-export const healthApplicationService: IHealthApplicationService = {
-  getHealthStatus: () => 'healthy',
-}
+export const createGetHealthStatusUseCase = (): IHealthStatusUseCase => () =>
+  'healthy'
