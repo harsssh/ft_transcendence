@@ -19,6 +19,5 @@ export const fastifyHttpServer: HttpServer = {
     await server.register(fastifyConnectPlugin, { routes })
     await server.listen({ host: option.host, port: option.port })
     console.log('server is listening at', server.addresses())
-  }
+  },
 }
-
