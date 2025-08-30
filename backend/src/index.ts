@@ -1,6 +1,6 @@
-import { runHttpServer } from './app/http/server'
+import { fastifyHttpServer } from './app/http/server'
 
-runHttpServer({
+fastifyHttpServer.run({
   host: 'localhost',
   port: 3000,
 })
