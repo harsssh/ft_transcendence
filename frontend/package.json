@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
     "typecheck": "tsc --pretty"
   },
   "keywords": [],
@@ -13,9 +15,12 @@
   "dependencies": {
     "@connectrpc/connect": "^2.1.0",
     "@connectrpc/connect-web": "^2.1.0",
-    "@workspace/generated": "workspace:*"
+    "@tailwindcss/vite": "^4.1.12",
+    "@workspace/generated": "workspace:*",
+    "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3"
   }
 }
