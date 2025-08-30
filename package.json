@@ -6,6 +6,7 @@
     "backend"
   ],
   "scripts": {
+    "dev": "$npm_execpath --parallel --filter frontend --filter backend dev",
     "lint": "$npm_execpath run lint:codestyle && $npm_execpath run lint:buf",
     "lint:fix": "$npm_execpath run lint:codestyle:fix",
     "lint:codestyle": "biome check",

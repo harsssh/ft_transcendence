@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  backend:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,5 +34,4 @@ jobs:
         uses: ./.github/actions/setup-node
 
       - name: Build
-        working-directory: ./backend
-        run: pnpm build
+        run: pnpm -r build

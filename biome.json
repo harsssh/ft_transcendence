@@ -8,11 +8,11 @@
   "files": {
     "ignoreUnknown": false,
     "includes": [
-      "frontend/**/*.js",
-      "frontend/**/*.ts",
-      "frontend/**/*.css",
-      "backend/**/*.js",
-      "backend/**/*.ts",
+      "**/*.js",
+      "**/*.ts",
+      "**/*.css",
+      "**/*.html",
+      "!**/node_modules/**/*",
       "!**/generated/**/*",
       "**/*.json"
     ]
@@ -32,6 +32,11 @@
       "quoteStyle": "single",
       "semicolons": "asNeeded",
       "trailingCommas": "all"
+    }
+  },
+  "html": {
+    "formatter": {
+      "enabled": true
     }
   },
   "assist": {
