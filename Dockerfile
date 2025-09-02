@@ -22,7 +22,6 @@ RUN pnpm deploy --filter=backend --prod /prod/backend
 FROM nginx:1.29.1-alpine AS frontend
 
 COPY --from=build /prod/frontend /usr/share/nginx/html
-RUN ls -la /usr/share/nginx/html
 
 FROM base AS backend
 
