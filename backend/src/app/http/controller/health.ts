@@ -5,9 +5,9 @@ import {
 } from '@workspace/generated/connectrpc/health/v1/health_pb'
 import {
   createGetHealthStatusUseCase,
+  type IHealthCheckPort,
   type IHealthStatusUseCase,
 } from '../../../feature/health/application'
-import type { IHealthStatusRepository } from '../../../feature/health/infrastructure/sqlite'
 
 // DI することで Request -> Response の関数をテストできる
 export const createCheckHealthMethod =
@@ -30,13 +30,12 @@ export const createCheckHealthMethod =
     }
   }
 
-// 必要なら IHealthApplicationService を注入してもよい
 export const registerHealthService = (
   router: ConnectRouter,
-  healthStatusRepository: IHealthStatusRepository,
+  healthCheckPorts: IHealthCheckPort[],
 ) =>
   router.service(HealthService, {
     checkHealth: createCheckHealthMethod(
-      createGetHealthStatusUseCase(healthStatusRepository),
+      createGetHealthStatusUseCase(healthCheckPorts),
     ),
   })

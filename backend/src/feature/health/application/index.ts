@@ -2,25 +2,14 @@ export type HealthStatus = 'healthy' | 'unhealthy'
 
 export type IHealthStatusUseCase = () => HealthStatus
 
-type ExternalService = {
-  name: 'db'
-  status: 'healthy' | 'unhealthy'
-}
-
-export interface IHealthStatusRepository {
-  getAll(): ExternalService[]
+export interface IHealthCheckPort {
+  getStatus(): HealthStatus
 }
 
 export const createGetHealthStatusUseCase =
-  (healthStatusRepository: IHealthStatusRepository): IHealthStatusUseCase =>
+  (targets: IHealthCheckPort[]): IHealthStatusUseCase =>
   () => {
-    if (
-      healthStatusRepository
-        .getAll()
-        .every(({ status }) => status === 'healthy')
-    ) {
-      return 'healthy'
-    }
+    const statuses = targets.map((t) => t.getStatus())
 
-    return 'unhealthy'
+    return statuses.every((s) => s === 'healthy') ? 'healthy' : 'unhealthy'
   }
