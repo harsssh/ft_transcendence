@@ -6,6 +6,7 @@
     "build": "tsup",
     "dev": "tsup --watch --onSuccess \"node --env-file=.env dist/index.js\"",
     "start": "node dist/index.js",
+    "test": "vitest run",
     "typecheck": "tsc --pretty"
   },
   "dependencies": {
@@ -21,7 +22,8 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.3.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   },
   "overrides": {
     "tsup": {
