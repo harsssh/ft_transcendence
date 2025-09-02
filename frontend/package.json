@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "start": "http-server ./dist",
+    "test": "vitest run",
     "typecheck": "tsc --pretty"
   },
   "keywords": [],
@@ -22,8 +23,12 @@
     "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.8.0",
+    "jsdom": "^26.1.0",
     "typescript": "^5.9.2",
-    "vite": "^7.1.3"
+    "vite": "^7.1.3",
+    "vitest": "^3.2.4"
   },
   "overrides": {
     "tsup": {
