@@ -13,7 +13,7 @@ export default defineConfig({
       `.snapshots/${path.relative(import.meta.dirname, testPath)}${snapExtension}`,
     coverage: {
       enabled: true,
-      reporter: ['json-summary', 'html'],
+      reporter: ['json-summary', 'json', 'html'],
       reportOnFailure: true,
       reportsDirectory: '../.coverage/frontend',
     },

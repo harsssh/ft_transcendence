@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     coverage: {
       enabled: true,
-      reporter: ['json-summary', 'html'],
+      reporter: ['json-summary', 'json', 'html'],
       reportOnFailure: true,
       reportsDirectory: '../.coverage/backend',
     },

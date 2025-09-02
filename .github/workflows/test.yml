@@ -43,9 +43,11 @@ jobs:
         with:
           name: Frontend
           json-summary-path: ./.coverage/frontend/coverage-summary.json
+          json-final-path: ./.coverage/frontend/coverage-final.json
 
       - name: Report Backend Coverage
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           name: Backend
           json-summary-path: ./.coverage/backend/coverage-summary.json
+          json-final-path: ./.coverage/backend/coverage-final.json
