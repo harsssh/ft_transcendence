@@ -36,7 +36,7 @@ jobs:
 
       - name: Run test
         continue-on-error: true
-        run: pnpm -r test
+        run: pnpm test
 
       - name: Report coverage
         uses: davelosert/vitest-coverage-report-action@v2
