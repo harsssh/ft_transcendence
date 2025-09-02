@@ -35,10 +35,10 @@ jobs:
         uses: ./.github/actions/setup-node
 
       - name: Run test
-        continue-on-error: true
         run: pnpm test
 
       - name: Report coverage
+        if: ${{ success() || failure() }}
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           json-summary-path: ./.coverage/coverage-summary.json
