@@ -1,6 +1,13 @@
-import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vite'
+/// <reference types="vitest" />
 
-export default defineConfig({
-  plugins: [tailwindcss()],
-})
+import tailwindcss from '@tailwindcss/vite'
+import { mergeConfig } from 'vite'
+import { defineProject } from 'vitest/config'
+import configShared from '../vitest.config'
+
+export default mergeConfig(
+  configShared,
+  defineProject({
+    plugins: [tailwindcss()],
+  }),
+)
