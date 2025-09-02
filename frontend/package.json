@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "start": "http-server ./dist",
     "typecheck": "tsc --pretty"
   },
   "keywords": [],
@@ -17,10 +18,16 @@
     "@connectrpc/connect-web": "^2.1.0",
     "@tailwindcss/vite": "^4.1.12",
     "@workspace/generated": "workspace:*",
+    "http-server": "^14.1.1",
     "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
     "typescript": "^5.9.2",
     "vite": "^7.1.3"
+  },
+  "overrides": {
+    "tsup": {
+      "rollup": "npm:@rollup/wasm-node"
+    }
   }
 }
