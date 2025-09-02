@@ -11,5 +11,11 @@ export default defineConfig({
     // スナップショットは .snapshots 以下に保存する
     resolveSnapshotPath: (testPath, snapExtension) =>
       `.snapshots/${path.relative(import.meta.dirname, testPath)}${snapExtension}`,
+    coverage: {
+      enabled: true,
+      reporter: ['json-summary', 'html'],
+      reportOnFailure: true,
+      reportsDirectory: '../.coverage/frontend',
+    },
   },
 })

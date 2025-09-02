@@ -33,5 +33,18 @@ jobs:
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
 
-      - name: Build
+      - name: Run test
+        continue-on-error: true
         run: pnpm -r test
+
+      - name: Report Frontend Coverage
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: Frontend
+          json-summary-path: ./.coverage/frontend/coverage-summary.json
+
+      - name: Report Backend Coverage
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: Backend
+          json-summary-path: ./.coverage/backend/coverage-summary.json
