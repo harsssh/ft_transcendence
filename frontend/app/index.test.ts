@@ -7,7 +7,7 @@ import { App } from '.'
 import '@testing-library/jest-dom/vitest'
 
 describe('App', () => {
-  it(`should comtain 'some message'`, () => {
+  it(`should contain 'some message'`, () => {
     const app = App()
 
     expect(app).toHaveTextContent('some message')
