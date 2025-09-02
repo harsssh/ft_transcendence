@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch --onSuccess \"node --env-file=.env dist/index.js\"",
+    "dev": "tsup --watch --onSuccess \"node --env-file-if-exists=.env dist/index.js\"",
     "start": "node --env-file-if-exists=.env dist/index.js",
     "typecheck": "tsc --pretty"
   },
