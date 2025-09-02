@@ -1,21 +1,13 @@
 /// <reference types="vitest" />
 
-import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vite'
+import { mergeConfig } from 'vite'
+import configShared from '../vitest.config'
+import { defineProject } from 'vitest/config'
 
-export default defineConfig({
-  plugins: [tailwindcss()],
-  test: {
-    // TODO: .snapshot の扱いを考える（.gitignoreする？CIでどう扱う？）
-    // スナップショットは .snapshots 以下に保存する
-    resolveSnapshotPath: (testPath, snapExtension) =>
-      `.snapshots/${path.relative(import.meta.dirname, testPath)}${snapExtension}`,
-    coverage: {
-      enabled: true,
-      reporter: ['json-summary', 'json', 'html'],
-      reportOnFailure: true,
-      reportsDirectory: '../.coverage/frontend',
-    },
-  },
-})
+export default mergeConfig(
+  configShared,
+  defineProject({
+    plugins: [tailwindcss()],
+  }),
+)
