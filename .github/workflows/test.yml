@@ -7,7 +7,7 @@ on:
 
   pull_request:
     paths:
-      - .github/workflows/build.yml
+      - .github/workflows/test.yml
       - ".nvmrc"
       - "**/*.ts"
       - "**/*.js"
