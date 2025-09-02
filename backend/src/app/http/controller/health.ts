@@ -10,8 +10,8 @@ export const createCheckHealthMethod =
   (
     getHealthStatusUseCase: IGetHealthStatusUseCase,
   ): MethodImpl<typeof HealthService.method.checkHealth> =>
-  () => {
-    const status = getHealthStatusUseCase()
+  async () => {
+    const status = await getHealthStatusUseCase()
     switch (status) {
       case 'healthy':
         return {
