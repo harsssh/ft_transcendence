@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch --onSuccess \"node dist/index.js\"",
+    "dev": "tsup --watch --onSuccess \"node --env-file=.env dist/index.js\"",
     "start": "node dist/index.js",
     "typecheck": "tsc --pretty"
   },
@@ -13,11 +13,12 @@
     "@connectrpc/connect-fastify": "^2.1.0",
     "@connectrpc/connect-node": "^2.1.0",
     "@workspace/generated": "workspace:*",
+    "better-sqlite3": "^12.2.0",
     "fastify": "^5.5.0"
   },
   "devDependencies": {
-    "@fastify/cors": "^11.1.0",
     "@tsconfig/strictest": "^2.0.5",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.3.0",
     "tsup": "^8.5.0",
     "typescript": "^5.9.2"
