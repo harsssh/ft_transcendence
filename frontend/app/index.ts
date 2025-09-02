@@ -4,7 +4,7 @@ export function App() {
   const container = document.createElement('div')
   container.insertAdjacentHTML(
     'afterbegin',
-    `<h1 class="text-3xl underline">some message</h1>`,
+    `<h1 class="text-3xl underline">wrong message</h1>`,
   )
 
   return container
