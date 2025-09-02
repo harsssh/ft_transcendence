@@ -1,13 +1,5 @@
 import Database from 'better-sqlite3'
-
-type ExternalService = {
-  name: 'db'
-  status: 'healthy' | 'unhealthy'
-}
-
-export interface IHealthStatusRepository {
-  getAll(): ExternalService[]
-}
+import type { IHealthStatusRepository } from '../application'
 
 export const healthStatusRepositoryImpl: IHealthStatusRepository = {
   getAll: () => {
