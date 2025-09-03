@@ -1,5 +1,3 @@
-# node:24-bookworm-slim は重大な脆弱性が報告されていたので使わなかった
-# see: https://hub.docker.com/layers/library/node/24-bookworm-slim/images/sha256-b6300b33342c3775580dec007dc6751b7440b0aa02fdf66c1016710b75fc1df6
 FROM node:24-slim AS base
 
 ENV PNPM_HOME="/pnpm"
