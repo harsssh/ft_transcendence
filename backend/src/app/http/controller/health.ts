@@ -3,7 +3,7 @@ import {
   HealthService,
   HealthStatus,
 } from '@workspace/generated/connectrpc/health/v1/health_pb'
-import type { IGetHealthStatusUseCase } from '../../../feature/health/application'
+import type { IGetHealthStatusUseCase } from '../../../feature/health/application/getHealthStatusUseCase'
 
 // DI することで Request -> Response の関数をテストできる
 export const createCheckHealthMethod =
