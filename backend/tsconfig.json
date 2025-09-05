@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "module": "esnext",
+    "module": "nodenext",
     "target": "esnext",
     "moduleResolution": "nodenext",
     "noEmit": true
