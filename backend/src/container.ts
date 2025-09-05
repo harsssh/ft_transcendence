@@ -1,5 +1,5 @@
 import * as awilix from 'awilix'
-import { sqliteHealthCheckAdapter } from './feature/health/infrastructure/sqlite'
+import { sqliteHealthCheckAdapter } from './feature/health/infrastructure/sqlite.js'
 
 export const container = awilix.createContainer({
     injectionMode: awilix.InjectionMode.CLASSIC,

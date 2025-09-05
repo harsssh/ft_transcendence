@@ -1,6 +1,6 @@
 import type { ConnectRouter } from '@connectrpc/connect'
-import { registerHealthService } from './controller/health'
-import { container } from '../../container'
+import { registerHealthService } from './controller/health.js'
+import { container } from '../../container.js'
 
 export default (router: ConnectRouter) => {
   registerHealthService(
