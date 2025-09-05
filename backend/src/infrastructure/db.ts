@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3'
 
-export const CONTAINER_KEY_DB = Symbol('db')
+export const CONTAINER_KEY_DB = 'db'
 
 const createDBConnection = (dbFilePath: string) => {
   const db = new Database(dbFilePath)
