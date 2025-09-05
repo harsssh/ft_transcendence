@@ -1,5 +1,5 @@
 import * as awilix from 'awilix'
-import { sqliteHealthCheckAdapter } from './feature/health/infrastructure/sqlite.js'
+import { config } from './config.js'
 
 export const container = awilix.createContainer({
   injectionMode: awilix.InjectionMode.CLASSIC,
@@ -7,6 +7,7 @@ export const container = awilix.createContainer({
 })
 
 // 実は Promise を返してる (esModules: true のとき)
+// NOTE: foo.ts で bar を default export すると、foo という名前で bar が register される
 container.loadModules(['dist/**/*.js'], {
   formatName: 'camelCase',
   esModules: true,
@@ -15,6 +16,8 @@ container.loadModules(['dist/**/*.js'], {
   },
 })
 
-container.register({
-  healthCheckTargets: awilix.asValue([sqliteHealthCheckAdapter]),
-})
+container.register(
+  Object.fromEntries(
+    Object.entries(config).map(([k, v]) => [k, awilix.asValue(v)]),
+  ),
+)

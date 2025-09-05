@@ -1,12 +1,11 @@
-import Database from 'better-sqlite3'
+import type { Database } from 'better-sqlite3'
+import { container } from '../../../container.js'
+import { CONTAINER_KEY_DB } from '../../../infrastructure/db.js'
 import type { IHealthCheckPort } from '../application/getHealthStatusUseCase.js'
-
-// TODO: repository 化する
-// TODO: SQLITE_APP_DB_PATH が適切なパスであることを確認する
-const db = new Database(process.env.SQLITE_APP_DB_PATH)
 
 export const sqliteHealthCheckAdapter: IHealthCheckPort = {
   getStatus: async () => {
+    const db = container.resolve<Database>(CONTAINER_KEY_DB)
     try {
       db.prepare('SELECT 1').run()
       return 'healthy'
