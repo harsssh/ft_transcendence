@@ -4,7 +4,19 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.15.0",
+  "exports": {
+    "./*": {
+      "import": "./*",
+      "types": "./*.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "@bufbuild/protobuf": "^2.7.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
   }
 }
