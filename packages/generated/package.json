@@ -11,7 +11,8 @@
     }
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "postinstall": "$npm_execpath build"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.7.0"
