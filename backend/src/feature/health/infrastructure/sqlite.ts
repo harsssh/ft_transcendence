@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3'
-import type { IHealthCheckPort } from '../application/getHealthStatusUseCase'
+import type { IHealthCheckPort } from '../application/getHealthStatusUseCase.js'
 
 // TODO: repository 化する
 // TODO: SQLITE_APP_DB_PATH が適切なパスであることを確認する

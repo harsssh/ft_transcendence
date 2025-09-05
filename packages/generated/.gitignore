@@ -1,0 +1,4 @@
+# backend 向けの tsc による生成物
+*.js
+*.d.ts
+*.map

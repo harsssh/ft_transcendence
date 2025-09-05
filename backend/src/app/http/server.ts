@@ -1,6 +1,6 @@
 import { fastifyConnectPlugin } from '@connectrpc/connect-fastify'
 import { fastify } from 'fastify'
-import routes from './connect'
+import routes from './connect.js'
 
 export type HttpServerOption = {
   host: string
