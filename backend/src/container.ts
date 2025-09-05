@@ -6,8 +6,10 @@ export const container = awilix.createContainer({
   strict: true,
 })
 
-container.loadModules(['**/*.ts'], {
+// 実は Promise を返してる (esModules: true のとき)
+container.loadModules(['dist/**/*.js'], {
   formatName: 'camelCase',
+  esModules: true,
   resolverOptions: {
     lifetime: awilix.Lifetime.SINGLETON,
   },
