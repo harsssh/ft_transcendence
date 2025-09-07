@@ -6,10 +6,10 @@ export default defineConfig(() => ({
   format: ['esm'],
   platform: 'node',
   noExternal: ['@workspace/generated'],
-  sourcemap: true,
+  sourcemap: false,
   dts: false,
   splitting: false,
   clean: true,
-  minify: false,
+  minify: true,
   shims: false,
 }))

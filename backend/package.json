@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "tsup --minify",
+    "build": "tsup --config tsup.config.prod.ts",
     "dev": "tsup --watch --onSuccess \"node --env-file-if-exists=.env dist/index.js\"",
     "start": "node --env-file-if-exists=.env dist/index.js",
     "typecheck": "tsc --pretty"
