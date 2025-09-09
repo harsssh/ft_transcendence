@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { createGetHealthStatusUseCase, type IHealthCheckPort } from '.'
+import createGetHealthStatusUseCase, {
+  type IHealthCheckPort,
+} from './getHealthStatusUseCase.js'
 
 describe('GetHealthStatusUseCase', () => {
   const healthyPort: IHealthCheckPort = { getStatus: async () => 'healthy' }

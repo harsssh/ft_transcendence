@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "packages/*"
   ],
   "scripts": {
     "dev": "$npm_execpath --parallel --filter frontend --filter backend dev",
@@ -15,7 +16,7 @@
     "lint:codestyle:fix": "biome check --write",
     "lint:buf": "buf lint",
     "lint:buf:fix": "buf format -w && buf lint",
-    "gen:buf": "buf generate"
+    "gen:buf": "buf generate && $npm_execpath --filter @workspace/generated build"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",

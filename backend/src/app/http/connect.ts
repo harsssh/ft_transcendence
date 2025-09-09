@@ -1,11 +1,11 @@
 import type { ConnectRouter } from '@connectrpc/connect'
-import { createGetHealthStatusUseCase } from '../../feature/health/application'
-import { sqliteHealthCheckAdapter } from '../../feature/health/infrastructure/sqlite'
-import { registerHealthService } from './controller/health'
+import { container } from '../../container.js'
+import { CONTAINER_KEY_GET_HEALTH_STATUS_USE_CASE } from '../../feature/health/application/getHealthStatusUseCase.js'
+import { registerHealthService } from './controller/health.js'
 
 export default (router: ConnectRouter) => {
   registerHealthService(
     router,
-    createGetHealthStatusUseCase([sqliteHealthCheckAdapter]),
+    container.resolve(CONTAINER_KEY_GET_HEALTH_STATUS_USE_CASE),
   )
 }
