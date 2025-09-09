@@ -1,5 +1,6 @@
 import type { IHealthCheckPort } from './feature/health/application/getHealthStatusUseCase.js'
 import { sqliteHealthCheckAdapter } from './feature/health/infrastructure/sqliteHealthCheckAdapter.js'
+import { requireEnv } from './utils/requireEnv.js'
 
 export type ApplicationConfig = Readonly<{
   healthCheckTargets: IHealthCheckPort[]
@@ -8,5 +9,5 @@ export type ApplicationConfig = Readonly<{
 
 export const config: ApplicationConfig = {
   healthCheckTargets: [sqliteHealthCheckAdapter],
-  dbFilePath: process.env.SQLITE_APP_DB_PATH,
+  dbFilePath: requireEnv('SQLITE_APP_DB_PATH'),
 }
