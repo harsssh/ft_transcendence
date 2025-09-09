@@ -5,5 +5,6 @@ export const requireEnv = <K extends keyof AppEnv>(key: K): AppEnv[K] => {
   if (!value) {
     throw new Error(`environment variable ${key} must be set`)
   }
-  return value
+  // ProcessEnv extends AppEnv なので問題なし
+  return value as AppEnv[K]
 }
