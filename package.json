@@ -7,6 +7,8 @@
   ],
   "scripts": {
     "dev": "$npm_execpath --parallel --filter frontend --filter backend dev",
+    "test": "vitest run --coverage",
+    "test:report": "vitest --ui",
     "lint": "$npm_execpath run lint:codestyle && $npm_execpath run lint:buf",
     "lint:fix": "$npm_execpath run lint:codestyle:fix",
     "lint:codestyle": "biome check",
@@ -19,6 +21,8 @@
     "@biomejs/biome": "2.2.0",
     "@bufbuild/buf": "^1.57.0",
     "@bufbuild/protoc-gen-es": "^2.7.0",
-    "@tsconfig/strictest": "^2.0.5"
+    "@tsconfig/strictest": "^2.0.5",
+    "@vitest/coverage-v8": "^3.2.4",
+    "vitest": "^3.2.4"
   }
 }
