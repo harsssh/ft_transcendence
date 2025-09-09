@@ -2,8 +2,8 @@ import type { ConnectRouter, MethodImpl } from '@connectrpc/connect'
 import {
   HealthService,
   HealthStatus,
-} from '@workspace/generated/connectrpc/health/v1/health_pb'
-import type { IGetHealthStatusUseCase } from '../../../feature/health/application/getHealthStatusUseCase'
+} from '@workspace/generated/connectrpc/health/v1/health_pb.js'
+import type { IGetHealthStatusUseCase } from '../../../feature/health/application/getHealthStatusUseCase.js'
 
 // DI することで Request -> Response の関数をテストできる
 export const createCheckHealthMethod =

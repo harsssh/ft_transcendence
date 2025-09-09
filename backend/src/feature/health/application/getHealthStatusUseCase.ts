@@ -9,7 +9,9 @@ export interface IHealthCheckPort {
 const createGetHealthStatusUseCase =
   (healthCheckTargets: IHealthCheckPort[]): IGetHealthStatusUseCase =>
   async () => {
-    const statuses = await Promise.all(healthCheckTargets.map((t) => t.getStatus()))
+    const statuses = await Promise.all(
+      healthCheckTargets.map((t) => t.getStatus()),
+    )
 
     return statuses.every((s) => s === 'healthy') ? 'healthy' : 'unhealthy'
   }
