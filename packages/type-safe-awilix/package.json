@@ -12,8 +12,7 @@
     "./build": "./dist/build.js"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "node src/index.ts"
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",

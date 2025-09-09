@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { defineCommand, runMain } from 'citty'
-import { generateTypes } from './build.js'
+import { generateTypes } from './build'
 
 const main = defineCommand({
   args: {
