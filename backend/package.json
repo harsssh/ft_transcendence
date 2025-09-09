@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsup",
+    "prebuild": "awilix-types -l 'src/**/*.ts' -o src/generated",
     "dev": "tsup --watch --onSuccess \"node --env-file-if-exists=.env dist/index.js\"",
     "start": "node --env-file-if-exists=.env dist/index.js",
     "typecheck": "tsc --pretty"
@@ -22,7 +23,8 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.3.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "@workspace/type-safe-awilix": "workspace:*"
   },
   "overrides": {
     "tsup": {
