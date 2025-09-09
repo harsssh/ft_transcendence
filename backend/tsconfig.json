@@ -4,8 +4,7 @@
     "module": "nodenext",
     "target": "esnext",
     "moduleResolution": "nodenext",
-    "noEmit": true,
-    "plugins": [{ "name": "@workspace/type-safe-awilix" }]
+    "noEmit": true
   },
   "include": ["src/**/*.ts"]
 }
