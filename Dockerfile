@@ -1,6 +1,4 @@
-# node:24-bookworm-slim は重大な脆弱性が報告されていたので使わなかった
-# see: https://hub.docker.com/layers/library/node/24-bookworm-slim/images/sha256-b6300b33342c3775580dec007dc6751b7440b0aa02fdf66c1016710b75fc1df6
-FROM node:24-alpine AS base
+FROM node:24-slim AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -8,6 +6,11 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
 FROM base AS build
+
+# PID 1 問題を回避する
+ENV TINI_VERSION=v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static /tini-static
+RUN chmod +x /tini-static
 
 COPY . /usr/src/app
 
@@ -23,10 +26,14 @@ FROM nginx:1.29.1-alpine AS frontend
 
 COPY --from=build /prod/frontend /usr/share/nginx/html
 
-FROM base AS backend
+FROM gcr.io/distroless/nodejs24-debian12:latest AS backend
 
-COPY --from=build /prod/backend /prod/backend
+COPY --from=build /prod/backend/dist /prod/backend/dist
+COPY --from=build /prod/backend/node_modules /prod/backend/node_modules
+
+COPY --from=build /tini-static /tini-static
 
 WORKDIR /prod/backend
 
-CMD [ "pnpm", "start" ]
+ENTRYPOINT [ "/tini-static" , "--", "/nodejs/bin/node" ]
+CMD [ "dist/index.js" ]
