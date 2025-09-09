@@ -1,6 +1,6 @@
 import { fastifyHttpServer } from './app/http/server.js'
 
 fastifyHttpServer.run({
-  host: 'localhost',
+  host: '0.0.0.0',
   port: 3000,
 })

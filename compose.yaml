@@ -1,0 +1,17 @@
+services:
+  backend:
+    build:
+      context: .
+      target: backend
+    ports:
+      - "3000:3000"
+    env_file: backend/.env
+    volumes:
+      - ./db:/prod/db
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+    ports:
+      - "8080:80"
