@@ -7,6 +7,10 @@
   "bin": {
     "awilix-types": "dist/index.js"
   },
+  "exports": {
+    ".": "./dist/index.js",
+    "./build": "./dist/build.js"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node src/index.ts"

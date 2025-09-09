@@ -4,7 +4,6 @@
   "type": "module",
   "scripts": {
     "build": "tsup",
-    "prebuild": "awilix-types -l 'src/**/*.ts' -o src/generated",
     "dev": "tsup --watch --onSuccess \"node --env-file-if-exists=.env dist/index.js\"",
     "start": "node --env-file-if-exists=.env dist/index.js",
     "typecheck": "tsc --pretty"
