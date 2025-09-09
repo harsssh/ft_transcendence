@@ -1,4 +1,4 @@
-name: Build
+name: Test
 
 on:
   push:
@@ -7,12 +7,10 @@ on:
 
   pull_request:
     paths:
-      - .github/workflows/build.yml
+      - .github/workflows/test.yml
       - ".nvmrc"
       - "**/*.ts"
       - "**/*.js"
-      - "**/*.html"
-      - "**/*.css"
       - "**/*.yaml"
       - "**/*.proto"
       - "**/*.json"
@@ -20,13 +18,14 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  unit-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,5 +34,12 @@ jobs:
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
 
-      - name: Build
-        run: pnpm -r build
+      - name: Run test
+        run: pnpm test
+
+      - name: Report coverage
+        if: ${{ success() || failure() }}
+        uses: davelosert/vitest-coverage-report-action@8ab049ff5a2c6e78f78af446329379b318544a1a # v2.8.3
+        with:
+          json-summary-path: ./.coverage/coverage-summary.json
+          json-final-path: ./.coverage/coverage-final.json
