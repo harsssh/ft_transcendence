@@ -1,3 +1,4 @@
+import { createRouter } from './router'
 import './style.css'
 
 export function App() {
@@ -10,6 +11,13 @@ export function App() {
   return container
 }
 
+const router = createRouter({
+  onNavigated: ({ element }) => {
+    document.getElementById('app')?.replaceChildren(element)
+  },
+  routes: [{ path: '/', element: App() }],
+})
+
 document.addEventListener('DOMContentLoaded', async () => {
-  document.querySelector('#app')?.appendChild(App())
+  router.push({ path: '/' })
 })
