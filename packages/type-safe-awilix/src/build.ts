@@ -14,7 +14,6 @@ export const generateTypes = async (args: { load: string; outDir: string }) => {
       continue
     }
 
-    console.log(rawSrcPath)
     const key = path.parse(srcPath).name
     const srcPathFromOutFile = path.relative(outDirPath, srcPath)
 
