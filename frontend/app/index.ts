@@ -1,4 +1,4 @@
-import { createRouter } from './router'
+import { createRouter } from '../shared/lib/routing/router'
 import './style.css'
 
 export function App() {
