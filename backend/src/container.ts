@@ -1,7 +1,8 @@
 import * as awilix from 'awilix'
 import { config } from './config.js'
+import type { Cradle } from './generated/awilix-types.js'
 
-export const container = awilix.createContainer({
+export const container = awilix.createContainer<Cradle>({
   injectionMode: awilix.InjectionMode.CLASSIC,
   strict: true,
 })

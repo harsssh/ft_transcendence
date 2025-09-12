@@ -6,8 +6,6 @@ export interface IHealthCheckPort {
   getStatus(): Promise<HealthStatus>
 }
 
-export const CONTAINER_KEY_GET_HEALTH_STATUS_USE_CASE = 'getHealthStatusUseCase'
-
 const createGetHealthStatusUseCase =
   (healthCheckTargets: IHealthCheckPort[]): IGetHealthStatusUseCase =>
   async () => {

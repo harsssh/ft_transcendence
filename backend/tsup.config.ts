@@ -1,4 +1,7 @@
+import { generateTypes } from '@workspace/type-safe-awilix/build'
 import { defineConfig } from 'tsup'
+
+await generateTypes({ load: 'src/**/*.ts', outDir: 'src/generated' })
 
 export default defineConfig(() => ({
   entry: ['src/**/*.ts', '!src/**/*.test.ts'],
