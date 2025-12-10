@@ -2,11 +2,11 @@ import { parseWithZod } from '@conform-to/zod/v4'
 import { usersTable } from 'db/schema'
 import { eq } from 'drizzle-orm'
 import { redirect } from 'react-router'
-import { dbContext } from '~/contexts/db'
 import { isValidPassword } from '../../_shared/password.server'
 import { commitSession, getSession } from '../../_shared/session.server'
 import type { Route } from '../+types/route'
 import { SigninFormSchema } from '../model/signinForm'
+import { dbContext } from 'app/contexts/db'
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
   const formData = await request.formData()
@@ -16,7 +16,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     return submission.reply()
   }
 
-  const session = await getSession(request.headers.get('Cookie'))
+  const session = await getSession(request)
   const db = context.get(dbContext)
 
   try {
@@ -30,16 +30,16 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     }
 
     session.set('userId', user.id)
-
-    return redirect('/channels/@me', {
-      headers: {
-        'Set-Cookie': await commitSession(session),
-      },
-    })
   } catch (e) {
     console.error(e)
     return submission.reply({
       formErrors: ['Failed to sign in. Try again later.'],
     })
   }
+
+  throw redirect('/channels/@me', {
+    headers: {
+      'Set-Cookie': await commitSession(session),
+    },
+  })
 }

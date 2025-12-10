@@ -5,12 +5,13 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig((config) => ({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
-  resolve:
-    config.command === 'build'
-      ? {
+  ...(config.command === 'build'
+    ? {
+        resolve: {
           alias: {
             'react-dom/server': 'react-dom/server.node',
           },
-        }
-      : undefined,
+        },
+      }
+    : {}),
 }))
