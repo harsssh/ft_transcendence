@@ -1,9 +1,0 @@
-.git
-**/.gitignore
-**/*.md
-
-**/node_modules
-**/*.tsbuildinfo
-**/dist
-**/.env*
-**/.coverage
