@@ -1,5 +1,7 @@
-import { Button } from '@mantine/core'
+import { AppShell, Center, Text } from '@mantine/core'
+import { redirect } from 'react-router'
+import type { Route } from './+types/_index'
 
-export default function Index() {
-  return <Button onClick={() => alert('hello')}>ボタン</Button>
+export const loader = () => {
+  throw redirect('/signup')
 }
