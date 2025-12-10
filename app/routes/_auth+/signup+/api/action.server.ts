@@ -1,23 +1,13 @@
-import { createHash } from 'crypto'
-import { usersTable } from 'db/schema'
-import { createCookie, redirect } from 'react-router'
-import { dbContext } from '~/contexts/db'
-import { SignupFormSchema } from '../model/signupForm'
-import { DatabaseError } from 'pg'
 import { parseWithZod } from '@conform-to/zod/v4'
+import { usersTable } from 'db/schema'
 import { DrizzleQueryError } from 'drizzle-orm'
+import { DatabaseError } from 'pg'
+import { redirect } from 'react-router'
+import { dbContext } from '~/contexts/db'
+import { hashPassword } from '../../_shared/password.server'
+import { commitSession, getSession } from '../../_shared/session.server'
 import type { Route } from '../+types/route'
-
-const authCookie = createCookie('ft_auth', {
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: process.env.NODE_ENV === 'production',
-  path: '/',
-  maxAge: 60 * 60 * 24 * 7, // 7 days
-})
-
-const hashPassword = (password: string) =>
-  createHash('sha256').update(password).digest('hex')
+import { SignupFormSchema } from '../model/signupForm'
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
   const formData = await request.formData()
@@ -27,6 +17,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     return submission.reply()
   }
 
+  const session = await getSession(request.headers.get('Cookie'))
   const db = context.get(dbContext)
 
   try {
@@ -39,10 +30,11 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
       })
       .returning()
 
-    const cookieHeader = await authCookie.serialize({ userId: user.id })
+    session.set('userId', user.id)
+
     return redirect('/channels/@me', {
       headers: {
-        'Set-Cookie': cookieHeader,
+        'Set-Cookie': await commitSession(session),
       },
     })
   } catch (e) {

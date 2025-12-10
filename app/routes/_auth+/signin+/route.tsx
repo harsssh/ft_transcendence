@@ -13,20 +13,21 @@ import {
 } from '@mantine/core'
 import { Form, useNavigation } from 'react-router'
 import type { Route } from './+types/route'
-import { SignupFormSchema } from './model/signupForm'
+import { SigninFormSchema } from './model/signinForm'
 
 export { action } from './api/action.server'
+export { loader } from './api/loader.server'
 
-export default function Signup({ actionData }: Route.ComponentProps) {
+export default function Signin({ actionData }: Route.ComponentProps) {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
   const [form, fields] = useForm({
     lastResult: actionData,
-    constraint: getZodConstraint(SignupFormSchema),
+    constraint: getZodConstraint(SigninFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema: SignupFormSchema })
+      return parseWithZod(formData, { schema: SigninFormSchema })
     },
   })
 
@@ -35,7 +36,7 @@ export default function Signup({ actionData }: Route.ComponentProps) {
       <Container size="md" miw="30vw">
         <Paper shadow="md" p="lg" radius="md">
           <Stack gap="md">
-            <Title order={2}>Sign up</Title>
+            <Title order={2}>Welcome back!</Title>
 
             <Form method="post" {...getFormProps(form)}>
               {form.errors && (
@@ -44,11 +45,6 @@ export default function Signup({ actionData }: Route.ComponentProps) {
                 </Alert>
               )}
               <Stack gap="sm">
-                <TextInput
-                  {...getInputProps(fields.name, { type: 'text' })}
-                  label="Name"
-                  error={fields.name.errors}
-                />
                 <TextInput
                   {...getInputProps(fields.email, { type: 'email' })}
                   label="Email"
@@ -60,7 +56,7 @@ export default function Signup({ actionData }: Route.ComponentProps) {
                   error={fields.password.errors}
                 />
                 <Button type="submit" loading={isSubmitting} fullWidth>
-                  Create an account
+                  Sign in
                 </Button>
               </Stack>
             </Form>
