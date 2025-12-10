@@ -10,8 +10,10 @@ import {
   Stack,
   TextInput,
   Title,
+  Text,
+  Anchor,
 } from '@mantine/core'
-import { Form, useNavigation } from 'react-router'
+import { Form, Link, useNavigation } from 'react-router'
 import type { Route } from './+types/route'
 import { SignupFormSchema } from './model/signupForm'
 
@@ -35,7 +37,7 @@ export default function Signup({ actionData }: Route.ComponentProps) {
       <Container size="md" miw="30vw">
         <Paper shadow="md" p="lg" radius="md">
           <Stack gap="md">
-            <Title order={2}>Sign up</Title>
+            <Title order={2}>Create an account</Title>
 
             <Form method="post" {...getFormProps(form)}>
               {form.errors && (
@@ -62,6 +64,12 @@ export default function Signup({ actionData }: Route.ComponentProps) {
                 <Button type="submit" loading={isSubmitting} fullWidth>
                   Create an account
                 </Button>
+                <Text>
+                  Already have an account?{' '}
+                  <Link to="/signin">
+                    <Anchor>Sign in</Anchor>
+                  </Link>
+                </Text>
               </Stack>
             </Form>
           </Stack>

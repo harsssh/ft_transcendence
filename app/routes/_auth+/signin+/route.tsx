@@ -2,6 +2,7 @@ import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   Alert,
+  Anchor,
   Button,
   Center,
   Container,
@@ -10,8 +11,9 @@ import {
   Stack,
   TextInput,
   Title,
+  Text,
 } from '@mantine/core'
-import { Form, useNavigation } from 'react-router'
+import { Form, Link, useNavigation } from 'react-router'
 import type { Route } from './+types/route'
 import { SigninFormSchema } from './model/signinForm'
 
@@ -58,6 +60,12 @@ export default function Signin({ actionData }: Route.ComponentProps) {
                 <Button type="submit" loading={isSubmitting} fullWidth>
                   Sign in
                 </Button>
+                <Text>
+                  New to ft_transcendence?{' '}
+                  <Link to="/signup">
+                    <Anchor>Sign up</Anchor>
+                  </Link>
+                </Text>
               </Stack>
             </Form>
           </Stack>
