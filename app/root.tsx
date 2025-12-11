@@ -35,17 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <MantineProvider>
-          <AppShell>
-            <AppShell.Main>{children}</AppShell.Main>
-
-            <AppShell.Footer>
-              <Center>
-                <Text>ft_transcendence</Text>
-              </Center>
-            </AppShell.Footer>
-          </AppShell>
-        </MantineProvider>
+        <MantineProvider>{children}</MantineProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

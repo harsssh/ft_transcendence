@@ -1,12 +1,8 @@
-import { authMiddleware } from 'app/middlewares/auth'
-import type { Route } from './+types/route'
+import { AppShell, Center, Text } from '@mantine/core'
 import { Outlet } from 'react-router'
-import { AppShell } from '@mantine/core'
 import { Footer } from '../_shared/ui/footer'
 
-export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
-
-export default function Channels() {
+export default function AuthLayout() {
   return (
     <AppShell>
       <AppShell.Main>
