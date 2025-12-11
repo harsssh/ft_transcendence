@@ -2,17 +2,15 @@ import { AppShell, type AppShellProps, Center, Text } from '@mantine/core'
 
 type Props = {
   navbar?: React.ReactNode
+  navbarWidth?: number
   children: React.ReactNode
 }
 
-export function Scaffold({ children, navbar }: Props) {
+export function Scaffold({ children, navbar, navbarWidth }: Props) {
   const appShellConfig = {
     ...(navbar
       ? {
-          navbar: {
-            width: 72,
-            breakpoint: 'sm',
-          },
+          navbar: { width: navbarWidth ?? 'auto', breakpoint: 'sm' },
         }
       : {}),
   } satisfies AppShellProps
