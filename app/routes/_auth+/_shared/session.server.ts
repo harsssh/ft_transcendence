@@ -19,7 +19,7 @@ const {
     //
     // expires: new Date(Date.now() + 60_000),
     httpOnly: true,
-    maxAge: 60,
+    maxAge: 60 * 60 * 24,
     path: '/',
     sameSite: 'lax',
     // SSL化する予定はないため常にfalseにする
