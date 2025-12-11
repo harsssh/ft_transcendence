@@ -2,16 +2,16 @@ import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   Alert,
+  Anchor,
   Button,
   Center,
   Container,
   Paper,
   PasswordInput,
   Stack,
+  Text,
   TextInput,
   Title,
-  Text,
-  Anchor,
 } from '@mantine/core'
 import { Form, Link, useNavigation } from 'react-router'
 import type { Route } from './+types/route'

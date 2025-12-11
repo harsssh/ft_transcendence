@@ -1,6 +1,6 @@
 import { userContext } from 'app/contexts/user'
-import type { Route } from './+types/route'
 import { redirect } from 'react-router'
+import type { Route } from './+types/route'
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
   const user = context.get(userContext)

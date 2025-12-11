@@ -6,7 +6,7 @@ import {
 } from 'app/routes/_auth+/_shared/session.server'
 import { usersTable } from 'db/schema'
 import { eq } from 'drizzle-orm'
-import { redirect, type MiddlewareFunction } from 'react-router'
+import { type MiddlewareFunction, redirect } from 'react-router'
 
 export const authMiddleware: MiddlewareFunction<Response> = async ({
   request,

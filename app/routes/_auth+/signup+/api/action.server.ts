@@ -1,4 +1,5 @@
 import { parseWithZod } from '@conform-to/zod/v4'
+import { dbContext } from 'app/contexts/db'
 import { usersTable } from 'db/schema'
 import { DrizzleQueryError } from 'drizzle-orm'
 import { DatabaseError } from 'pg'
@@ -7,7 +8,6 @@ import { hashPassword } from '../../_shared/password.server'
 import { commitSession, getSession } from '../../_shared/session.server'
 import type { Route } from '../+types/route'
 import { SignupFormSchema } from '../model/signupForm'
-import { dbContext } from 'app/contexts/db'
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
   const formData = await request.formData()

@@ -9,9 +9,9 @@ import {
   Paper,
   PasswordInput,
   Stack,
+  Text,
   TextInput,
   Title,
-  Text,
 } from '@mantine/core'
 import { Form, Link, useNavigation } from 'react-router'
 import type { Route } from './+types/route'

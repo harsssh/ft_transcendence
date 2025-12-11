@@ -1,4 +1,5 @@
 import { parseWithZod } from '@conform-to/zod/v4'
+import { dbContext } from 'app/contexts/db'
 import { usersTable } from 'db/schema'
 import { eq } from 'drizzle-orm'
 import { redirect } from 'react-router'
@@ -6,7 +7,6 @@ import { isValidPassword } from '../../_shared/password.server'
 import { commitSession, getSession } from '../../_shared/session.server'
 import type { Route } from '../+types/route'
 import { SigninFormSchema } from '../model/signinForm'
-import { dbContext } from 'app/contexts/db'
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
   const formData = await request.formData()

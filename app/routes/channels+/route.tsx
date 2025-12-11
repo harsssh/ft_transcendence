@@ -1,21 +1,14 @@
 import { authMiddleware } from 'app/middlewares/auth'
-import type { Route } from './+types/route'
 import { Outlet } from 'react-router'
-import { AppShell } from '@mantine/core'
-import { Footer } from '../_shared/ui/footer'
+import { Scaffold } from '../_shared/ui/scaffold'
+import type { Route } from './+types/route'
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
 export default function Channels() {
   return (
-    <AppShell>
-      <AppShell.Main>
-        <Outlet />
-      </AppShell.Main>
-
-      <AppShell.Footer>
-        <Footer />
-      </AppShell.Footer>
-    </AppShell>
+    <Scaffold navbar="navbar">
+      <Outlet />
+    </Scaffold>
   )
 }
