@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: development-dependencies-env
-    command: bun dev -- --host --port 5173
+    command: sh -c "bun i && bun dev -- --host --port 5173"
     depends_on:
       db:
         condition: service_healthy
