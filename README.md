@@ -1,11 +1,19 @@
 ## Docker
 
-以下のコマンドで開発用のコンテナが起動します
+開発用:
 
 ```sh
-docker compose --profile dev up
+docker compose up
 ```
+
+本番用:
+
+```sh
+docker compose -f compose.prod.yml up
+```
+
 ## 開発フロー
+
 1. バックログにイシューを追加
 2. 実装するかPO,PM,テックリードとすり合わせ
 3. POが要件FIX UIのイメージをイシューに記載
