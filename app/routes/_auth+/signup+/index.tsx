@@ -2,19 +2,19 @@ import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   Alert,
+  Anchor,
   Button,
   Center,
   Container,
   Paper,
   PasswordInput,
   Stack,
+  Text,
   TextInput,
   Title,
-  Text,
-  Anchor,
 } from '@mantine/core'
-import { Form, Link, useNavigation } from 'react-router'
-import type { Route } from './+types/route'
+import { Form, useNavigation } from 'react-router'
+import type { Route } from './+types'
 import { SignupFormSchema } from './model/signupForm'
 
 export { action } from './api/action.server'
@@ -66,9 +66,7 @@ export default function Signup({ actionData }: Route.ComponentProps) {
                 </Button>
                 <Text>
                   Already have an account?{' '}
-                  <Link to="/signin">
-                    <Anchor>Sign in</Anchor>
-                  </Link>
+                  <Anchor href="/signin">Sign in</Anchor>
                 </Text>
               </Stack>
             </Form>

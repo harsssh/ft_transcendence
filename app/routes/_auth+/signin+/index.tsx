@@ -9,12 +9,12 @@ import {
   Paper,
   PasswordInput,
   Stack,
+  Text,
   TextInput,
   Title,
-  Text,
 } from '@mantine/core'
-import { Form, Link, useNavigation } from 'react-router'
-import type { Route } from './+types/route'
+import { Form, useNavigation } from 'react-router'
+import type { Route } from './+types'
 import { SigninFormSchema } from './model/signinForm'
 
 export { action } from './api/action.server'
@@ -62,9 +62,7 @@ export default function Signin({ actionData }: Route.ComponentProps) {
                 </Button>
                 <Text>
                   New to ft_transcendence?{' '}
-                  <Link to="/signup">
-                    <Anchor>Sign up</Anchor>
-                  </Link>
+                  <Anchor href="/signup">Sign up</Anchor>
                 </Text>
               </Stack>
             </Form>
