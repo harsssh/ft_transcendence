@@ -1,24 +1,21 @@
 services:
   webapp:
-    container_name: webapp-dev
+    container_name: webapp-prod
     build:
       context: .
       dockerfile: Dockerfile
-      target: development-dependencies-env
-    command: bun dev -- --host --port 5173
+    command: bun start
     depends_on:
       db:
         condition: service_healthy
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - DATABASE_URL=postgres://app:app@db:5432/app
-    volumes:
-      - .:/app
     ports:
-      - "5173:5173"
+      - "3000:3000"
 
   db:
-    container_name: db-dev
+    container_name: db-prod
     image: postgres:18
     environment:
       POSTGRES_USER: app
