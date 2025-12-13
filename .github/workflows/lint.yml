@@ -1,0 +1,41 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/lint.yml
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.js"
+      - "**/*.jsx"
+      - "**/*.css"
+      - "**/*.json"
+  pull_request:
+    paths:
+      - ./.github/workflows/lint.yml
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.js"
+      - "**/*.jsx"
+      - "**/*.css"
+      - "**/*.json"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Check ${{ matrix.lint-target }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Run Script
+        run: bun lint --error-on-warnings
