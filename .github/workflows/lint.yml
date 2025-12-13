@@ -14,7 +14,7 @@ on:
       - "**/*.json"
   pull_request:
     paths:
-      - ./.github/workflows/lint.yml
+      - .github/workflows/lint.yml
       - "**/*.ts"
       - "**/*.tsx"
       - "**/*.js"
