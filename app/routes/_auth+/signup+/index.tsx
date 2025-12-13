@@ -13,8 +13,8 @@ import {
   TextInput,
   Title,
 } from '@mantine/core'
-import { Form, Link, useNavigation } from 'react-router'
-import type { Route } from './+types/route'
+import { Form, useNavigation } from 'react-router'
+import type { Route } from './+types'
 import { SignupFormSchema } from './model/signupForm'
 
 export { action } from './api/action.server'
@@ -66,9 +66,7 @@ export default function Signup({ actionData }: Route.ComponentProps) {
                 </Button>
                 <Text>
                   Already have an account?{' '}
-                  <Link to="/signin">
-                    <Anchor>Sign in</Anchor>
-                  </Link>
+                  <Anchor href="/signin">Sign in</Anchor>
                 </Text>
               </Stack>
             </Form>

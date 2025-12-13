@@ -1,6 +1,6 @@
 import { redirect } from 'react-router'
 import { getSession } from '../../_shared/session.server'
-import type { Route } from '../+types/route'
+import type { Route } from '../+types'
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const session = await getSession(request)

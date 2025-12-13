@@ -1,4 +1,4 @@
-export type ChannelsHandle<LoaderData = unknown> = {
-  navbar: (data: LoaderData) => React.ReactNode
+export type ChannelsHandle<LoaderData = unknown, ActionData = unknown> = {
+  navbar: (loadData: LoaderData, actionData: ActionData) => React.ReactNode
   navbarWidth: number
 }

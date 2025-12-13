@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router'
-import { Scaffold } from '../_shared/ui/scaffold'
+import { Scaffold } from '../_shared/ui/Scaffold'
 
 export default function AuthLayout() {
   return (

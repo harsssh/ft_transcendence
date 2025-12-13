@@ -1,12 +1,12 @@
-import { dbContext } from 'app/contexts/db'
-import { userContext } from 'app/contexts/user'
+import { eq } from 'drizzle-orm'
+import { type MiddlewareFunction, redirect } from 'react-router'
+import { users } from '../../db/schema'
+import { dbContext } from '../contexts/db'
+import { userContext } from '../contexts/user'
 import {
   destroySession,
   getSession,
-} from 'app/routes/_auth+/_shared/session.server'
-import { usersTable } from 'db/schema'
-import { eq } from 'drizzle-orm'
-import { type MiddlewareFunction, redirect } from 'react-router'
+} from '../routes/_auth+/_shared/session.server'
 
 export const authMiddleware: MiddlewareFunction<Response> = async ({
   request,
@@ -21,10 +21,7 @@ export const authMiddleware: MiddlewareFunction<Response> = async ({
 
   try {
     const db = context.get(dbContext)
-    const [user] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.id, userId))
+    const [user] = await db.select().from(users).where(eq(users.id, userId))
     if (!user) {
       return redirect('/signin', {
         headers: {

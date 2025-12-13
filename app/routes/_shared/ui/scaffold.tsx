@@ -13,6 +13,9 @@ export function Scaffold({ children, navbar, navbarWidth }: Props) {
           navbar: { width: navbarWidth ?? 'auto', breakpoint: 'sm' },
         }
       : {}),
+    footer: {
+      height: 30,
+    },
   } satisfies AppShellProps
 
   return (
