@@ -5,5 +5,5 @@ export const loader = async () => {
 }
 
 export default function DMChannels({ params }: Route.ComponentProps) {
-  return <p>{params.userId}</p>
+  return <p>{params.channelId}</p>
 }
