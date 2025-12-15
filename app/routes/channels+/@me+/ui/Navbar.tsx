@@ -72,7 +72,7 @@ export function Navbar({ channels, lastResult }: Props) {
       </Stack>
 
       <Modal opened={opened} onClose={close} title="Create DM Channel" centered>
-        <Form method="post" action="/channels" {...getFormProps(form)}>
+        <Form method="post" action="/channels/@me" {...getFormProps(form)}>
           <Stack gap="sm">
             {form.errors && (
               <Alert variant="light" color="red">
