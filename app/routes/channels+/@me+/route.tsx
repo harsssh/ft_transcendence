@@ -1,9 +1,9 @@
 import { parseWithZod } from '@conform-to/zod/v4'
 import { ok, ResultAsync } from 'neverthrow'
 import { useEffect } from 'react'
-import { Outlet, redirect, useOutletContext } from 'react-router'
+import { Outlet, useOutletContext } from 'react-router'
 import * as R from 'remeda'
-import { channels } from '../../../../db/schema'
+import { channels, usersToChannels } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { userContext } from '../../../contexts/user'
 import type { ChannelsOutletContext } from '../route'
@@ -67,12 +67,36 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
   }
 
   const db = context.get(dbContext)
-  const [channel] = await db
-    .insert(channels)
-    .values({ name: submission.value.name })
-    .returning()
+  const participant = await db.query.users.findFirst({
+    where: { name: submission.value.name },
+  })
+  if (!participant) {
+    return submission.reply({
+      formErrors: ['User not found'],
+    })
+  }
+  if (participant.id === user.id) {
+    return submission.reply({
+      formErrors: ['You cannot create a channel just for yourself.'],
+    })
+  }
 
-  throw redirect(`/channels/@me/${channel?.id}`)
+  const [channel] = await db.transaction(async (tx) => {
+    const [newChannel] = await tx.insert(channels).values({}).returning()
+    if (!newChannel) {
+      throw new Error('Failed to create channel')
+    }
+    await tx.insert(usersToChannels).values([
+      { userId: user.id, channelId: newChannel.id },
+      { userId: participant.id, channelId: newChannel.id },
+    ])
+    return [newChannel]
+  })
+
+  return {
+    ...submission.reply(),
+    channelId: channel?.id,
+  }
 }
 
 export default function Me({ loaderData, actionData }: Route.ComponentProps) {
