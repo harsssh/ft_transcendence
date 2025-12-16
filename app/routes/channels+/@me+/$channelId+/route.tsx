@@ -147,7 +147,11 @@ export default function DMChannel({ actionData }: Route.ComponentProps) {
     <Stack
       gap={0}
       h="calc(100dvh - var(--app-shell-footer-offset, 0rem))"
-      style={{ minHeight: 0 }}
+      style={{
+        minHeight: 0,
+        overflow: 'hidden',
+        overscrollBehavior: 'contain',
+      }}
     >
       <Box
         p="md"
@@ -157,6 +161,7 @@ export default function DMChannel({ actionData }: Route.ComponentProps) {
           top: 0,
           zIndex: 1,
           backgroundColor: 'var(--mantine-color-body)',
+          flexShrink: 0,
         }}
       >
         <Group>
@@ -174,6 +179,9 @@ export default function DMChannel({ actionData }: Route.ComponentProps) {
         viewportRef={scrollViewport}
         p="md"
         style={{ minHeight: 0 }}
+        styles={{
+          viewport: { overscrollBehavior: 'contain' },
+        }}
       >
         <Stack gap="xs">
           {messages.map((msg) => (
@@ -194,6 +202,7 @@ export default function DMChannel({ actionData }: Route.ComponentProps) {
           bottom: 0,
           backgroundColor: 'var(--mantine-color-body)',
           borderTop: '1px solid var(--mantine-color-dark-4)',
+          flexShrink: 0,
         }}
       >
         <Form method="post" {...getFormProps(form)}>
