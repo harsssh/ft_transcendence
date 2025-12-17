@@ -12,7 +12,12 @@ import {
   Tooltip,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { IconCheck, IconCookieMan, IconX, IconMessageCircleFilled } from '@tabler/icons-react'
+import {
+  IconCheck,
+  IconCookieMan,
+  IconMessageCircleFilled,
+  IconX,
+} from '@tabler/icons-react'
 import { and, eq, or } from 'drizzle-orm'
 import { Form, useRouteLoaderData } from 'react-router'
 import { friendships } from '../../../../db/schema'
