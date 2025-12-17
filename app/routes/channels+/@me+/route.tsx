@@ -27,11 +27,46 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
             participants: true,
           },
         },
+        sentFriendships: {
+          with: {
+            friend: true,
+          },
+        },
+        receivedFriendships: {
+          with: {
+            user: true,
+          },
+        },
       },
     }),
     R.identity(),
   )
     .andThen((res) => {
+      const acceptedSent =
+        res?.sentFriendships
+          .filter((f) => f.status === 'accepted')
+          .map((f) => f.friend) ?? []
+
+      const acceptedReceived =
+        res?.receivedFriendships
+          .filter((f) => f.status === 'accepted')
+          .map((f) => f.user) ?? []
+
+      const friends = R.uniqueBy(
+        [...acceptedSent, ...acceptedReceived],
+        (f) => f?.id,
+      )
+
+      const pendingRequests =
+        res?.receivedFriendships
+          .filter((f) => f.status === 'pending')
+          .map((f) => f.user) ?? []
+
+      const sentRequests =
+        res?.sentFriendships
+          .filter((f) => f.status === 'pending')
+          .map((f) => f.friend) ?? []
+
       return ok({
         channels:
           res?.channels.map((ch) => ({
@@ -42,6 +77,9 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
               name: p.name,
             })),
           })) ?? [],
+        friends,
+        pendingRequests,
+        sentRequests,
       })
     })
     .match(R.identity(), (e) => {
