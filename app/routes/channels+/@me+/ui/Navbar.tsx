@@ -18,7 +18,7 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus } from '@tabler/icons-react'
 import { useEffect } from 'react'
-import { Form, Link, useNavigation, useNavigate } from 'react-router'
+import { Form, Link, useNavigate, useNavigation } from 'react-router'
 import type { Channel } from '../model/channel'
 import { NewChannelFormSchema } from '../model/newChannelForm'
 

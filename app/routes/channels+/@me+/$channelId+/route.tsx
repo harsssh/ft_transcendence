@@ -11,15 +11,15 @@ import {
   TextInput,
 } from '@mantine/core'
 import { IconSend } from '@tabler/icons-react'
-
 import { ok, ResultAsync } from 'neverthrow'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Form, useLoaderData, useNavigation } from 'react-router'
 import { z } from 'zod'
 import { messages } from '../../../../../db/schema'
 import { dbContext } from '../../../../contexts/db'
 import { userContext } from '../../../../contexts/user'
 import type { Route } from './+types/route'
+import { DateSeparator } from './ui/DateSeparator'
 import { Message } from './ui/Message'
 
 const SendMessageSchema = z.object({
@@ -91,6 +91,12 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
   return result
 }
 
+type LoaderData = Awaited<ReturnType<typeof loader>>
+type MessageEntry = LoaderData['messages'][number]
+type MessageListItem =
+  | { kind: 'separator'; date: string }
+  | { kind: 'message'; message: MessageEntry }
+
 export const action = async ({
   context,
   request,
@@ -125,6 +131,26 @@ export default function DMChannel({ actionData }: Route.ComponentProps) {
   const scrollViewport = useRef<HTMLDivElement>(null)
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
+
+  const messagesWithSeparators = useMemo<MessageListItem[]>(
+    () =>
+      messages.flatMap((message, index) => {
+        const currentDate = message.createdAt.toLocaleDateString()
+        const previousMsg = messages[index - 1]
+        const previousDate = previousMsg
+          ? previousMsg.createdAt.toLocaleDateString()
+          : null
+        const entries: MessageListItem[] = []
+
+        if (currentDate !== previousDate) {
+          entries.push({ kind: 'separator', date: currentDate })
+        }
+
+        entries.push({ kind: 'message', message })
+        return entries
+      }),
+    [messages],
+  )
 
   useEffect(() => {
     if (scrollViewport.current) {
@@ -184,14 +210,21 @@ export default function DMChannel({ actionData }: Route.ComponentProps) {
         }}
       >
         <Stack gap="xs">
-          {messages.map((msg) => (
-            <Message
-              key={msg.id}
-              senderName={msg.sender.name}
-              content={msg.content}
-              createdAt={msg.createdAt}
-            />
-          ))}
+          {messagesWithSeparators.map((entry, index) =>
+            entry.kind === 'separator' ? (
+              <DateSeparator
+                key={`separator-${entry.date}-${index}`}
+                date={entry.date}
+              />
+            ) : (
+              <Message
+                key={entry.message.id}
+                senderName={entry.message.sender.name}
+                content={entry.message.content}
+                createdAt={entry.message.createdAt}
+              />
+            ),
+          )}
         </Stack>
       </ScrollArea>
 
