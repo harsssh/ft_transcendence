@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { IconCheck, IconCookieMan, IconX } from '@tabler/icons-react'
+import { IconCheck, IconCookieMan, IconX, IconMessageCircleFilled } from '@tabler/icons-react'
 import { and, eq, or } from 'drizzle-orm'
 import { Form, useRouteLoaderData } from 'react-router'
 import { friendships } from '../../../../db/schema'
@@ -237,7 +237,7 @@ export default function FriendsIndex() {
                   <Group gap="xs">
                     <ActionIcon variant="subtle" color="gray" title="Message">
                       {/* TODO: Link to DM */}
-                      <IconCookieMan size={18} />
+                      <IconMessageCircleFilled size={18} />
                     </ActionIcon>
                     <Form method="post">
                       <input type="hidden" name="userId" value={friend?.id} />
