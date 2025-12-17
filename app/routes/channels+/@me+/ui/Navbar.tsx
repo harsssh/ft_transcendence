@@ -43,7 +43,6 @@ export function Navbar({ channels, lastResult }: Props) {
   const isSubmitting = navigation.state === 'submitting'
 
   useEffect(() => {
-    console.log(lastResult)
     if (lastResult?.status === 'success' && lastResult.channelId) {
       close()
       navigate(`/channels/@me/${lastResult.channelId}`)

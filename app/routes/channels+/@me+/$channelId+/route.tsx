@@ -71,7 +71,7 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
         messages: sortedMessages.map((m) => ({
           id: m.id,
           content: m.content,
-          createdAt: new Date(m.createdAt.toISOString()),
+          createdAt: m.createdAt,
           sender: {
             id: m.sender.id,
             name: m.sender.name,
