@@ -11,6 +11,7 @@ import {
   Title,
   Tooltip,
 } from '@mantine/core'
+import { openConfirmModal } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 import {
   IconCheck,
@@ -19,7 +20,7 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import { and, eq, or } from 'drizzle-orm'
-import { Form, useRouteLoaderData } from 'react-router'
+import { Form, useRouteLoaderData, useSubmit } from 'react-router'
 import { friendships } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { userContext } from '../../../contexts/user'
@@ -177,6 +178,26 @@ export const clientAction = async ({
 
 export default function FriendsIndex() {
   const data = useRouteLoaderData<typeof loader>('routes/channels+/@me+/route')
+  const submit = useSubmit()
+
+  const openRemoveModal = (friendName: string, friendId: number) =>
+    openConfirmModal({
+      title: 'Delete your friend',
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to remove <Text span fw={700} c='blue' inherit>{friendName}</Text> from your friend list?
+        </Text>
+      ),
+      labels: { confirm: 'Remove', cancel: "Cancel" },
+      confirmProps: { color: 'red' },
+      onConfirm: () => {
+        const formData = new FormData()
+        formData.append('userId', friendId.toString())
+        formData.append('intent', 'remove-friend')
+        submit(formData, { method: 'post' })
+      },
+    })
 
   const friends = data?.friends ?? []
   const pendingRequests = data?.pendingRequests ?? []
@@ -248,20 +269,17 @@ export default function FriendsIndex() {
                       {/* TODO: Link to DM */}
                       <IconMessageCircleFilled size={18} />
                     </ActionIcon>
-                    <Form method="post">
-                      <input type="hidden" name="userId" value={friend?.id} />
-                      <Tooltip label="Remove Friend">
-                        <ActionIcon
-                          type="submit"
-                          name="intent"
-                          value="remove-friend"
-                          variant="subtle"
-                          color="red"
-                        >
-                          <IconX size={18} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Form>
+                    <Tooltip label="Remove Friend">
+                      <ActionIcon
+                        variant="subtle"
+                        color="red"
+                        onClick={() =>
+                          openRemoveModal(friend?.name ?? '', friend?.id ?? 0)
+                        }
+                      >
+                        <IconX size={18} />
+                      </ActionIcon>
+                    </Tooltip>
                   </Group>
                 </Group>
               ))
