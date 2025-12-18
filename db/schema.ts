@@ -29,7 +29,6 @@ export const usersToChannels = p.pgTable(
 export const friendStatusEnum = p.pgEnum('friend_status', [
   'pending',
   'accepted',
-  'blocked',
 ])
 
 export const friendships = p.pgTable(
