@@ -11,15 +11,15 @@ import {
   TextInput,
 } from '@mantine/core'
 import { IconSend } from '@tabler/icons-react'
-import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+import { useCallback, useMemo, useSyncExternalStore } from 'react'
 import { Form, useNavigation } from 'react-router'
 import type { Route } from './+types/route'
 import { SendMessageSchema } from './model/message'
 import { DateSeparator } from './ui/DateSeparator'
 import { Message } from './ui/Message'
 
-export { loader } from './api/loader.server'
 export { action } from './api/action.server'
+export { loader } from './api/loader.server'
 
 type MessageEntry = Route.ComponentProps['loaderData']['messages'][number]
 type MessageListItem =
@@ -31,7 +31,6 @@ export default function DMChannel({
   actionData,
 }: Route.ComponentProps) {
   const { messages, partner, locale } = loaderData
-  const scrollViewport = useRef<HTMLDivElement>(null)
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
   const timeZone = useSyncExternalStore(
@@ -39,6 +38,12 @@ export default function DMChannel({
     () => Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
     () => 'UTC',
   )
+  const latestMessageRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) {
+      return
+    }
+    node.scrollIntoView({ block: 'end' })
+  }, [])
 
   const messagesWithSeparators = useMemo<MessageListItem[]>(() => {
     // Use the server snapshot timezone for SSR/hydration, then re-render in client timezone.
@@ -60,15 +65,6 @@ export default function DMChannel({
       return entries
     })
   }, [locale, messages, timeZone])
-
-  useEffect(() => {
-    if (scrollViewport.current) {
-      scrollViewport.current.scrollTo({
-        top: scrollViewport.current.scrollHeight,
-        behavior: 'smooth',
-      })
-    }
-  }, [])
 
   const [form, fields] = useForm({
     lastResult: actionData,
@@ -111,7 +107,6 @@ export default function DMChannel({
 
       <ScrollArea
         flex={1}
-        viewportRef={scrollViewport}
         p="md"
         style={{ minHeight: 0 }}
         styles={{
@@ -119,21 +114,31 @@ export default function DMChannel({
         }}
       >
         <Stack gap="xs">
-          {messagesWithSeparators.map((entry, index) =>
-            entry.kind === 'separator' ? (
-              <DateSeparator
-                key={`separator-${entry.date}-${index}`}
-                date={entry.date}
-              />
-            ) : (
-              <Message
+          {messagesWithSeparators.map((entry, index) => {
+            if (entry.kind === 'separator') {
+              return (
+                <DateSeparator
+                  key={`separator-${entry.date}-${index}`}
+                  date={entry.date}
+                />
+              )
+            }
+
+            const isLatest = index === messagesWithSeparators.length - 1
+
+            return (
+              <div
                 key={entry.message.id}
-                senderName={entry.message.sender.name}
-                content={entry.message.content}
-                createdAt={entry.message.createdAt}
-              />
-            ),
-          )}
+                ref={isLatest ? latestMessageRef : undefined}
+              >
+                <Message
+                  senderName={entry.message.sender.name}
+                  content={entry.message.content}
+                  createdAt={entry.message.createdAt}
+                />
+              </div>
+            )
+          })}
         </Stack>
       </ScrollArea>
 
