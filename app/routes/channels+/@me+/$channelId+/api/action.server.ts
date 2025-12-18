@@ -1,0 +1,35 @@
+import { parseWithZod } from '@conform-to/zod/v4'
+import { messages } from '../../../../../../db/schema'
+import { dbContext } from '../../../../../contexts/db'
+import { userContext } from '../../../../../contexts/user'
+import type { Route } from '../+types/route'
+import { SendMessageSchema } from '../model/message'
+
+export const action = async ({
+  context,
+  request,
+  params,
+}: Route.ActionArgs) => {
+  const user = context.get(userContext)
+  if (!user) {
+    throw new Response('Unauthorized', { status: 401 })
+  }
+
+  const formData = await request.formData()
+  const submission = parseWithZod(formData, { schema: SendMessageSchema })
+
+  if (submission.status !== 'success') {
+    return submission.reply()
+  }
+
+  const db = context.get(dbContext)
+  const channelId = Number(params.channelId)
+
+  await db.insert(messages).values({
+    content: submission.value.content,
+    channelId,
+    senderId: user.id,
+  })
+
+  return submission.reply({ resetForm: true })
+}

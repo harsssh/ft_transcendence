@@ -11,123 +11,25 @@ import {
   TextInput,
 } from '@mantine/core'
 import { IconSend } from '@tabler/icons-react'
-import { ok, ResultAsync } from 'neverthrow'
 import { useEffect, useMemo, useRef } from 'react'
-import { Form, useLoaderData, useNavigation } from 'react-router'
-import { z } from 'zod'
-import { messages } from '../../../../../db/schema'
-import { dbContext } from '../../../../contexts/db'
-import { userContext } from '../../../../contexts/user'
+import { Form, useNavigation } from 'react-router'
 import type { Route } from './+types/route'
+import { SendMessageSchema } from './model/message'
 import { DateSeparator } from './ui/DateSeparator'
 import { Message } from './ui/Message'
 
-const SendMessageSchema = z.object({
-  content: z.string().min(1, 'Message cannot be empty'),
-})
+export { loader } from './api/loader.server'
 
-export const loader = async ({ context, params }: Route.LoaderArgs) => {
-  const user = context.get(userContext)
-  if (!user) {
-    throw new Response('Unauthorized', { status: 401 })
-  }
-
-  const db = context.get(dbContext)
-  const { data: channelId, success } = z.coerce
-    .number()
-    .safeParse(params.channelId)
-
-  if (!success) {
-    throw new Response('Bad Request', { status: 400 })
-  }
-
-  const result = await ResultAsync.fromPromise(
-    db.query.channels.findFirst({
-      where: {
-        id: channelId,
-      },
-      with: {
-        participants: true,
-        messages: {
-          with: {
-            sender: true,
-          },
-        },
-      },
-    }),
-    (val) => val,
-  )
-    .andThen((channel) => {
-      if (!channel) {
-        return ResultAsync.fromSafePromise(Promise.reject('Channel not found'))
-      }
-
-      const partner = channel.participants.find((p) => p.id !== user.id)
-      const sortedMessages = channel.messages.sort(
-        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-      )
-
-      return ok({
-        messages: sortedMessages.map((m) => ({
-          id: m.id,
-          content: m.content,
-          createdAt: m.createdAt,
-          sender: {
-            id: m.sender.id,
-            name: m.sender.name,
-          },
-        })),
-        partner: partner ? { id: partner.id, name: partner.name } : null,
-        user: { id: user.id },
-      })
-    })
-    .match(
-      (val) => val,
-      () => {
-        throw new Response('Channel not found', { status: 404 })
-      },
-    )
-
-  return result
-}
-
-type LoaderData = Awaited<ReturnType<typeof loader>>
-type MessageEntry = LoaderData['messages'][number]
+type MessageEntry = Route.ComponentProps['loaderData']['messages'][number]
 type MessageListItem =
   | { kind: 'separator'; date: string }
   | { kind: 'message'; message: MessageEntry }
 
-export const action = async ({
-  context,
-  request,
-  params,
-}: Route.ActionArgs) => {
-  const user = context.get(userContext)
-  if (!user) {
-    throw new Response('Unauthorized', { status: 401 })
-  }
-
-  const formData = await request.formData()
-  const submission = parseWithZod(formData, { schema: SendMessageSchema })
-
-  if (submission.status !== 'success') {
-    return submission.reply()
-  }
-
-  const db = context.get(dbContext)
-  const channelId = Number(params.channelId)
-
-  await db.insert(messages).values({
-    content: submission.value.content,
-    channelId,
-    senderId: user.id,
-  })
-
-  return submission.reply({ resetForm: true })
-}
-
-export default function DMChannel({ actionData }: Route.ComponentProps) {
-  const { messages, partner } = useLoaderData<typeof loader>()
+export default function DMChannel({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
+  const { messages, partner, locale } = loaderData
   const scrollViewport = useRef<HTMLDivElement>(null)
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
@@ -135,10 +37,10 @@ export default function DMChannel({ actionData }: Route.ComponentProps) {
   const messagesWithSeparators = useMemo<MessageListItem[]>(
     () =>
       messages.flatMap((message, index) => {
-        const currentDate = message.createdAt.toLocaleDateString()
+        const currentDate = message.createdAt.toLocaleDateString(locale)
         const previousMsg = messages[index - 1]
         const previousDate = previousMsg
-          ? previousMsg.createdAt.toLocaleDateString()
+          ? previousMsg.createdAt.toLocaleDateString(locale)
           : null
         const entries: MessageListItem[] = []
 
@@ -149,7 +51,7 @@ export default function DMChannel({ actionData }: Route.ComponentProps) {
         entries.push({ kind: 'message', message })
         return entries
       }),
-    [messages],
+    [locale, messages],
   )
 
   useEffect(() => {
