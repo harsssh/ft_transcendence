@@ -182,14 +182,18 @@ export default function FriendsIndex() {
 
   const openRemoveModal = (friendName: string, friendId: number) =>
     openConfirmModal({
-      title: 'Delete your friend',
+      title: 'Remove your friend',
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to remove <Text span fw={700} c='blue' inherit>{friendName}</Text> from your friend list?
+          Are you sure you want to remove{' '}
+          <Text span fw={700} c="blue" inherit>
+            {friendName}
+          </Text>{' '}
+          from your friend list?
         </Text>
       ),
-      labels: { confirm: 'Remove', cancel: "Cancel" },
+      labels: { confirm: 'Remove', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
       onConfirm: () => {
         const formData = new FormData()

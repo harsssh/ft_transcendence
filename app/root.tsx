@@ -11,8 +11,8 @@ import './app.css'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
 import { MantineProvider } from '@mantine/core'
-import { Notifications } from '@mantine/notifications'
 import { ModalsProvider } from '@mantine/modals'
+import { Notifications } from '@mantine/notifications'
 import { theme } from './theme'
 
 export const links: Route.LinksFunction = () => [
