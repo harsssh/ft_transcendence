@@ -78,7 +78,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
       status: 'pending',
     })
 
-    return { success: true }
+    return { success: 'Friend request sent' }
   }
 
   if (intent === 'accept-friend-request') {
@@ -96,7 +96,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
         ),
       )
 
-    return { success: true }
+    return { success: 'Friend request accepted' }
   }
 
   if (
@@ -121,7 +121,11 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
         ),
       )
 
-    return { success: true }
+    if (intent === 'reject-friend-request') {
+      return { success: 'Friend request rejected' }
+    } else {
+      return { success: 'Friend request canceled' }
+    }
   }
 
   if (intent === 'remove-friend') {
@@ -142,7 +146,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
           ),
         ),
       )
-    return { success: true }
+    return { success: 'Friend removed' }
   }
 
   return null
@@ -157,7 +161,7 @@ export const clientAction = async ({
     console.log('request success')
     notifications.show({
       title: 'Success!',
-      message: 'Sent a friend request',
+      message: res.success,
       autoClose: 5000,
     })
   } else if (res?.error) {
