@@ -11,7 +11,7 @@ import {
   TextInput,
 } from '@mantine/core'
 import { IconSend } from '@tabler/icons-react'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import { Form, useNavigation } from 'react-router'
 import type { Route } from './+types/route'
 import { SendMessageSchema } from './model/message'
@@ -19,6 +19,7 @@ import { DateSeparator } from './ui/DateSeparator'
 import { Message } from './ui/Message'
 
 export { loader } from './api/loader.server'
+export { action } from './api/action.server'
 
 type MessageEntry = Route.ComponentProps['loaderData']['messages'][number]
 type MessageListItem =
@@ -33,26 +34,32 @@ export default function DMChannel({
   const scrollViewport = useRef<HTMLDivElement>(null)
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-
-  const messagesWithSeparators = useMemo<MessageListItem[]>(
-    () =>
-      messages.flatMap((message, index) => {
-        const currentDate = message.createdAt.toLocaleDateString(locale)
-        const previousMsg = messages[index - 1]
-        const previousDate = previousMsg
-          ? previousMsg.createdAt.toLocaleDateString(locale)
-          : null
-        const entries: MessageListItem[] = []
-
-        if (currentDate !== previousDate) {
-          entries.push({ kind: 'separator', date: currentDate })
-        }
-
-        entries.push({ kind: 'message', message })
-        return entries
-      }),
-    [locale, messages],
+  const timeZone = useSyncExternalStore(
+    () => () => {},
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
+    () => 'UTC',
   )
+
+  const messagesWithSeparators = useMemo<MessageListItem[]>(() => {
+    // Use the server snapshot timezone for SSR/hydration, then re-render in client timezone.
+    const dateFormatter = new Intl.DateTimeFormat(locale, { timeZone })
+
+    return messages.flatMap((message, index) => {
+      const currentDate = dateFormatter.format(message.createdAt)
+      const previousMsg = messages[index - 1]
+      const previousDate = previousMsg
+        ? dateFormatter.format(previousMsg.createdAt)
+        : null
+      const entries: MessageListItem[] = []
+
+      if (currentDate !== previousDate) {
+        entries.push({ kind: 'separator', date: currentDate })
+      }
+
+      entries.push({ kind: 'message', message })
+      return entries
+    })
+  }, [locale, messages, timeZone])
 
   useEffect(() => {
     if (scrollViewport.current) {
