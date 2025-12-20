@@ -12,8 +12,11 @@ import { messages, relations, users } from '../db/schema'
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
 
-// Create shared database instance
-const db = drizzle(process.env.DATABASE_URL, { relations })
+const dbUrl = process.env.DATABASE_URL
+if (!dbUrl) {
+  throw new Error('DATABASE_URL environment variable is not set')
+}
+const db = drizzle(dbUrl, { relations })
 
 const honoServer = await createHonoServer({
   defaultLogger: false,
