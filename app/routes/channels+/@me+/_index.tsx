@@ -161,14 +161,12 @@ export const clientAction = async ({
   const res = await serverAction()
 
   if (res?.success) {
-    console.log('request success')
     notifications.show({
       title: 'Success!',
       message: res.success,
       autoClose: 5000,
     })
   } else if (res?.error) {
-    console.log('request error:', res.error)
     notifications.show({
       title: 'Error!',
       message: res.error,
