@@ -271,11 +271,13 @@ export default function FriendsIndex() {
                     <Text fw={500}>{friend?.name}</Text>
                   </Group>
                   <Group gap="xs">
-                    <ActionIcon variant="subtle" color="gray" title="Message">
-                      {/* TODO: Link to DM */}
-                      <IconMessageCircleFilled size={18} />
-                    </ActionIcon>
-                    <Tooltip label="Remove Friend">
+                    <Tooltip label="Message">
+                      <ActionIcon variant="subtle" color="gray">
+                        {/* TODO: Link to DM */}
+                        <IconMessageCircleFilled size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Remove Friend" color="red">
                       <ActionIcon
                         variant="subtle"
                         color="red"
