@@ -41,6 +41,27 @@ const honoServer = await createHonoServer({
             // Store userId with connection
             ;(ws as WSContext & { userId?: number }).userId = userId
 
+            // Verify channel membership
+            const channel = await db.query.channels.findFirst({
+              where: {
+                id: Number(channelId),
+              },
+              with: {
+                participants: true,
+              },
+            })
+
+            if (
+              !channel ||
+              !channel.participants.some((p) => p.id === userId)
+            ) {
+              console.log(
+                'WebSocket rejected: user not a participant of channel',
+              )
+              ws.close()
+              return
+            }
+
             if (!channelConnections.has(channelId)) {
               channelConnections.set(channelId, new Set())
             }
