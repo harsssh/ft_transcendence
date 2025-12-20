@@ -1,3 +1,4 @@
+import { parseWithZod } from '@conform-to/zod/v4'
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import type { WSContext } from 'hono/ws'
@@ -5,9 +6,8 @@ import { RouterContextProvider } from 'react-router'
 import { createHonoServer } from 'react-router-hono-server/bun'
 import { dbContext } from '../app/contexts/db'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
-import { messages, relations, users } from '../db/schema'
-import { parseWithZod } from '@conform-to/zod/v4'
 import { SendMessageSchema } from '../app/routes/channels+/@me+/$channelId+/model/message'
+import { messages, relations, users } from '../db/schema'
 
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
