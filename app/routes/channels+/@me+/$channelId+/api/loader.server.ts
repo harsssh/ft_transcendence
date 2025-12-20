@@ -75,7 +75,7 @@ export const loader = async ({
           },
         })),
         partner: partner ? { id: partner.id, name: partner.name } : null,
-        user: { id: user.id },
+        user: { id: user.id, name: user.name },
       })
     })
     .match(

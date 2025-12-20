@@ -31,5 +31,8 @@ export const action = async ({
     senderId: user.id,
   })
 
-  return submission.reply({ resetForm: true })
+  return submission.reply({
+    resetForm: true,
+    fieldErrors: {},
+  })
 }
