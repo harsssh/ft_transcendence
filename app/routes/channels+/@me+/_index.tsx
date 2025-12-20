@@ -84,7 +84,8 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
   if (intent === 'accept-friend-request') {
     const targetId = Number(formData.get('userId'))
-    if (!targetId) return { error: 'Invalid user ID' }
+    if (!targetId || isNaN(targetId) || targetId <= 0)
+      return { error: 'Invalid user ID' }
 
     await db
       .update(friendships)
@@ -131,7 +132,8 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
   if (intent === 'remove-friend') {
     const targetId = Number(formData.get('userId'))
-    if (!targetId) return { error: 'Invalid user ID' }
+    if (!targetId || isNaN(targetId) || targetId <= 0)
+      return { error: 'Invalid user ID' }
 
     await db
       .delete(friendships)
