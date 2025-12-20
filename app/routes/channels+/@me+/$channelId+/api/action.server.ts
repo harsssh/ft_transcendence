@@ -25,6 +25,23 @@ export const action = async ({
   const db = context.get(dbContext)
   const channelId = Number(params.channelId)
 
+  const channel = await db.query.channels.findFirst({
+    where: {
+      id: channelId,
+    },
+    with: {
+      participants: true,
+    },
+  })
+
+  if (!channel) {
+    throw new Response('Channel not found', { status: 404 })
+  }
+
+  if (!channel.participants.some((p) => p.id === user.id)) {
+    throw new Response('Forbidden', { status: 403 })
+  }
+
   await db.insert(messages).values({
     content: submission.value.content,
     channelId,
