@@ -56,7 +56,11 @@ export const loader = async ({
   )
     .andThen((channel) => {
       if (!channel) {
-        return err('Channel not found')
+        return err('NOT_FOUND')
+      }
+
+      if (!channel.participants.some((p) => p.id === user.id)) {
+        return err('FORBIDDEN')
       }
 
       const partner = channel.participants.find((p) => p.id !== user.id)
@@ -80,7 +84,10 @@ export const loader = async ({
     })
     .match(
       (val) => val,
-      () => {
+      (e) => {
+        if (e === 'FORBIDDEN') {
+          throw new Response('Forbidden', { status: 403 })
+        }
         throw new Response('Channel not found', { status: 404 })
       },
     )
