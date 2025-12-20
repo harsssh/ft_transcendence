@@ -106,7 +106,8 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     intent === 'cancel-friend-request'
   ) {
     const targetId = Number(formData.get('userId'))
-    if (!targetId) return { error: 'Invalid user ID' }
+    if (!targetId || Number.isNaN(targetId) || targetId <= 0)
+      return { error: 'Invalid user ID' }
 
     await db
       .delete(friendships)
