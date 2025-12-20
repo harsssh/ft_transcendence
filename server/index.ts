@@ -6,6 +6,8 @@ import { createHonoServer } from 'react-router-hono-server/bun'
 import { dbContext } from '../app/contexts/db'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import { messages, relations, users } from '../db/schema'
+import { parseWithZod } from '@conform-to/zod/v4'
+import { SendMessageSchema } from '../app/routes/channels+/@me+/$channelId+/model/message'
 
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
@@ -74,6 +76,21 @@ const honoServer = await createHonoServer({
 
             try {
               const data = JSON.parse(event.data as string)
+              const submission = parseWithZod(data, {
+                schema: SendMessageSchema,
+              })
+
+              if (submission.status !== 'success') {
+                console.error('Invalid message format')
+                ws.send(
+                  JSON.stringify({
+                    type: 'error',
+                    error: 'Invalid message format',
+                  }),
+                )
+                return
+              }
+
               const userId = (ws as WSContext & { userId?: number }).userId
 
               if (!userId) {
@@ -85,7 +102,7 @@ const honoServer = await createHonoServer({
               const [insertedMessage] = await db
                 .insert(messages)
                 .values({
-                  content: data.content,
+                  content: submission.value.content,
                   channelId: Number(channelId),
                   senderId: userId,
                 })
