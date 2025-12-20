@@ -50,36 +50,44 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     if (!targetUser) return { error: 'User not found' }
     if (targetUser.id === user.id) return { error: 'Cannot add yourself' }
 
-    const existing = await db.query.friendships.findFirst({
-      where: {
-        OR: [
-          {
-            userId: user.id,
-            friendId: targetUser.id,
-          },
-          {
-            userId: targetUser.id,
-            friendId: user.id,
-          },
-        ],
-      },
-    })
+    let result: { error?: string; success?: string } | null = null
 
-    if (existing) {
-      if (existing.status === 'pending') {
-        return { error: 'Friend request already pending' }
-      } else if (existing.status === 'accepted') {
-        return { error: 'Already friends' }
+    await db.transaction(async (tx) => {
+      const existing = await tx.query.friendships.findFirst({
+        where: {
+          OR: [
+            {
+              userId: user.id,
+              friendId: targetUser.id,
+            },
+            {
+              userId: targetUser.id,
+              friendId: user.id,
+            },
+          ],
+        },
+      })
+
+      if (existing) {
+        if (existing.status === 'pending') {
+          result = { error: 'Friend request already pending' }
+          return
+        } else if (existing.status === 'accepted') {
+          result = { error: 'Already friends' }
+          return
+        }
       }
-    }
 
-    await db.insert(friendships).values({
-      userId: user.id,
-      friendId: targetUser.id,
-      status: 'pending',
+      await tx.insert(friendships).values({
+        userId: user.id,
+        friendId: targetUser.id,
+        status: 'pending',
+      })
+
+      result = { success: 'Friend request sent' }
     })
 
-    return { success: 'Friend request sent' }
+    return result
   }
 
   if (intent === 'accept-friend-request') {
