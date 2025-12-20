@@ -4,6 +4,7 @@ import { dbContext } from '../../../../../contexts/db'
 import { userContext } from '../../../../../contexts/user'
 import type { Route } from '../+types/route'
 import { SendMessageSchema } from '../model/message'
+import z from 'zod'
 
 export const action = async ({
   context,
@@ -23,7 +24,13 @@ export const action = async ({
   }
 
   const db = context.get(dbContext)
-  const channelId = Number(params.channelId)
+  const { data: channelId, success: isValidChannelId } = z.coerce
+    .number()
+    .safeParse(params.channelId)
+
+  if (!isValidChannelId) {
+    throw new Response('Channel not found', { status: 404 })
+  }
 
   const channel = await db.query.channels.findFirst({
     where: {
