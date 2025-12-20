@@ -409,7 +409,7 @@ export default function FriendsIndex() {
           <Form method="post">
             <Group align="flex-start">
               <TextInput
-                placeholder="You can add friends with their username."
+                placeholder="Enter username"
                 name="username"
                 required
                 style={{ flex: 1 }}
