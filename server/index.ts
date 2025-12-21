@@ -3,9 +3,9 @@ import { drizzle } from 'drizzle-orm/node-postgres'
 import type { WSContext } from 'hono/ws'
 import { RouterContextProvider } from 'react-router'
 import { createHonoServer } from 'react-router-hono-server/bun'
-import z from 'zod'
 import { dbContext } from '../app/contexts/db'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
+import { SendMessageSchema } from '../app/routes/channels+/@me+/$channelId+/model/message'
 import { messages, relations, users } from '../db/schema'
 
 // Store WebSocket connections per channel
@@ -78,9 +78,8 @@ const honoServer = await createHonoServer({
 
             try {
               const data = JSON.parse(event.data as string)
-              const { data: msgContent, success } = z
-                .object({ content: z.string() })
-                .safeParse(data)
+              const { data: msgContent, success } =
+                SendMessageSchema.safeParse(data)
 
               if (!success) {
                 console.error('Invalid message format')
