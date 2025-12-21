@@ -148,14 +148,17 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
       await db
         .delete(friendships)
         .where(
-          or(
-            and(
-              eq(friendships.userId, user.id),
-              eq(friendships.friendId, targetId),
-            ),
-            and(
-              eq(friendships.userId, targetId),
-              eq(friendships.friendId, user.id),
+          and(
+            eq(friendships.status, 'accepted'),
+            or(
+              and(
+                eq(friendships.userId, user.id),
+                eq(friendships.friendId, targetId),
+              ),
+              and(
+                eq(friendships.userId, targetId),
+                eq(friendships.friendId, user.id),
+              ),
             ),
           ),
         )
