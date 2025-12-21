@@ -20,12 +20,13 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import { and, eq, or } from 'drizzle-orm'
-import { Form, useRouteLoaderData, useSubmit } from 'react-router'
+import { ok, ResultAsync } from 'neverthrow'
+import { Form, useSubmit } from 'react-router'
+import * as R from 'remeda'
 import { friendships } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { userContext } from '../../../contexts/user'
 import type { Route } from './+types/_index'
-import type { loader } from './route'
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
   const user = context.get(userContext)
@@ -185,8 +186,73 @@ export const clientAction = async ({
   }
 }
 
-export default function FriendsIndex() {
-  const data = useRouteLoaderData<typeof loader>('routes/channels+/@me+/route')
+export const loader = async ({ context }: Route.LoaderArgs) => {
+  const user = context.get(userContext)
+  if (!user) {
+    throw new Response('Unauthorized', { status: 401 })
+  }
+
+  const db = context.get(dbContext)
+
+  return await ResultAsync.fromPromise(
+    db.query.users.findFirst({
+      where: {
+        id: user.id,
+      },
+      with: {
+        sentFriendships: {
+          with: {
+            friend: true,
+          },
+        },
+        receivedFriendships: {
+          with: {
+            user: true,
+          },
+        },
+      },
+    }),
+    R.identity(),
+  )
+    .andThen((res) => {
+      const acceptedSent =
+        res?.sentFriendships
+          .filter((f) => f.status === 'accepted')
+          .map((f) => f.friend) ?? []
+
+      const acceptedReceived =
+        res?.receivedFriendships
+          .filter((f) => f.status === 'accepted')
+          .map((f) => f.user) ?? []
+
+      const friends = R.uniqueBy(
+        [...acceptedSent, ...acceptedReceived],
+        (f) => f?.id,
+      )
+
+      const pendingRequests =
+        res?.receivedFriendships
+          .filter((f) => f.status === 'pending')
+          .map((f) => f.user) ?? []
+
+      const sentRequests =
+        res?.sentFriendships
+          .filter((f) => f.status === 'pending')
+          .map((f) => f.friend) ?? []
+
+      return ok({
+        friends,
+        pendingRequests,
+        sentRequests,
+      })
+    })
+    .match(R.identity(), (e) => {
+      console.error(e)
+      throw new Response('Internal Server Error', { status: 500 })
+    })
+}
+
+export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
   const submit = useSubmit()
 
   const openRemoveModal = (friendName: string, friendId: number) =>
@@ -212,9 +278,9 @@ export default function FriendsIndex() {
       },
     })
 
-  const friends = data?.friends ?? []
-  const pendingRequests = data?.pendingRequests ?? []
-  const sentRequests = data?.sentRequests ?? []
+  const friends = loaderData?.friends ?? []
+  const pendingRequests = loaderData?.pendingRequests ?? []
+  const sentRequests = loaderData?.sentRequests ?? []
 
   return (
     <Stack h="100%" gap={0}>
