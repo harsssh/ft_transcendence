@@ -97,7 +97,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
       if (!targetId || Number.isNaN(targetId) || targetId <= 0)
         return { error: 'Invalid user ID' }
 
-      await db
+      const updated = await db
         .update(friendships)
         .set({ status: 'accepted' })
         .where(
@@ -107,6 +107,11 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
             eq(friendships.status, 'pending'),
           ),
         )
+        .returning()
+
+      if (updated.length === 0) {
+        return { error: 'Friend request not found or already processed' }
+      }
 
       return { success: 'Friend request accepted' }
     }
