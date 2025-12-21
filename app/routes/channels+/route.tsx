@@ -1,60 +1,36 @@
-import { parseWithZod } from '@conform-to/zod/v4'
 import { Avatar, Flex, Stack } from '@mantine/core'
 import { IconMessageCircleFilled } from '@tabler/icons-react'
-import {
-  NavLink,
-  Outlet,
-  redirect,
-  type UIMatch,
-  useMatches,
-} from 'react-router'
-import { channels } from '../../../db/schema'
-import { dbContext } from '../../contexts/db'
-import { userContext } from '../../contexts/user'
+import { useState } from 'react'
+import { NavLink, Outlet } from 'react-router'
 import { authMiddleware } from '../../middlewares/auth'
 import { Scaffold } from '../_shared/ui/Scaffold'
-import { NewChannelFormSchema } from './@me+/model/newChannelForm'
-import type { ChannelsHandle } from './_shared/handle'
 import type { Route } from './+types/route'
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
-export const action = async ({ context, request }: Route.ActionArgs) => {
-  const user = context.get(userContext)
-  if (!user) {
-    throw new Response('Unauthorized', { status: 401 })
-  }
-
-  const formData = await request.formData()
-  const submission = parseWithZod(formData, { schema: NewChannelFormSchema })
-
-  if (submission.status !== 'success') {
-    return submission.reply()
-  }
-
-  const db = context.get(dbContext)
-  const [channel] = await db
-    .insert(channels)
-    .values({ name: submission.value.name })
-    .returning()
-
-  throw redirect(`/channels/@me/${channel?.id}`)
+export type ChannelsOutletContext = {
+  setSecondaryNavbar: (node: React.ReactNode) => void
+  setSecondaryNavbarWidth: (width: number) => void
 }
 
-export default function Channels({ actionData }: Route.ComponentProps) {
-  const matches = useMatches() as UIMatch<unknown, ChannelsHandle | undefined>[]
-  const matchedNavbar = matches.find((m) => m.handle?.navbar)
+export default function Channels() {
+  const [secondaryNavbar, setSecondaryNavbar] =
+    useState<React.ReactNode | null>(null)
+  const [secondaryNavbarWidth, setSecondaryNavbarWidth] = useState<number>(0)
 
   return (
     <Scaffold
-      navbar={
-        <Navbar>
-          {matchedNavbar?.handle?.navbar(matchedNavbar.loaderData, actionData)}
-        </Navbar>
-      }
-      navbarWidth={72 + (matchedNavbar?.handle?.navbarWidth ?? 0)}
+      navbar={<Navbar>{secondaryNavbar}</Navbar>}
+      navbarWidth={72 + secondaryNavbarWidth}
     >
-      <Outlet />
+      <Outlet
+        context={
+          {
+            setSecondaryNavbar,
+            setSecondaryNavbarWidth,
+          } satisfies ChannelsOutletContext
+        }
+      />
     </Scaffold>
   )
 }

@@ -26,8 +26,26 @@ export const usersToChannels = p.pgTable(
   (t) => [p.primaryKey({ columns: [t.userId, t.channelId] })],
 )
 
+export const messages = p.pgTable('messages', {
+  id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+  content: p.text().notNull(),
+  createdAt: p.timestamp('created_at').defaultNow().notNull(),
+  channelId: p
+    .integer('channel_id')
+    .references(() => channels.id, {
+      onDelete: 'cascade',
+    })
+    .notNull(),
+  senderId: p
+    .integer('sender_id')
+    .references(() => users.id, {
+      onDelete: 'cascade',
+    })
+    .notNull(),
+})
+
 export const relations = defineRelations(
-  { users, channels, usersToChannels },
+  { users, channels, usersToChannels, messages },
   (r) => ({
     users: {
       channels: r.many.channels({
@@ -37,6 +55,19 @@ export const relations = defineRelations(
     },
     channels: {
       participants: r.many.users(),
+      messages: r.many.messages(),
+    },
+    messages: {
+      sender: r.one.users({
+        from: r.messages.senderId,
+        to: r.users.id,
+        optional: false,
+      }),
+      channel: r.one.channels({
+        from: r.messages.channelId,
+        to: r.channels.id,
+        optional: false,
+      }),
     },
   }),
 )
