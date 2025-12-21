@@ -110,34 +110,33 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     return { success: 'Friend request accepted' }
   }
 
-  if (
-    intent === 'reject-friend-request' ||
-    intent === 'cancel-friend-request'
-  ) {
+  if (intent === 'reject-friend-request') {
     const targetId = Number(formData.get('userId'))
-    if (!targetId || Number.isNaN(targetId) || targetId <= 0)
-      return { error: 'Invalid user ID' }
-
+    if (!targetId) return { error: 'Invalid user ID' }
     await db
       .delete(friendships)
       .where(
-        or(
-          and(
-            eq(friendships.userId, user.id),
-            eq(friendships.friendId, targetId),
-          ),
-          and(
-            eq(friendships.userId, targetId),
-            eq(friendships.friendId, user.id),
-          ),
+        and(
+          eq(friendships.userId, targetId),
+          eq(friendships.friendId, user.id),
+          eq(friendships.status, 'pending'),
         ),
       )
-
-    if (intent === 'reject-friend-request') {
-      return { success: 'Friend request rejected' }
-    } else {
-      return { success: 'Friend request canceled' }
-    }
+    return { success: 'Friend request rejected' }
+  }
+  if (intent === 'cancel-friend-request') {
+    const targetId = Number(formData.get('userId'))
+    if (!targetId) return { error: 'Invalid user ID' }
+    await db
+      .delete(friendships)
+      .where(
+        and(
+          eq(friendships.userId, user.id),
+          eq(friendships.friendId, targetId),
+          eq(friendships.status, 'pending'),
+        ),
+      )
+    return { success: 'Friend request canceled' }
   }
 
   if (intent === 'remove-friend') {
