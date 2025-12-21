@@ -99,62 +99,83 @@ const honoServer = await createHonoServer({
                 return
               }
 
-              // Persist to database
-              const [insertedMessage] = await db
-                .insert(messages)
-                .values({
-                  content: msgContent.content,
-                  channelId: Number(channelId),
-                  senderId: userId,
-                })
-                .returning()
-
-              if (!insertedMessage) {
-                console.error('Failed to insert message')
-                ws.send(
-                  JSON.stringify({
-                    type: 'error',
-                    error: 'Failed to insert message',
-                  }),
-                )
-                return
-              }
-
-              // Fetch sender info
-              const [sender] = await db
-                .select({ id: users.id, name: users.name })
-                .from(users)
-                .where(eq(users.id, userId))
-
-              if (!sender) {
-                console.error('Sender not found')
-                return
-              }
-
-              // Prepare broadcast with real DB data
-              const broadcastData = {
-                type: 'message',
-                data: {
-                  id: insertedMessage.id,
-                  content: insertedMessage.content,
-                  createdAt: insertedMessage.createdAt,
-                  sender: {
-                    id: sender.id,
-                    name: sender.name,
+              await db.transaction(async (tx) => {
+                const channel = await db.query.channels.findFirst({
+                  where: {
+                    id: Number(channelId),
                   },
-                  tempId: data.id, // Client's temp ID for matching
-                },
-              }
+                  with: {
+                    participants: true,
+                  },
+                })
 
-              // Broadcast to ALL clients (including sender)
-              const connections = channelConnections.get(channelId)
-              if (connections) {
-                const message = JSON.stringify(broadcastData)
-                for (const client of connections) {
-                  client.send(message)
+                if (
+                  !channel ||
+                  !channel.participants.some((p) => p.id === userId)
+                ) {
+                  console.log(
+                    'WebSocket rejected: user not a participant of channel',
+                  )
+                  ws.close()
+                  return
                 }
-                console.log(`Broadcast to ${connections.size} clients`)
-              }
+
+                const [insertedMessage] = await tx
+                  .insert(messages)
+                  .values({
+                    content: msgContent.content,
+                    channelId: Number(channelId),
+                    senderId: userId,
+                  })
+                  .returning()
+
+                if (!insertedMessage) {
+                  console.error('Failed to insert message')
+                  ws.send(
+                    JSON.stringify({
+                      type: 'error',
+                      error: 'Failed to insert message',
+                    }),
+                  )
+                  return tx.rollback()
+                }
+
+                // Fetch sender info
+                const [sender] = await db
+                  .select({ id: users.id, name: users.name })
+                  .from(users)
+                  .where(eq(users.id, userId))
+
+                if (!sender) {
+                  console.error('Sender not found')
+                  return tx.rollback()
+                }
+
+                // Prepare broadcast with real DB data
+                const broadcastData = {
+                  type: 'message',
+                  data: {
+                    id: insertedMessage.id,
+                    content: insertedMessage.content,
+                    createdAt: insertedMessage.createdAt,
+                    sender: {
+                      id: sender.id,
+                      name: sender.name,
+                    },
+                    tempId: data.id, // Client's temp ID for matching
+                  },
+                }
+
+                // Broadcast to ALL clients (including sender)
+                const connections = channelConnections.get(channelId)
+                if (connections) {
+                  const message = JSON.stringify(broadcastData)
+                  for (const client of connections) {
+                    client.send(message)
+                  }
+                  console.log(`Broadcast to ${connections.size} clients`)
+                }
+              })
             } catch (error) {
               console.error('Error handling message:', error)
               ws.send(
