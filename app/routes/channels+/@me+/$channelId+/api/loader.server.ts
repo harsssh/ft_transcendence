@@ -64,7 +64,7 @@ export const loader = async ({
       }
 
       const partner = channel.participants.find((p) => p.id !== user.id)
-      const sortedMessages = channel.messages.sort(
+      const sortedMessages = [...channel.messages].sort(
         (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
       )
 
