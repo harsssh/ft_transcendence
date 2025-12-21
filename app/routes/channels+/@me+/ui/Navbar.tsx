@@ -18,13 +18,13 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import { IconPlus } from '@tabler/icons-react'
 import { useEffect } from 'react'
-import { Form, Link, useNavigation } from 'react-router'
+import { Form, Link, useNavigate, useNavigation } from 'react-router'
 import type { Channel } from '../model/channel'
 import { NewChannelFormSchema } from '../model/newChannelForm'
 
 type Props = {
   channels: Channel[]
-  lastResult: SubmissionResult<string[]> | null
+  lastResult: (SubmissionResult<string[]> & { channelId?: string }) | null
 }
 
 export function Navbar({ channels, lastResult }: Props) {
@@ -39,14 +39,15 @@ export function Navbar({ channels, lastResult }: Props) {
     },
   })
   const navigation = useNavigation()
+  const navigate = useNavigate()
   const isSubmitting = navigation.state === 'submitting'
 
   useEffect(() => {
-    console.log(lastResult)
-    if (lastResult?.status === 'success') {
+    if (lastResult?.status === 'success' && lastResult.channelId) {
       close()
+      navigate(`/channels/@me/${lastResult.channelId}`)
     }
-  }, [lastResult, close])
+  }, [lastResult, close, navigate])
 
   return (
     <>
@@ -72,7 +73,7 @@ export function Navbar({ channels, lastResult }: Props) {
       </Stack>
 
       <Modal opened={opened} onClose={close} title="Create DM Channel" centered>
-        <Form method="post" action="/channels" {...getFormProps(form)}>
+        <Form method="post" action="/channels/@me" {...getFormProps(form)}>
           <Stack gap="sm">
             {form.errors && (
               <Alert variant="light" color="red">

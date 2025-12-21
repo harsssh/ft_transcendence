@@ -1,11 +1,14 @@
-import type { SubmissionResult } from '@conform-to/react'
+import { parseWithZod } from '@conform-to/zod/v4'
 import { ok, ResultAsync } from 'neverthrow'
-import { Outlet } from 'react-router'
+import { useEffect } from 'react'
+import { Outlet, useOutletContext } from 'react-router'
 import * as R from 'remeda'
+import { channels, usersToChannels } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { userContext } from '../../../contexts/user'
-import type { ChannelsHandle } from '../_shared/handle'
+import type { ChannelsOutletContext } from '../route'
 import type { Route } from './+types/route'
+import { NewChannelFormSchema } from './model/newChannelForm'
 import { Navbar } from './ui/Navbar'
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
@@ -50,16 +53,72 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
     })
 }
 
-export const handle: ChannelsHandle<
-  Route.ComponentProps['loaderData'],
-  SubmissionResult<string[]> | null
-> = {
-  navbar: ({ channels }, actionData) => (
-    <Navbar channels={channels} lastResult={actionData} />
-  ),
-  navbarWidth: 300,
+export const action = async ({ context, request }: Route.ActionArgs) => {
+  const user = context.get(userContext)
+  if (!user) {
+    throw new Response('Unauthorized', { status: 401 })
+  }
+
+  const formData = await request.formData()
+  const submission = parseWithZod(formData, { schema: NewChannelFormSchema })
+
+  if (submission.status !== 'success') {
+    return submission.reply()
+  }
+
+  const db = context.get(dbContext)
+  const participant = await db.query.users.findFirst({
+    where: { name: submission.value.name },
+  })
+  if (!participant) {
+    return submission.reply({
+      formErrors: ['User not found'],
+    })
+  }
+  if (participant.id === user.id) {
+    return submission.reply({
+      formErrors: ['You cannot create a channel just for yourself.'],
+    })
+  }
+
+  const [channel] = await db.transaction(async (tx) => {
+    const [newChannel] = await tx.insert(channels).values({}).returning()
+    if (!newChannel) {
+      throw new Error('Failed to create channel')
+    }
+    await tx.insert(usersToChannels).values([
+      { userId: user.id, channelId: newChannel.id },
+      { userId: participant.id, channelId: newChannel.id },
+    ])
+    return [newChannel]
+  })
+
+  return {
+    ...submission.reply(),
+    channelId: channel?.id,
+  }
 }
 
-export default function Me() {
+export default function Me({ loaderData, actionData }: Route.ComponentProps) {
+  const { setSecondaryNavbar, setSecondaryNavbarWidth } =
+    useOutletContext<ChannelsOutletContext>()
+
+  useEffect(() => {
+    setSecondaryNavbar(
+      <Navbar channels={loaderData.channels} lastResult={actionData ?? null} />,
+    )
+    setSecondaryNavbarWidth(300)
+
+    return () => {
+      setSecondaryNavbar(null)
+      setSecondaryNavbarWidth(0)
+    }
+  }, [
+    loaderData.channels,
+    actionData,
+    setSecondaryNavbar,
+    setSecondaryNavbarWidth,
+  ])
+
   return <Outlet />
 }
