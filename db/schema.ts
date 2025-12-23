@@ -44,13 +44,41 @@ export const messages = p.pgTable('messages', {
     .notNull(),
 })
 
+export const friendStatusEnum = p.pgEnum('friend_status', [
+  'pending',
+  'accepted',
+])
+
+export const friendships = p.pgTable(
+  'friendships',
+  {
+    userId: p
+      .integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    friendId: p
+      .integer('friend_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    status: friendStatusEnum('status').notNull(),
+    createdAt: p.timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => [p.primaryKey({ columns: [t.userId, t.friendId] })],
+)
+
 export const relations = defineRelations(
-  { users, channels, usersToChannels, messages },
+  { users, channels, usersToChannels, messages, friendships },
   (r) => ({
     users: {
       channels: r.many.channels({
         from: r.users.id.through(r.usersToChannels.userId),
         to: r.channels.id.through(r.usersToChannels.channelId),
+      }),
+      sentFriendships: r.many.friendships({
+        alias: 'friendship_user',
+      }),
+      receivedFriendships: r.many.friendships({
+        alias: 'friendship_friend',
       }),
     },
     channels: {
@@ -67,6 +95,18 @@ export const relations = defineRelations(
         from: r.messages.channelId,
         to: r.channels.id,
         optional: false,
+      }),
+    },
+    friendships: {
+      user: r.one.users({
+        from: r.friendships.userId,
+        to: r.users.id,
+        alias: 'friendship_user',
+      }),
+      friend: r.one.users({
+        from: r.friendships.friendId,
+        to: r.users.id,
+        alias: 'friendship_friend',
       }),
     },
   }),
