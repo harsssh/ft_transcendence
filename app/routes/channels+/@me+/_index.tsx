@@ -292,6 +292,15 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
       },
     })
 
+  const handleMessageClick = (username: string | undefined) => {
+    if (!username) {
+      return
+    }
+    const formData = new FormData()
+    formData.append('name', username)
+    submit(formData, { method: 'post', action: '/channels/@me' })
+  }
+
   const friends = loaderData?.friends ?? []
   const pendingRequests = loaderData?.pendingRequests ?? []
   const sentRequests = loaderData?.sentRequests ?? []
@@ -359,8 +368,11 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
                   </Group>
                   <Group gap="xs">
                     <Tooltip label="Message">
-                      <ActionIcon variant="subtle" color="gray">
-                        {/* TODO: Link to DM */}
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        onClick={() => handleMessageClick(friend?.name)}
+                      >
                         <IconMessageCircleFilled size={18} />
                       </ActionIcon>
                     </Tooltip>
