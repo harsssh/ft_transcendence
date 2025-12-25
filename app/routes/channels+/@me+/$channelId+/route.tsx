@@ -2,7 +2,6 @@ import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   Affix,
-  Avatar,
   Box,
   Button,
   Group,
@@ -25,14 +24,10 @@ import type { Route } from './+types/route'
 import { SendMessageSchema } from './model/message'
 import { DateSeparator } from './ui/DateSeparator'
 import { Message } from './ui/Message'
+import { UserAvatar } from './ui/UserAvatar'
 
 export { action } from './api/action.server'
 export { loader } from './api/loader.server'
-
-type MessageEntry = Route.ComponentProps['loaderData']['messages'][number]
-type MessageListItem =
-  | { kind: 'separator'; date: string }
-  | { kind: 'message'; message: MessageEntry }
 
 export default function DMChannel({
   loaderData,
@@ -209,7 +204,7 @@ export default function DMChannel({
     }
   }, [navigation.state, actionData, scrollToBottom])
 
-  const messagesWithSeparators = useMemo<MessageListItem[]>(() => {
+  const messagesWithSeparators = useMemo(() => {
     // Use the server snapshot timezone for SSR/hydration, then re-render in client timezone.
     const dateFormatter = new Intl.DateTimeFormat(locale, { timeZone })
 
@@ -219,14 +214,19 @@ export default function DMChannel({
       const previousDate = previousMsg
         ? dateFormatter.format(previousMsg.createdAt)
         : null
-      const entries: MessageListItem[] = []
+      const messageEntry = {
+        kind: 'message',
+        message: {
+          ...message,
+          withAvatar: previousMsg?.sender.id !== message.sender.id,
+        },
+      } as const
 
       if (currentDate !== previousDate) {
-        entries.push({ kind: 'separator', date: currentDate })
+        return [{ kind: 'separator', date: currentDate } as const, messageEntry]
       }
 
-      entries.push({ kind: 'message', message })
-      return entries
+      return [messageEntry]
     })
   }, [locale, messages, timeZone])
 
@@ -280,9 +280,7 @@ export default function DMChannel({
         }}
       >
         <Group>
-          <Avatar radius="xl" color="initials">
-            {partner?.name?.slice(0, 2).toUpperCase() ?? '??'}
-          </Avatar>
+          <UserAvatar name={partner?.name} />
           <Text fw="bold" size="lg">
             {partner?.name ?? 'Unknown User'}
           </Text>
@@ -366,6 +364,7 @@ export default function DMChannel({
                   senderName={entry.message.sender.name}
                   content={entry.message.content}
                   createdAt={entry.message.createdAt}
+                  withAvatar={entry.message.withAvatar}
                 />
               </div>
             )
