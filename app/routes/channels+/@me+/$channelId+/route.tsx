@@ -1,3 +1,4 @@
+import { differenceInMinutes } from 'date-fns'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
@@ -218,7 +219,10 @@ export default function DMChannel({
         kind: 'message',
         message: {
           ...message,
-          withAvatar: previousMsg?.sender.id !== message.sender.id,
+          withProfile:
+            previousMsg?.sender.id !== message.sender.id ||
+            currentDate !== previousDate ||
+            differenceInMinutes(message.createdAt, previousMsg.createdAt) > 5,
         },
       } as const
 
@@ -334,7 +338,9 @@ export default function DMChannel({
       <ScrollArea
         ref={scrollAreaRef}
         flex={1}
-        p="md"
+        pb="md"
+        pl="md"
+        pr="md"
         style={{ minHeight: 0 }}
         styles={{
           viewport: { overscrollBehavior: 'contain' },
@@ -342,7 +348,7 @@ export default function DMChannel({
         viewportRef={viewportRef}
         onScrollPositionChange={checkIfAtBottom}
       >
-        <Stack gap="xs">
+        <Stack gap={0}>
           {messagesWithSeparators.map((entry, index) => {
             if (entry.kind === 'separator') {
               return (
@@ -364,7 +370,7 @@ export default function DMChannel({
                   senderName={entry.message.sender.name}
                   content={entry.message.content}
                   createdAt={entry.message.createdAt}
-                  withAvatar={entry.message.withAvatar}
+                  withProfile={entry.message.withProfile}
                 />
               </div>
             )

@@ -1,4 +1,4 @@
-import { Group, Text } from '@mantine/core'
+import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useSyncExternalStore } from 'react'
 import { UserAvatar } from './UserAvatar'
@@ -8,7 +8,7 @@ type Props = {
   senderName: string
   content: string
   avatarSrc?: string | undefined | null
-  withAvatar?: boolean
+  withProfile?: boolean
 }
 
 export function Message({
@@ -16,7 +16,7 @@ export function Message({
   senderName,
   content,
   avatarSrc = null,
-  withAvatar = false,
+  withProfile = false,
 }: Props) {
   // サーバーとクライアントのロケールが異なる場合にhydration errorが発生するため、それを避けるハッチ
   const localeTimeCreatedAt = useSyncExternalStore(
@@ -26,17 +26,37 @@ export function Message({
   )
 
   return (
-    <Group align="center" justify="flex-start" gap={4}>
-      {withAvatar && <UserAvatar name={senderName} src={avatarSrc} />}
-      <Text size="11px" c="dimmed">
-        <TimeValue value={localeTimeCreatedAt} />
-      </Text>
-      <Text fw={700} c="white">
-        {senderName}
-      </Text>
-      <Text c="white" style={{ wordBreak: 'break-word' }}>
-        {content}
-      </Text>
-    </Group>
+    <Box
+      pl={50}
+      style={
+        withProfile
+          ? {
+              position: 'relative',
+              marginTop: 'var(--mantine-spacing-md)',
+            }
+          : {}
+      }
+    >
+      {withProfile && (
+        <Box style={{ position: 'absolute', left: '0px', top: '4px' }}>
+          <UserAvatar name={senderName} src={avatarSrc} />
+        </Box>
+      )}
+      <Box>
+        {withProfile && (
+          <Group align="center" gap="xs">
+            <Text fw={700} c="white" size="sm">
+              {senderName}
+            </Text>
+            <Text size="xs" c="dimmed">
+              <TimeValue value={localeTimeCreatedAt} />
+            </Text>
+          </Group>
+        )}
+        <Text c="white" style={{ wordBreak: 'break-word' }}>
+          {content}
+        </Text>
+      </Box>
+    </Box>
   )
 }
