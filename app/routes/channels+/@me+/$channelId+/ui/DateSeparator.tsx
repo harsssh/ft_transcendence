@@ -8,7 +8,9 @@ export function DateSeparator({ date }: Props) {
   return (
     <Divider
       mt="lg"
-      color="gray.6"
+      ml="md"
+      mr="md"
+      color="var(--transcendence-border-color)"
       label={
         <Text size="xs" c="dimmed" fw={600}>
           {date}

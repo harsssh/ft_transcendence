@@ -48,14 +48,7 @@ function Navbar({ children }: NavbarProps) {
       wrap="nowrap"
       h="100%"
     >
-      <Stack
-        p="sm"
-        align="center"
-        justify="flex-start"
-        h="100%"
-        className="border-r"
-        style={{ borderRightColor: 'var(--app-shell-border-color)' }}
-      >
+      <Stack p="sm" align="center" justify="flex-start" h="100%">
         <NavLink to="/channels/@me">
           {({ isActive }) => (
             <Avatar

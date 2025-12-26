@@ -275,11 +275,10 @@ export default function DMChannel({
       <Box
         p="md"
         style={{
-          borderBottom: '1px solid var(--mantine-color-dark-4)',
+          borderBottom: '1px solid var(--transcendence-border-color)',
           position: 'sticky',
           top: 0,
           zIndex: 1,
-          backgroundColor: 'var(--mantine-color-body)',
           flexShrink: 0,
         }}
       >
@@ -324,7 +323,6 @@ export default function DMChannel({
           >
             <Button
               variant="filled"
-              color="blue"
               size="sm"
               onClick={scrollToBottom}
               style={{ pointerEvents: 'auto' }}
@@ -339,8 +337,6 @@ export default function DMChannel({
         ref={scrollAreaRef}
         flex={1}
         pb="md"
-        pl="md"
-        pr="md"
         style={{ minHeight: 0 }}
         styles={{
           viewport: { overscrollBehavior: 'contain' },
@@ -383,8 +379,7 @@ export default function DMChannel({
         style={{
           position: 'sticky',
           bottom: 0,
-          backgroundColor: 'var(--mantine-color-body)',
-          borderTop: '1px solid var(--mantine-color-dark-4)',
+          borderTop: '1px solid var(--transcendence-border-color)',
           flexShrink: 0,
         }}
       >

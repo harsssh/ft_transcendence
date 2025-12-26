@@ -2,6 +2,7 @@ import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useSyncExternalStore } from 'react'
 import { UserAvatar } from './UserAvatar'
+import { useFocusWithin, useHover } from '@mantine/hooks'
 
 type Props = {
   createdAt: Date
@@ -24,22 +25,32 @@ export function Message({
     () => createdAt.toLocaleTimeString(),
     () => createdAt.toISOString(),
   )
+  const { ref: hoverRef, hovered } = useHover()
 
   return (
     <Box
-      pl={50}
+      ref={hoverRef}
+      pl={72}
+      pos="relative"
+      {...(hovered ? { bg: '#242428' } : {})}
       style={
         withProfile
           ? {
-              position: 'relative',
               marginTop: 'var(--mantine-spacing-md)',
             }
           : {}
       }
     >
       {withProfile && (
-        <Box style={{ position: 'absolute', left: '0px', top: '4px' }}>
+        <Box style={{ position: 'absolute', left: '16px', top: '2px' }}>
           <UserAvatar name={senderName} src={avatarSrc} />
+        </Box>
+      )}
+      {!withProfile && hovered && (
+        <Box style={{ position: 'absolute', left: '32px', top: '7px' }}>
+          <Text size="11px" c="dimmed">
+            <TimeValue value={localeTimeCreatedAt} />
+          </Text>
         </Box>
       )}
       <Box>
@@ -53,9 +64,11 @@ export function Message({
             </Text>
           </Group>
         )}
-        <Text c="white" style={{ wordBreak: 'break-word' }}>
-          {content}
-        </Text>
+        <Group>
+          <Text c="white" style={{ wordBreak: 'break-word' }}>
+            {content}
+          </Text>
+        </Group>
       </Box>
     </Box>
   )

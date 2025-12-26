@@ -51,7 +51,7 @@ export function Navbar({ channels, lastResult }: Props) {
 
   return (
     <>
-      <Stack gap="sm" w="100%" p="sm" h="100%">
+      <Stack gap="sm" w="100%" p="sm" h="100%" className="border-l border-t">
         <Group justify="space-between" align="center">
           <Text fw="bold" size="sm">
             Direct Messages

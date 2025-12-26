@@ -19,12 +19,19 @@ export function Scaffold({ children, navbar, navbarWidth }: Props) {
   } satisfies AppShellProps
 
   return (
-    <AppShell {...appShellConfig}>
-      {navbar && <AppShell.Navbar>{navbar}</AppShell.Navbar>}
+    <AppShell
+      {...appShellConfig}
+      styles={{ footer: { borderColor: 'var(--transcendence-border-color)' } }}
+    >
+      {navbar && (
+        <AppShell.Navbar bg="#121214" bd="none">
+          {navbar}
+        </AppShell.Navbar>
+      )}
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main bg="#1A1A1E">{children}</AppShell.Main>
 
-      <AppShell.Footer>
+      <AppShell.Footer bg="#121214">
         <Center>
           <Text>ft_transcendence</Text>
         </Center>
