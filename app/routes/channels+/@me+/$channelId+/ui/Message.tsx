@@ -1,8 +1,8 @@
 import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
+import { useHover } from '@mantine/hooks'
 import { useSyncExternalStore } from 'react'
 import { UserAvatar } from './UserAvatar'
-import { useFocusWithin, useHover } from '@mantine/hooks'
 
 type Props = {
   createdAt: Date
