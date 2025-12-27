@@ -10,7 +10,7 @@ export function DateSeparator({ date }: Props) {
       mt="lg"
       ml="md"
       mr="md"
-      color="var(--transcendence-border-color)"
+      color="var(--ft-border-color)"
       label={
         <Text size="xs" c="dimmed" fw={600}>
           {date}

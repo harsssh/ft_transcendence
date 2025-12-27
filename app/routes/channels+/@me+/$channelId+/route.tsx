@@ -1,4 +1,3 @@
-import { differenceInMinutes } from 'date-fns'
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
@@ -12,6 +11,7 @@ import {
   TextInput,
 } from '@mantine/core'
 import { IconSend } from '@tabler/icons-react'
+import { differenceInMinutes } from 'date-fns'
 import {
   useCallback,
   useEffect,
@@ -264,31 +264,33 @@ export default function DMChannel({
   return (
     <Stack
       gap={0}
-      h="calc(100dvh - var(--app-shell-footer-offset, 0rem))"
+      h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
       style={{
+        borderTop: '1px solid var(--ft-border-color)',
         minHeight: 0,
         overflow: 'hidden',
         overscrollBehavior: 'contain',
         position: 'relative',
       }}
     >
-      <Box
-        p="md"
+      <Group
+        h="48"
+        align="center"
+        pl="md"
+        gap="xs"
         style={{
-          borderBottom: '1px solid var(--transcendence-border-color)',
+          borderBottom: '1px solid var(--ft-border-color)',
           position: 'sticky',
           top: 0,
           zIndex: 1,
           flexShrink: 0,
         }}
       >
-        <Group>
-          <UserAvatar name={partner?.name} />
-          <Text fw="bold" size="lg">
-            {partner?.name ?? 'Unknown User'}
-          </Text>
-        </Group>
-      </Box>
+        <UserAvatar name={partner?.name} size="sm" />
+        <Text fw="bold" size="lg" c="white">
+          {partner?.name ?? 'Unknown User'}
+        </Text>
+      </Group>
 
       {wsStatus !== 'open' && (
         <Box
@@ -379,7 +381,7 @@ export default function DMChannel({
         style={{
           position: 'sticky',
           bottom: 0,
-          borderTop: '1px solid var(--transcendence-border-color)',
+          borderTop: '1px solid var(--ft-border-color)',
           flexShrink: 0,
         }}
       >

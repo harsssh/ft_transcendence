@@ -1,17 +1,5 @@
-import type {
-  CSSVariablesResolver,
-  MantineTheme,
-  MantineThemeOverride,
-} from '@mantine/core'
-import {
-  Card,
-  Container,
-  createTheme,
-  Paper,
-  rem,
-  Select,
-  Stack,
-} from '@mantine/core'
+import type { MantineThemeOverride } from '@mantine/core'
+import { Card, Container, createTheme, Paper, rem, Select } from '@mantine/core'
 
 const CONTAINER_SIZES: Record<string, string> = {
   xxs: rem('200px'),

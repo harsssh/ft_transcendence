@@ -8,21 +8,24 @@ type Props = {
 
 export function Scaffold({ children, navbar, navbarWidth }: Props) {
   const appShellConfig = {
+    header: {
+      height: 30,
+    },
     ...(navbar
       ? {
           navbar: { width: navbarWidth ?? 'auto', breakpoint: 'sm' },
         }
       : {}),
-    footer: {
-      height: 30,
-    },
   } satisfies AppShellProps
 
   return (
-    <AppShell
-      {...appShellConfig}
-      styles={{ footer: { borderColor: 'var(--transcendence-border-color)' } }}
-    >
+    <AppShell {...appShellConfig} withBorder={false}>
+      <AppShell.Header bg="#121214">
+        <Center>
+          <Text>ft_transcendence</Text>
+        </Center>
+      </AppShell.Header>
+
       {navbar && (
         <AppShell.Navbar bg="#121214" bd="none">
           {navbar}
@@ -30,12 +33,6 @@ export function Scaffold({ children, navbar, navbarWidth }: Props) {
       )}
 
       <AppShell.Main bg="#1A1A1E">{children}</AppShell.Main>
-
-      <AppShell.Footer bg="#121214">
-        <Center>
-          <Text>ft_transcendence</Text>
-        </Center>
-      </AppShell.Footer>
     </AppShell>
   )
 }
