@@ -6,9 +6,7 @@ type Props = {
   children: React.ReactNode
 }
 
-const Aside = AppShell.Aside
-
-function ScaffoldRoot({ children, navbar, navbarWidth }: Props) {
+export function Scaffold({ children, navbar, navbarWidth }: Props) {
   const appShellConfig = {
     header: {
       height: 30,
@@ -38,7 +36,3 @@ function ScaffoldRoot({ children, navbar, navbarWidth }: Props) {
     </AppShell>
   )
 }
-
-export const Scaffold = Object.assign(ScaffoldRoot, {
-  Aside,
-})

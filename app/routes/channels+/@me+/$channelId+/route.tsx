@@ -1,6 +1,7 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
+  ActionIcon,
   Affix,
   Box,
   Button,
@@ -10,7 +11,8 @@ import {
   Text,
   TextInput,
 } from '@mantine/core'
-import { IconSend } from '@tabler/icons-react'
+import { useDisclosure } from '@mantine/hooks'
+import { IconSend, IconUserCircle } from '@tabler/icons-react'
 import { differenceInMinutes } from 'date-fns'
 import {
   useCallback,
@@ -21,11 +23,13 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { Form, useNavigation } from 'react-router'
+import { IconButton } from '../../../_shared/ui/IconButton'
 import type { Route } from './+types/route'
 import { SendMessageSchema } from './model/message'
 import { DateSeparator } from './ui/DateSeparator'
 import { Message } from './ui/Message'
 import { UserAvatar } from './ui/UserAvatar'
+import { UserProfileSidebar } from './ui/UserProfileSidebar'
 
 export { action } from './api/action.server'
 export { loader } from './api/loader.server'
@@ -42,7 +46,6 @@ export default function DMChannel({
   const [messages, setMessages] = useState(initialMessages)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAtBottom, setIsAtBottom] = useState(true)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const pendingMessagesRef = useRef<string[]>([])
@@ -261,148 +264,166 @@ export default function DMChannel({
     },
   })
 
+  const [profileSidebarOpened, { toggle: toggleProfileSidebar }] =
+    useDisclosure(false)
+
   return (
-    <Stack
-      gap={0}
-      h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
-      style={{
-        borderTop: '1px solid var(--ft-border-color)',
-        minHeight: 0,
-        overflow: 'hidden',
-        overscrollBehavior: 'contain',
-        position: 'relative',
-      }}
-    >
-      <Group
-        h="48"
-        align="center"
-        pl="md"
-        gap="xs"
+    <Group gap={0} wrap="nowrap" align="flex-start" h="100%">
+      <Stack
+        gap={0}
+        h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
         style={{
-          borderBottom: '1px solid var(--ft-border-color)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 1,
-          flexShrink: 0,
+          borderTop: '1px solid var(--ft-border-color)',
+          minHeight: 0,
+          overflow: 'hidden',
+          overscrollBehavior: 'contain',
+          position: 'relative',
+          flex: 1,
         }}
       >
-        <UserAvatar name={partner?.name} size="sm" />
-        <Text fw="bold" size="lg" c="white">
-          {partner?.name ?? 'Unknown User'}
-        </Text>
-      </Group>
-
-      {wsStatus !== 'open' && (
-        <Box
-          p="xs"
+        <Group
+          h="48"
+          align="center"
+          justify="space-between"
+          pl="md"
+          pr="md"
+          gap="xs"
           style={{
-            backgroundColor:
-              wsStatus === 'connecting'
-                ? 'var(--mantine-color-yellow-9)'
-                : 'var(--mantine-color-red-9)',
-            color: 'white',
-            textAlign: 'center',
-            fontSize: '0.875rem',
+            borderBottom: '1px solid var(--ft-border-color)',
+            position: 'sticky',
+            top: 0,
+            zIndex: 1,
+            flexShrink: 0,
           }}
         >
-          {wsStatus === 'connecting'
-            ? 'Connecting...'
-            : 'Disconnected - Retrying...'}
-        </Box>
-      )}
+          <Group>
+            <UserAvatar name={partner?.name} size="sm" />
+            <Text fw="bold" size="lg" c="white">
+              {partner?.name ?? 'Unknown User'}
+            </Text>
+          </Group>
+          <ActionIcon.Group>
+            <IconButton
+              label="Show User Profile"
+              onClick={toggleProfileSidebar}
+            >
+              <IconUserCircle />
+            </IconButton>
+          </ActionIcon.Group>
+        </Group>
 
-      {unreadCount > 0 && (
-        <Affix
-          position={{ top: 80, left: 0, right: 0 }}
-          style={{ zIndex: 2, pointerEvents: 'none' }}
-        >
+        {wsStatus !== 'open' && (
           <Box
+            p="xs"
             style={{
-              display: 'flex',
-              justifyContent: 'center',
-              width: '100%',
+              backgroundColor:
+                wsStatus === 'connecting'
+                  ? 'var(--mantine-color-yellow-9)'
+                  : 'var(--mantine-color-red-9)',
+              color: 'white',
+              textAlign: 'center',
+              fontSize: '0.875rem',
             }}
           >
-            <Button
-              variant="filled"
-              size="sm"
-              onClick={scrollToBottom}
-              style={{ pointerEvents: 'auto' }}
-            >
-              {unreadCount} {unreadCount === 1 ? 'message' : 'messages'}
-            </Button>
+            {wsStatus === 'connecting'
+              ? 'Connecting...'
+              : 'Disconnected - Retrying...'}
           </Box>
-        </Affix>
-      )}
+        )}
 
-      <ScrollArea
-        ref={scrollAreaRef}
-        flex={1}
-        pb="md"
-        style={{ minHeight: 0 }}
-        styles={{
-          viewport: { overscrollBehavior: 'contain' },
-        }}
-        viewportRef={viewportRef}
-        onScrollPositionChange={checkIfAtBottom}
-      >
-        <Stack gap={0}>
-          {messagesWithSeparators.map((entry, index) => {
-            if (entry.kind === 'separator') {
-              return (
-                <DateSeparator
-                  key={`separator-${entry.date}-${index}`}
-                  date={entry.date}
-                />
-              )
-            }
-
-            const isLatest = index === messagesWithSeparators.length - 1
-
-            return (
-              <div
-                key={entry.message.id}
-                ref={isLatest ? latestMessageRef : undefined}
-              >
-                <Message
-                  senderName={entry.message.sender.name}
-                  content={entry.message.content}
-                  createdAt={entry.message.createdAt}
-                  withProfile={entry.message.withProfile}
-                />
-              </div>
-            )
-          })}
-        </Stack>
-      </ScrollArea>
-
-      <Box
-        p="md"
-        style={{
-          position: 'sticky',
-          bottom: 0,
-          borderTop: '1px solid var(--ft-border-color)',
-          flexShrink: 0,
-        }}
-      >
-        <Form method="post" {...getFormProps(form)}>
-          <Group align="flex-start">
-            <TextInput
-              {...getInputProps(fields.content, { type: 'text' })}
-              placeholder={`Message @${partner?.name ?? 'user'}`}
-              style={{ flex: 1 }}
-              key={fields.content.key}
-            />
-            <Button
-              type="submit"
-              loading={isSubmitting}
-              disabled={wsStatus !== 'open'}
+        {unreadCount > 0 && (
+          <Affix
+            position={{ top: 80, left: 0, right: 0 }}
+            style={{ zIndex: 2, pointerEvents: 'none' }}
+          >
+            <Box
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                width: '100%',
+              }}
             >
-              <IconSend size={16} />
-            </Button>
-          </Group>
-        </Form>
-      </Box>
-    </Stack>
+              <Button
+                variant="filled"
+                size="sm"
+                onClick={scrollToBottom}
+                style={{ pointerEvents: 'auto' }}
+              >
+                {unreadCount} {unreadCount === 1 ? 'message' : 'messages'}
+              </Button>
+            </Box>
+          </Affix>
+        )}
+
+        <ScrollArea
+          flex={1}
+          pb="md"
+          style={{ minHeight: 0 }}
+          styles={{
+            viewport: { overscrollBehavior: 'contain' },
+          }}
+          viewportRef={viewportRef}
+          onScrollPositionChange={checkIfAtBottom}
+        >
+          <Stack gap={0}>
+            {messagesWithSeparators.map((entry, index) => {
+              if (entry.kind === 'separator') {
+                return (
+                  <DateSeparator
+                    key={`separator-${entry.date}-${index}`}
+                    date={entry.date}
+                  />
+                )
+              }
+
+              const isLatest = index === messagesWithSeparators.length - 1
+
+              return (
+                <div
+                  key={entry.message.id}
+                  ref={isLatest ? latestMessageRef : undefined}
+                >
+                  <Message
+                    senderName={entry.message.sender.name}
+                    content={entry.message.content}
+                    createdAt={entry.message.createdAt}
+                    withProfile={entry.message.withProfile}
+                  />
+                </div>
+              )
+            })}
+          </Stack>
+        </ScrollArea>
+
+        <Box
+          p="md"
+          style={{
+            position: 'sticky',
+            bottom: 0,
+            borderTop: '1px solid var(--ft-border-color)',
+            flexShrink: 0,
+          }}
+        >
+          <Form method="post" {...getFormProps(form)}>
+            <Group align="flex-start">
+              <TextInput
+                {...getInputProps(fields.content, { type: 'text' })}
+                placeholder={`Message @${partner?.name ?? 'user'}`}
+                style={{ flex: 1 }}
+                key={fields.content.key}
+              />
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={wsStatus !== 'open'}
+              >
+                <IconSend size={16} />
+              </Button>
+            </Group>
+          </Form>
+        </Box>
+      </Stack>
+      <UserProfileSidebar user={partner} opened={profileSidebarOpened} />
+    </Group>
   )
 }
