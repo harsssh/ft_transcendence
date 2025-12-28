@@ -1,5 +1,13 @@
-import type { MantineThemeOverride } from '@mantine/core'
-import { Card, Container, createTheme, Paper, rem, Select } from '@mantine/core'
+import {
+  Card,
+  Container,
+  createTheme,
+  PaginationPrevious,
+  Paper,
+  rem,
+  Select,
+  Text,
+} from '@mantine/core'
 
 const CONTAINER_SIZES: Record<string, string> = {
   xxs: rem('200px'),
@@ -11,8 +19,36 @@ const CONTAINER_SIZES: Record<string, string> = {
   xxl: rem('1600px'),
 }
 
-export const theme: MantineThemeOverride = createTheme({
+export const colors = {
+  'text-muted': [
+    '#94959c',
+    '#94959c',
+    '#94959c',
+    '#94959c',
+    '#94959c',
+    '#94959c',
+    '#94959c',
+    '#94959c',
+    '#94959c',
+    '#94959c',
+  ],
+  'text-default': [
+    '#efeff0',
+    '#efeff0',
+    '#efeff0',
+    '#efeff0',
+    '#efeff0',
+    '#efeff0',
+    '#efeff0',
+    '#efeff0',
+    '#efeff0',
+    '#efeff0',
+  ],
+} as const
+
+export const theme = createTheme({
   /** Put your mantine theme override here */
+  colors,
   fontSizes: {
     xs: rem('12px'),
     sm: rem('14px'),
@@ -49,27 +85,13 @@ export const theme: MantineThemeOverride = createTheme({
         },
       }),
     }),
-    Paper: Paper.extend({
-      defaultProps: {
-        p: 'md',
-        shadow: 'xl',
-        radius: 'md',
-        withBorder: true,
-      },
-    }),
-
-    Card: Card.extend({
-      defaultProps: {
-        p: 'xl',
-        shadow: 'xl',
-        radius: 'var(--mantine-radius-default)',
-        withBorder: true,
-      },
-    }),
     Select: Select.extend({
       defaultProps: {
         checkIconPosition: 'right',
       },
+    }),
+    Text: Text.extend({
+      defaultProps: { c: 'text-default.0' },
     }),
   },
   other: {

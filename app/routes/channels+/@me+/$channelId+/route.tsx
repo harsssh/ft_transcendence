@@ -66,8 +66,7 @@ export default function DMChannel({
     if (!viewportRef.current) return true
 
     const { scrollTop, scrollHeight, clientHeight } = viewportRef.current
-    const threshold = 100 // pixels from bottom
-    const atBottom = scrollHeight - scrollTop - clientHeight < threshold
+    const atBottom = scrollHeight - scrollTop - clientHeight < 1
     setIsAtBottom(atBottom)
     return atBottom
   }, [])
@@ -267,105 +266,100 @@ export default function DMChannel({
   const [profileSidebarOpened, { toggle: toggleProfileSidebar }] =
     useDisclosure(false)
 
+  const headerHeight = 48
+
   return (
-    <Group gap={0} wrap="nowrap" align="flex-start" h="100%">
-      <Stack
-        gap={0}
-        h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
+    <Stack
+      gap={0}
+      h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
+      style={{
+        borderTop: '1px solid var(--ft-border-color)',
+        overscrollBehavior: 'contain',
+        position: 'relative',
+      }}
+    >
+      <Group
+        h={headerHeight}
+        align="center"
+        justify="space-between"
+        pl="md"
+        pr="md"
+        gap="xs"
         style={{
-          borderTop: '1px solid var(--ft-border-color)',
-          minHeight: 0,
-          overflow: 'hidden',
-          overscrollBehavior: 'contain',
-          position: 'relative',
-          flex: 1,
+          borderBottom: '1px solid var(--ft-border-color)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          flexShrink: 0,
         }}
       >
-        <Group
-          h="48"
-          align="center"
-          justify="space-between"
-          pl="md"
-          pr="md"
-          gap="xs"
+        <Group>
+          <UserAvatar name={partner?.name} size="sm" />
+          <Text fw="bold" size="lg">
+            {partner?.name ?? 'Unknown User'}
+          </Text>
+        </Group>
+        <ActionIcon.Group>
+          <IconButton label="Show User Profile" onClick={toggleProfileSidebar}>
+            <IconUserCircle />
+          </IconButton>
+        </ActionIcon.Group>
+      </Group>
+
+      {wsStatus !== 'open' && (
+        <Box
+          p="xs"
           style={{
-            borderBottom: '1px solid var(--ft-border-color)',
-            position: 'sticky',
-            top: 0,
-            zIndex: 1,
-            flexShrink: 0,
+            backgroundColor:
+              wsStatus === 'connecting'
+                ? 'var(--mantine-color-yellow-9)'
+                : 'var(--mantine-color-red-9)',
+            color: 'white',
+            textAlign: 'center',
+            fontSize: '0.875rem',
           }}
         >
-          <Group>
-            <UserAvatar name={partner?.name} size="sm" />
-            <Text fw="bold" size="lg" c="white">
-              {partner?.name ?? 'Unknown User'}
-            </Text>
-          </Group>
-          <ActionIcon.Group>
-            <IconButton
-              label="Show User Profile"
-              onClick={toggleProfileSidebar}
-            >
-              <IconUserCircle />
-            </IconButton>
-          </ActionIcon.Group>
-        </Group>
+          {wsStatus === 'connecting'
+            ? 'Connecting...'
+            : 'Disconnected - Retrying...'}
+        </Box>
+      )}
 
-        {wsStatus !== 'open' && (
+      {unreadCount > 0 && (
+        <Affix
+          position={{ top: 80, left: 0, right: 0 }}
+          style={{ zIndex: 2, pointerEvents: 'none' }}
+        >
           <Box
-            p="xs"
             style={{
-              backgroundColor:
-                wsStatus === 'connecting'
-                  ? 'var(--mantine-color-yellow-9)'
-                  : 'var(--mantine-color-red-9)',
-              color: 'white',
-              textAlign: 'center',
-              fontSize: '0.875rem',
+              display: 'flex',
+              justifyContent: 'center',
+              width: '100%',
             }}
           >
-            {wsStatus === 'connecting'
-              ? 'Connecting...'
-              : 'Disconnected - Retrying...'}
-          </Box>
-        )}
-
-        {unreadCount > 0 && (
-          <Affix
-            position={{ top: 80, left: 0, right: 0 }}
-            style={{ zIndex: 2, pointerEvents: 'none' }}
-          >
-            <Box
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-              }}
+            <Button
+              variant="filled"
+              size="sm"
+              onClick={scrollToBottom}
+              style={{ pointerEvents: 'auto' }}
             >
-              <Button
-                variant="filled"
-                size="sm"
-                onClick={scrollToBottom}
-                style={{ pointerEvents: 'auto' }}
-              >
-                {unreadCount} {unreadCount === 1 ? 'message' : 'messages'}
-              </Button>
-            </Box>
-          </Affix>
-        )}
+              {unreadCount} {unreadCount === 1 ? 'message' : 'messages'}
+            </Button>
+          </Box>
+        </Affix>
+      )}
 
-        <ScrollArea
+      <Group>
+        <Stack
           flex={1}
-          pb="md"
-          style={{ minHeight: 0 }}
-          styles={{
-            viewport: { overscrollBehavior: 'contain' },
-          }}
-          viewportRef={viewportRef}
-          onScrollPositionChange={checkIfAtBottom}
+          h={`calc(100dvh - var(--app-shell-header-offset, 0rem) - ${headerHeight}px)`}
+          gap={0}
         >
-          <Stack gap={0}>
+          <ScrollArea
+            overscrollBehavior="contain"
+            viewportRef={viewportRef}
+            onScrollPositionChange={checkIfAtBottom}
+          >
             {messagesWithSeparators.map((entry, index) => {
               if (entry.kind === 'separator') {
                 return (
@@ -382,6 +376,9 @@ export default function DMChannel({
                 <div
                   key={entry.message.id}
                   ref={isLatest ? latestMessageRef : undefined}
+                  {...(index === messagesWithSeparators.length - 1
+                    ? { style: { paddingBottom: '24px' } }
+                    : {})}
                 >
                   <Message
                     senderName={entry.message.sender.name}
@@ -392,38 +389,38 @@ export default function DMChannel({
                 </div>
               )
             })}
-          </Stack>
-        </ScrollArea>
+          </ScrollArea>
 
-        <Box
-          p="md"
-          style={{
-            position: 'sticky',
-            bottom: 0,
-            borderTop: '1px solid var(--ft-border-color)',
-            flexShrink: 0,
-          }}
-        >
-          <Form method="post" {...getFormProps(form)}>
-            <Group align="flex-start">
-              <TextInput
-                {...getInputProps(fields.content, { type: 'text' })}
-                placeholder={`Message @${partner?.name ?? 'user'}`}
-                style={{ flex: 1 }}
-                key={fields.content.key}
-              />
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                disabled={wsStatus !== 'open'}
-              >
-                <IconSend size={16} />
-              </Button>
-            </Group>
-          </Form>
-        </Box>
-      </Stack>
-      <UserProfileSidebar user={partner} opened={profileSidebarOpened} />
-    </Group>
+          <Box
+            p="md"
+            style={{
+              position: 'sticky',
+              bottom: 0,
+              borderTop: '1px solid var(--ft-border-color)',
+              flexShrink: 0,
+            }}
+          >
+            <Form method="post" {...getFormProps(form)}>
+              <Group align="flex-start">
+                <TextInput
+                  {...getInputProps(fields.content, { type: 'text' })}
+                  placeholder={`Message @${partner?.name ?? 'user'}`}
+                  style={{ flex: 1 }}
+                  key={fields.content.key}
+                />
+                <Button
+                  type="submit"
+                  loading={isSubmitting}
+                  disabled={wsStatus !== 'open'}
+                >
+                  <IconSend size={16} />
+                </Button>
+              </Group>
+            </Form>
+          </Box>
+        </Stack>
+        <UserProfileSidebar profile={partner} opened={profileSidebarOpened} />
+      </Group>
+    </Stack>
   )
 }

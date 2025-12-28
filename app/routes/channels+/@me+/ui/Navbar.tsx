@@ -85,7 +85,7 @@ export function Navbar({ channels, lastResult }: Props) {
         {channels.map((ch) => (
           <Box key={ch.id} pl="sm" pr="sm">
             <Link to={`/channels/@me/${ch.id}`}>
-              <Text>{ch.name}</Text>
+              <Text c="text-muted">{ch.name}</Text>
             </Link>
           </Box>
         ))}

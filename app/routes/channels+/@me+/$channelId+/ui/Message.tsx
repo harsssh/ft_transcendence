@@ -56,7 +56,7 @@ export function Message({
       <Box>
         {withProfile && (
           <Group align="center" gap="xs">
-            <Text fw={700} c="white" size="sm">
+            <Text fw={700} size="sm">
               {senderName}
             </Text>
             <Text size="xs" c="dimmed">
@@ -65,9 +65,7 @@ export function Message({
           </Group>
         )}
         <Group>
-          <Text c="white" style={{ wordBreak: 'break-word' }}>
-            {content}
-          </Text>
+          <Text style={{ wordBreak: 'break-word' }}>{content}</Text>
         </Group>
       </Box>
     </Box>
