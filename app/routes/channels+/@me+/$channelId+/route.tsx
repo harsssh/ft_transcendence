@@ -300,7 +300,13 @@ export default function DMChannel({
           </Text>
         </Group>
         <ActionIcon.Group>
-          <IconButton label="Show User Profile" onClick={toggleProfileSidebar}>
+          <IconButton
+            label={
+              profileSidebarOpened ? 'Hide User Profile' : 'Show User Profile'
+            }
+            onClick={toggleProfileSidebar}
+            strong={profileSidebarOpened}
+          >
             <IconUserCircle />
           </IconButton>
         </ActionIcon.Group>

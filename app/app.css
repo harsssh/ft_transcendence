@@ -6,7 +6,6 @@ body {
 
 :root[data-mantine-color-scheme="dark"] {
   --ft-border-color: oklab(0.678888 0.00325716 -0.011175 / 0.121569);
-  --ft-icon-muted: oklab(0.671175 0.00174934 -0.010144);
   --ft-icon-subtle: oklab(0.740158 0.00280207 -0.00954258);
 }
 

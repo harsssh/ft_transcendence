@@ -4,13 +4,14 @@ type Props = {
   label?: string
   children: React.ReactNode
   onClick: React.MouseEventHandler<HTMLButtonElement>
+  strong?: boolean
 }
 
-export function IconButton({ label, children, onClick }: Props) {
+export function IconButton({ label, children, onClick, strong }: Props) {
   const actionIcon = (
     <ActionIcon
       variant="transparent"
-      color="var(--ft-icon-muted)"
+      color={strong ? 'icon-strong' : 'icon-muted'}
       size="lg"
       onClick={onClick}
     >
