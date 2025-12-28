@@ -1,4 +1,4 @@
-import { Box, Paper, Stack, Text } from '@mantine/core'
+import { Box, Stack, Text } from '@mantine/core'
 import { useId } from 'react'
 import { UserAvatar } from './UserAvatar'
 
