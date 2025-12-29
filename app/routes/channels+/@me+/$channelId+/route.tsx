@@ -360,6 +360,7 @@ export default function DMChannel({
           flex={1}
           h={`calc(100dvh - var(--app-shell-header-offset, 0rem) - ${headerHeight}px)`}
           gap={0}
+          justify="end"
         >
           <ScrollArea
             offsetScrollbars="y"
