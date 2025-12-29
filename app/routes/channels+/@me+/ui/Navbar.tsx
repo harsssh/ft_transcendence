@@ -28,7 +28,13 @@ type Props = {
   lastResult: (SubmissionResult<string[]> & { channelId?: string }) | null
 }
 
-export function Navbar({ channels, lastResult }: Props) {
+const NAVBAR_WIDTH = 300
+
+export const Navbar = Object.assign(NavbarRoot, {
+  width: NAVBAR_WIDTH,
+})
+
+function NavbarRoot({ channels, lastResult }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
   const [form, fields] = useForm({
     lastResult,
@@ -54,7 +60,7 @@ export function Navbar({ channels, lastResult }: Props) {
     <>
       <Stack
         gap="sm"
-        w="100%"
+        w={NAVBAR_WIDTH}
         h="100%"
         style={{
           borderInlineStart: '1px solid var(--ft-border-color)',
@@ -83,9 +89,11 @@ export function Navbar({ channels, lastResult }: Props) {
           </ActionIcon>
         </Group>
         {channels.map((ch) => (
-          <Box key={ch.id} pl="sm" pr="sm">
+          <Box key={ch.id} pl="sm" pr="sm" w="100%">
             <Link to={`/channels/@me/${ch.id}`}>
-              <Text c="text-muted">{ch.name}</Text>
+              <Text c="text-muted" truncate="end">
+                {ch.name}
+              </Text>
             </Link>
           </Box>
         ))}

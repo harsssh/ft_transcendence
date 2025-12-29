@@ -107,7 +107,7 @@ export default function Me({ loaderData, actionData }: Route.ComponentProps) {
     setSecondaryNavbar(
       <Navbar channels={loaderData.channels} lastResult={actionData ?? null} />,
     )
-    setSecondaryNavbarWidth(300)
+    setSecondaryNavbarWidth(Navbar.width)
 
     return () => {
       setSecondaryNavbar(null)

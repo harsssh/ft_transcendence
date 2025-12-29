@@ -295,7 +295,7 @@ export default function DMChannel({
       >
         <Group>
           <UserAvatar name={partner?.name} size="sm" />
-          <Text fw="bold" size="lg">
+          <Text fw="bold" size="lg" maw="40rem" truncate="end">
             {partner?.name ?? 'Unknown User'}
           </Text>
         </Group>
@@ -355,13 +355,14 @@ export default function DMChannel({
         </Affix>
       )}
 
-      <Group>
+      <Group gap={0}>
         <Stack
           flex={1}
           h={`calc(100dvh - var(--app-shell-header-offset, 0rem) - ${headerHeight}px)`}
           gap={0}
         >
           <ScrollArea
+            offsetScrollbars="y"
             overscrollBehavior="contain"
             viewportRef={viewportRef}
             onScrollPositionChange={checkIfAtBottom}
@@ -425,7 +426,7 @@ export default function DMChannel({
             </Form>
           </Box>
         </Stack>
-        <UserProfileSidebar profile={partner} opened={profileSidebarOpened} />
+        {profileSidebarOpened && <UserProfileSidebar profile={partner} />}
       </Group>
     </Stack>
   )

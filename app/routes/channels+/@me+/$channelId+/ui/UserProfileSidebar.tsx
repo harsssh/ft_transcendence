@@ -7,12 +7,10 @@ type Props = {
     name: string
     displayName: string | null
   }
-  opened: boolean
 }
 
-export function UserProfileSidebar({ profile, opened }: Props) {
+export function UserProfileSidebar({ profile }: Props) {
   const maskId = useId()
-  if (!opened) return null
 
   return (
     <Stack w={340} h="100%" bg="oklab(0.262384 0.00252247 -0.00889932)" gap={8}>
@@ -36,10 +34,10 @@ export function UserProfileSidebar({ profile, opened }: Props) {
       </Box>
       <Stack mr="md" ml="md">
         <Box>
-          <Text size="xl" fw={700} lh="24px">
+          <Text size="xl" fw={700} lh="24px" className="wrap-break-word">
             {profile.displayName ?? profile.name}
           </Text>
-          <Text size="sm" lh="18px">
+          <Text size="sm" lh="18px" className="wrap-break-word">
             {profile.name}
           </Text>
         </Box>

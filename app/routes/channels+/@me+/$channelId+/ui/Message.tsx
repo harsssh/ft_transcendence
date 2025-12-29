@@ -2,7 +2,7 @@ import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
 import { useSyncExternalStore } from 'react'
-import { UserAvatar } from './UserAvatar'
+import { UserAvatarPopover } from './UserAvatarPopover'
 
 type Props = {
   createdAt: Date
@@ -43,7 +43,7 @@ export function Message({
     >
       {withProfile && (
         <Box style={{ position: 'absolute', left: '16px', top: '2px' }}>
-          <UserAvatar name={senderName} src={avatarSrc} />
+          <UserAvatarPopover name={senderName} src={avatarSrc} />
         </Box>
       )}
       {!withProfile && hovered && (
@@ -56,7 +56,7 @@ export function Message({
       <Box>
         {withProfile && (
           <Group align="center" gap="xs">
-            <Text fw={700} size="sm">
+            <Text fw={700} size="sm" maw="40rem" truncate="end">
               {senderName}
             </Text>
             <Text size="xs" c="dimmed">

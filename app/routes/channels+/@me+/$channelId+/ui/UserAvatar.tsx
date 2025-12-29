@@ -1,12 +1,16 @@
 import { Avatar, type MantineSize } from '@mantine/core'
 
-type Props = {
-  name?: string | null
+export type UserAvatarProps = {
+  name: string | null
   src?: string | null
   size?: number | MantineSize
 }
 
-export function UserAvatar({ name = null, src = null, size = 40 }: Props) {
+export function UserAvatar({
+  name = null,
+  src = null,
+  size = 40,
+}: UserAvatarProps) {
   return (
     <Avatar src={src} radius="50%" color="initials" size={size}>
       {name?.slice(0, 2).toUpperCase() ?? '??'}
