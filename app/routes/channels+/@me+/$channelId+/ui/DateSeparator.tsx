@@ -7,7 +7,10 @@ type Props = {
 export function DateSeparator({ date }: Props) {
   return (
     <Divider
-      color="gray.6"
+      mt="lg"
+      ml="md"
+      mr="md"
+      color="var(--ft-border-color)"
       label={
         <Text size="xs" c="dimmed" fw={600}>
           {date}

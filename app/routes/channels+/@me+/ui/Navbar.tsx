@@ -8,6 +8,7 @@ import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   ActionIcon,
   Alert,
+  Box,
   Button,
   Group,
   Modal,
@@ -27,7 +28,13 @@ type Props = {
   lastResult: (SubmissionResult<string[]> & { channelId?: string }) | null
 }
 
-export function Navbar({ channels, lastResult }: Props) {
+const NAVBAR_WIDTH = 300
+
+export const Navbar = Object.assign(NavbarRoot, {
+  width: NAVBAR_WIDTH,
+})
+
+function NavbarRoot({ channels, lastResult }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
   const [form, fields] = useForm({
     lastResult,
@@ -51,8 +58,24 @@ export function Navbar({ channels, lastResult }: Props) {
 
   return (
     <>
-      <Stack gap="sm" w="100%" p="sm" h="100%">
-        <Group justify="space-between" align="center">
+      <Stack
+        gap="sm"
+        w={NAVBAR_WIDTH}
+        h="100%"
+        style={{
+          borderInlineStart: '1px solid var(--ft-border-color)',
+          borderStartStartRadius: '12px',
+          borderTop: '1px solid var(--ft-border-color)',
+        }}
+      >
+        <Group
+          justify="space-between"
+          align="center"
+          h="48"
+          pl="sm"
+          pr="sm"
+          className="border-b"
+        >
           <Text fw="bold" size="sm">
             Direct Messages
           </Text>
@@ -66,9 +89,13 @@ export function Navbar({ channels, lastResult }: Props) {
           </ActionIcon>
         </Group>
         {channels.map((ch) => (
-          <Link key={ch.id} to={`/channels/@me/${ch.id}`}>
-            <Text>{ch.name}</Text>
-          </Link>
+          <Box key={ch.id} pl="sm" pr="sm" w="100%">
+            <Link to={`/channels/@me/${ch.id}`}>
+              <Text c="text-muted" truncate="end">
+                {ch.name}
+              </Text>
+            </Link>
+          </Box>
         ))}
       </Stack>
 
