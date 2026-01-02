@@ -1,7 +1,8 @@
 import { parseWithZod } from '@conform-to/zod/v4'
+import { and, eq, sql } from 'drizzle-orm'
 import { err, ok, ResultAsync } from 'neverthrow'
 import { useEffect } from 'react'
-import { Outlet, redirect, useOutletContext } from 'react-router'
+import { Outlet, useOutletContext } from 'react-router'
 import * as R from 'remeda'
 import { channels, usersToChannels } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
@@ -10,7 +11,6 @@ import type { ChannelsOutletContext } from '../route'
 import type { Route } from './+types/route'
 import { NewChannelFormSchema } from './model/newChannelForm'
 import { Navbar } from './ui/Navbar'
-import { and, eq, sql } from 'drizzle-orm'
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
   const user = context.get(userContext)

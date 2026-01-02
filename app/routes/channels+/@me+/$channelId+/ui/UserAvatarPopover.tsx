@@ -1,6 +1,6 @@
-import { Box, Popover, Stack, UnstyledButton, Text } from '@mantine/core'
-import { UserAvatar, type UserAvatarProps } from './UserAvatar'
+import { Box, Popover, Stack, Text, UnstyledButton } from '@mantine/core'
 import { useId } from 'react'
+import { UserAvatar, type UserAvatarProps } from './UserAvatar'
 
 type Props = UserAvatarProps & {
   displayName?: string | null
