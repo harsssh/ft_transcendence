@@ -25,7 +25,7 @@ export function UserProfileSidebar({ profile }: Props) {
             <circle fill="black" cx="56" cy="112" r="46" />
           </mask>
           <foreignObject width="100%" height="100%" mask={`url(#${maskId})`}>
-            <Box h={120} bg="black"></Box>
+            <Box h={120} bg="black" />
           </foreignObject>
         </svg>
         <Box top={72} left={16} pos="absolute">

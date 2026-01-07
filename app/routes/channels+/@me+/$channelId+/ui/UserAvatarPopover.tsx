@@ -52,7 +52,7 @@ export function UserAvatarPopover(props: Props) {
                 height="100%"
                 mask={`url(#${maskId})`}
               >
-                <Box h={105} bg="black"></Box>
+                <Box h={105} bg="black" />
               </foreignObject>
             </svg>
             <Box top={61} left={16} pos="absolute">
