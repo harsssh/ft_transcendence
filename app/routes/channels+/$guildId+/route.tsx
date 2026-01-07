@@ -1,13 +1,13 @@
 import { Flex, NavLink as MantineNavLink, Text } from '@mantine/core'
 import { IconHash } from '@tabler/icons-react'
 import { useEffect } from 'react'
-import { NavLink, Outlet, useLoaderData, useOutletContext } from 'react-router'
+import { NavLink, useLoaderData, useOutletContext } from 'react-router'
 import { authMiddleware } from '../../../middlewares/auth'
 import type { ChannelsOutletContext } from '../route'
 import type { Route } from './+types/route'
+import { loader } from './api/loader.server'
 
-// export { action } from './api/action.server'
-export { loader } from './api/loader.server'
+export { loader }
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
@@ -29,14 +29,19 @@ export default function GuildRoute() {
         >
           {guild.name}
         </Flex>
-        <Flex direction="column" p="xs" gap={2} className="flex-1 overflow-y-auto">
+        <Flex
+          direction="column"
+          p="xs"
+          gap={2}
+          className="flex-1 overflow-y-auto"
+        >
           {guild.channels.map((channel) => (
             <MantineNavLink
               key={channel.id}
               component={NavLink}
               to={`/channels/${guild.id}/${channel.id}`}
               label={channel.name}
-              leftSection={<IconHash size={16} />}
+              leftSection={<IconHash size={20} stroke={2} />}
               variant="light"
               className="rounded-md"
             />
