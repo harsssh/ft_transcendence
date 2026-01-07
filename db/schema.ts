@@ -8,10 +8,40 @@ export const users = p.pgTable('users', {
   password: p.varchar({ length: 255 }).notNull(),
 })
 
+export const guilds = p.pgTable('guilds', {
+  id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: p.varchar({ length: 255 }).notNull(),
+  icon: p.text(),
+  ownerId: p
+    .integer('owner_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: p.timestamp('created_at').defaultNow().notNull(),
+})
+
 export const channels = p.pgTable('channels', {
   id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   name: p.text(),
+  guildId: p.integer('guild_id').references(() => guilds.id, {
+    onDelete: 'cascade',
+  }),
 })
+
+export const guildMembers = p.pgTable(
+  'guild_members',
+  {
+    userId: p
+      .integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    guildId: p
+      .integer('guild_id')
+      .notNull()
+      .references(() => guilds.id, { onDelete: 'cascade' }),
+    joinedAt: p.timestamp('joined_at').defaultNow().notNull(),
+  },
+  (t) => [p.primaryKey({ columns: [t.userId, t.guildId] })],
+)
 
 export const usersToChannels = p.pgTable(
   'user_channels',
@@ -67,9 +97,24 @@ export const friendships = p.pgTable(
 )
 
 export const relations = defineRelations(
-  { users, channels, usersToChannels, messages, friendships },
+  {
+    users,
+    guilds,
+    guildMembers,
+    channels,
+    usersToChannels,
+    messages,
+    friendships,
+  },
   (r) => ({
     users: {
+      guilds: r.many.guilds({
+        from: r.users.id.through(r.guildMembers.userId),
+        to: r.guilds.id.through(r.guildMembers.guildId),
+      }),
+      ownedGuilds: r.many.guilds({
+        alias: 'owner',
+      }),
       channels: r.many.channels({
         from: r.users.id.through(r.usersToChannels.userId),
         to: r.channels.id.through(r.usersToChannels.channelId),
@@ -81,7 +126,33 @@ export const relations = defineRelations(
         alias: 'friendship_friend',
       }),
     },
+    guilds: {
+      owner: r.one.users({
+        from: r.guilds.ownerId,
+        to: r.users.id,
+        alias: 'owner',
+      }),
+      members: r.many.users({
+        from: r.guilds.id.through(r.guildMembers.guildId),
+        to: r.users.id.through(r.guildMembers.userId),
+      }),
+      channels: r.many.channels(),
+    },
+    guildMembers: {
+      user: r.one.users({
+        from: r.guildMembers.userId,
+        to: r.users.id,
+      }),
+      guild: r.one.guilds({
+        from: r.guildMembers.guildId,
+        to: r.guilds.id,
+      }),
+    },
     channels: {
+      guild: r.one.guilds({
+        from: r.channels.guildId,
+        to: r.guilds.id,
+      }),
       participants: r.many.users(),
       messages: r.many.messages(),
     },
