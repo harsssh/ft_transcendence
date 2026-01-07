@@ -1,8 +1,8 @@
-import { parseWithZod } from '@conform-to/zod'
+import { parseWithZod } from '@conform-to/zod/v4'
 import { redirect } from 'react-router'
 import { dbContext } from '../../../contexts/db'
 import { userContext } from '../../../contexts/user'
-import { channels, guildMembers, guilds } from '../../../db/schema'
+import { channels, guildMembers, guilds } from '../../../../db/schema'
 import type { Route } from '../+types/route'
 import { NewGuildFormSchema } from '../model/newGuildForm'
 
