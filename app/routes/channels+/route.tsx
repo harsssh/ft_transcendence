@@ -1,13 +1,38 @@
-import { ActionIcon, Avatar, Flex, Stack, Tooltip } from '@mantine/core'
-import { IconMessageCircleFilled, IconCirclePlusFilled } from '@tabler/icons-react'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
+import {
+  ActionIcon,
+  Alert,
+  Avatar,
+  Button,
+  Flex,
+  Modal,
+  Stack,
+  TextInput,
+  Tooltip,
+} from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
+import {
+  IconCirclePlusFilled,
+  IconMessageCircleFilled,
+} from '@tabler/icons-react'
 import { useState } from 'react'
-import { NavLink, Outlet, useLoaderData } from 'react-router'
+import {
+  Form,
+  NavLink,
+  Outlet,
+  useLoaderData,
+  useNavigation,
+} from 'react-router'
 import { dbContext } from '../../contexts/db'
 import { userContext } from '../../contexts/user'
 import { authMiddleware } from '../../middlewares/auth'
 import { Scaffold } from '../_shared/ui/Scaffold'
 import type { Route } from './+types/route'
+
 export { action } from './api/action.server'
+
+import { NewGuildFormSchema } from './model/newGuildForm'
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
@@ -17,11 +42,17 @@ export type ChannelsOutletContext = {
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const db = context.get(dbContext)
   const user = context.get(userContext)
+  if (!user) {
+    throw new Response('Unauthorized', { status: 401 })
+  }
+
+  const db = context.get(dbContext)
 
   const currentUser = await db.query.users.findFirst({
-    where: (u, { eq }) => eq(u.id, user.id),
+    where: {
+      id: user.id,
+    },
     with: {
       guilds: true,
     },
@@ -61,6 +92,17 @@ type NavbarProps = {
 }
 
 function Navbar({ children, guilds }: NavbarProps) {
+  const [opened, { open, close }] = useDisclosure(false)
+  const [form, fields] = useForm({
+    constraint: getZodConstraint(NewGuildFormSchema),
+    shouldValidate: 'onBlur',
+    shouldRevalidate: 'onInput',
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: NewGuildFormSchema })
+    },
+  })
+  const navigation = useNavigation()
+  const isSubmitting = navigation.state === 'submitting'
   return (
     <Flex
       justify="flex-start"
@@ -121,12 +163,36 @@ function Navbar({ children, guilds }: NavbarProps) {
             size={48}
             radius="md"
             className="transition-all hover:rounded-xl"
-            // TODO: Open create server modal
-            onClick={() => {}}
+            onClick={open}
           >
             <IconCirclePlusFilled size={28} />
           </ActionIcon>
         </Tooltip>
+
+        <Modal
+          opened={opened}
+          onClose={close}
+          title="Create New Server"
+          centered
+        >
+          <Form method="post" action="/channels" {...getFormProps(form)}>
+            <Stack gap="sm">
+              {form.errors && (
+                <Alert variant="light" color="red">
+                  {form.errors}
+                </Alert>
+              )}
+              <TextInput
+                {...getInputProps(fields.name, { type: 'text' })}
+                label="Server Name"
+                error={fields.name.errors}
+              />
+              <Button type="submit" loading={isSubmitting} fullWidth>
+                Create
+              </Button>
+            </Stack>
+          </Form>
+        </Modal>
       </Stack>
       {children}
     </Flex>
