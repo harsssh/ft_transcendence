@@ -1,4 +1,4 @@
-import z from 'zod/v4'
+import z from 'zod'
 
 export const NewGuildFormSchema = z.object({
   name: z.string(),
