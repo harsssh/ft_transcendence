@@ -81,7 +81,6 @@ function EditProfileForm({ defaultValue, onClose, name }: Props) {
     },
     constraint: getZodConstraint(EditProfileSchema),
     onValidate({ formData }) {
-      console.log(formData.get('avatarImage'))
       return parseWithZod(formData, { schema: EditProfileSchema })
     },
   })
