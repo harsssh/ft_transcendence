@@ -139,8 +139,9 @@ const honoServer = await createHonoServer({
 
             try {
               const data = JSON.parse(event.data as string)
-              const { data: msgContent, success } =
-                SendMessageSchema.safeParse(data)
+              const { data: msgContent, success } = SendMessageSchema.omit({
+                intent: true,
+              }).safeParse(data)
 
               if (!success) {
                 console.error('Invalid message format')

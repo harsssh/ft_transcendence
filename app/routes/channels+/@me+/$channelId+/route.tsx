@@ -251,7 +251,6 @@ export default function DMChannel({
 
       const messageData = {
         id: Date.now(), // Temporary ID
-        intent: 'send-message',
         content: content.toString(),
       }
 
