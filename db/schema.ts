@@ -114,6 +114,8 @@ export const relations = defineRelations(
       }),
       ownedGuilds: r.many.guilds({
         alias: 'owner',
+        from: r.users.id,
+        to: r.guilds.ownerId,
       }),
       channels: r.many.channels({
         from: r.users.id.through(r.usersToChannels.userId),
