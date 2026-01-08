@@ -7,11 +7,11 @@ export const EditProfileSchema = z.object({
   displayName: z.string().max(40).optional(),
   avatarImage: z
     .instanceof(File)
-    .refine((file) => file.size > 0 && file.name.length > 0)
     .refine((file) => file.size <= IMAGE_FILE_SIZE_LIMIT, {
       message: 'Image size must be less than 5MB',
     })
-    .refine((file) => file.type.startsWith('image/'), {
+    .transform((file) => (file.size === 0 ? null : file))
+    .refine((file) => file?.type.startsWith('image/') ?? true, {
       message: 'File must be an image',
     })
     .optional(),

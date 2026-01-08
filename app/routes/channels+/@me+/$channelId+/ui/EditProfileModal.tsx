@@ -67,10 +67,12 @@ function EditProfileForm({ defaultValue, onClose }: Props) {
     lastResult,
     defaultValue: {
       intent: 'edit-profile',
+      avatarImage: null,
       ...defaultValue,
     },
     constraint: getZodConstraint(EditProfileSchema),
     onValidate({ formData }) {
+      console.log(formData.get('avatarImage'))
       return parseWithZod(formData, { schema: EditProfileSchema })
     },
   })
@@ -113,7 +115,15 @@ function EditProfileForm({ defaultValue, onClose }: Props) {
           )}
         </Box>
         <Group justify="end">
-          <Button type="button" mt="md" variant="default" onClick={onClose}>
+          <Button
+            type="button"
+            mt="md"
+            variant="default"
+            onClick={() => {
+              form.reset()
+              onClose()
+            }}
+          >
             Cancel
           </Button>
           <Button type="submit" mt="md" loading={isSubmitting}>

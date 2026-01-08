@@ -83,7 +83,7 @@ export function UserAvatarPopover(props: Props) {
                 </foreignObject>
               </svg>
               <Box top={61} left={16} pos="absolute">
-                <UserAvatar name={props.name} size={80} />
+                <UserAvatar {...props} size={80} />
               </Box>
             </Box>
             <Stack pr="md" pl="md" pt={4}>
