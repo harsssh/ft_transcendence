@@ -1,5 +1,4 @@
 import { parseWithZod } from '@conform-to/zod/v4'
-import { redirect } from 'react-router'
 import { channels, guildMembers, guilds } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { userContext } from '../../../contexts/user'
@@ -52,5 +51,8 @@ export async function action({ request, context }: Route.ActionArgs) {
     return newGuild.id
   })
 
-  return redirect(`/channels/${newGuildId}`)
+  return {
+    ...submission.reply(),
+    guildId: newGuildId,
+  }
 }

@@ -1,4 +1,9 @@
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import {
+  getFormProps,
+  getInputProps,
+  type SubmissionResult,
+  useForm,
+} from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   ActionIcon,
@@ -16,12 +21,14 @@ import {
   IconCirclePlusFilled,
   IconMessageCircleFilled,
 } from '@tabler/icons-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Form,
   NavLink,
   Outlet,
+  useActionData,
   useLoaderData,
+  useNavigate,
   useNavigation,
 } from 'react-router'
 import { dbContext } from '../../contexts/db'
@@ -30,7 +37,9 @@ import { authMiddleware } from '../../middlewares/auth'
 import { Scaffold } from '../_shared/ui/Scaffold'
 import type { Route } from './+types/route'
 
-export { action } from './api/action.server'
+import { action } from './api/action.server'
+
+export { action }
 
 import { NewGuildFormSchema } from './model/newGuildForm'
 
@@ -65,13 +74,18 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export default function Channels() {
   const { guilds } = useLoaderData<typeof loader>()
+  const actionData = useActionData<typeof action>()
   const [secondaryNavbar, setSecondaryNavbar] =
     useState<React.ReactNode | null>(null)
   const [secondaryNavbarWidth, setSecondaryNavbarWidth] = useState<number>(0)
 
   return (
     <Scaffold
-      navbar={<Navbar guilds={guilds}>{secondaryNavbar}</Navbar>}
+      navbar={
+        <Navbar guilds={guilds} lastResult={actionData ?? null}>
+          {secondaryNavbar}{' '}
+        </Navbar>
+      }
       navbarWidth={72 + secondaryNavbarWidth}
     >
       <Outlet
@@ -89,11 +103,13 @@ export default function Channels() {
 type NavbarProps = {
   children: React.ReactNode
   guilds: { id: number; name: string; icon: string | null }[]
+  lastResult: (SubmissionResult<string[]> & { guildId?: string }) | null
 }
 
-function Navbar({ children, guilds }: NavbarProps) {
+function Navbar({ children, guilds, lastResult }: NavbarProps) {
   const [opened, { open, close }] = useDisclosure(false)
   const [form, fields] = useForm({
+    lastResult,
     constraint: getZodConstraint(NewGuildFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -102,7 +118,15 @@ function Navbar({ children, guilds }: NavbarProps) {
     },
   })
   const navigation = useNavigation()
+  const navigate = useNavigate()
   const isSubmitting = navigation.state === 'submitting'
+
+  useEffect(() => {
+    if (lastResult?.status === 'success' && lastResult.guildId) {
+      close()
+      navigate(`/channels/${lastResult.guildId}`)
+    }
+  }, [lastResult, close, navigate])
   return (
     <Flex
       justify="flex-start"
