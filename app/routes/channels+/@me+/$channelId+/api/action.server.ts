@@ -1,8 +1,14 @@
+import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { parseWithZod } from '@conform-to/zod/v4'
 import { eq } from 'drizzle-orm'
 import z from 'zod'
 import { messages, users } from '../../../../../../db/schema'
 import { dbContext } from '../../../../../contexts/db'
+import {
+  AVATAR_BUCKET,
+  MINIO_PUBLIC_ENDPOINT,
+  storageContext,
+} from '../../../../../contexts/storage'
 import { userContext } from '../../../../../contexts/user'
 import type { Route } from '../+types/route'
 import { SendMessageSchema } from '../model/message'
@@ -33,10 +39,34 @@ export const action = async ({
 
   if (submission.value.intent === 'edit-profile') {
     const db = context.get(dbContext)
+    const s3Client = context.get(storageContext)
+
+    let avatarUrl: string | null = null
+
+    if (submission.value.avatarImage) {
+      const file = submission.value.avatarImage
+      const fileExtension = file.name.split('.').pop() || 'png'
+      const fileName = `${user.id}-${Date.now()}.${fileExtension}`
+      const fileBuffer = await file.arrayBuffer()
+
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: AVATAR_BUCKET,
+          Key: fileName,
+          Body: Buffer.from(fileBuffer),
+          ContentType: file.type,
+        }),
+      )
+
+      avatarUrl = `${MINIO_PUBLIC_ENDPOINT}/${AVATAR_BUCKET}/${fileName}`
+    }
 
     await db
       .update(users)
-      .set({ displayName: submission.value.displayName ?? null })
+      .set({
+        displayName: submission.value.displayName ?? null,
+        ...(avatarUrl && { avatarUrl }),
+      })
       .where(eq(users.id, user.id))
 
     return submission.reply()

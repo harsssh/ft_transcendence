@@ -2,19 +2,23 @@ import {
   getFormProps,
   getInputProps,
   type SubmissionResult,
+  unstable_useControl,
   useForm,
+  useInputControl,
 } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   Alert,
+  Box,
   Button,
+  FileButton,
   Group,
   Modal,
   Stack,
   Text,
   TextInput,
 } from '@mantine/core'
-import { createContext, useContext, useEffect } from 'react'
+import { createContext, useCallback, useContext, useEffect } from 'react'
 import { Form, useNavigation } from 'react-router'
 import { EditProfileSchema } from '../model/profile'
 
@@ -72,7 +76,7 @@ function EditProfileForm({ defaultValue, onClose }: Props) {
   })
 
   return (
-    <Form method="post" {...getFormProps(form)}>
+    <Form method="post" encType="multipart/form-data" {...getFormProps(form)}>
       {form.errors && (
         <Alert variant="light" color="red">
           {form.errors}
@@ -90,6 +94,24 @@ function EditProfileForm({ defaultValue, onClose }: Props) {
           {...getInputProps(fields.displayName, { type: 'text' })}
           error={fields.displayName.errors}
         />
+        <Box>
+          <FileButton
+            onChange={() => {}}
+            accept="image/*"
+            inputProps={getInputProps(fields.avatarImage, { type: 'file' })}
+          >
+            {(props) => (
+              <Button {...props} variant="outline" size="md">
+                Change Avatar
+              </Button>
+            )}
+          </FileButton>
+          {fields.avatarImage.errors && (
+            <Text size="sm" c="red" mt={4}>
+              {fields.avatarImage.errors}
+            </Text>
+          )}
+        </Box>
         <Group justify="end">
           <Button type="button" mt="md" variant="default" onClick={onClose}>
             Cancel

@@ -7,6 +7,7 @@ export const users = p.pgTable('users', {
   displayName: p.varchar('display_name', { length: 255 }),
   email: p.varchar({ length: 255 }).notNull().unique(),
   password: p.varchar({ length: 255 }).notNull(),
+  avatarUrl: p.text('avatar_url'),
 })
 
 export const channels = p.pgTable('channels', {
