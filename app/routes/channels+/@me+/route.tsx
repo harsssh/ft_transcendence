@@ -1,5 +1,6 @@
 import { parseWithZod } from '@conform-to/zod/v4'
-import { ok, ResultAsync } from 'neverthrow'
+import { and, eq, sql } from 'drizzle-orm'
+import { err, ok, ResultAsync } from 'neverthrow'
 import { useEffect } from 'react'
 import { Outlet, useOutletContext } from 'react-router'
 import * as R from 'remeda'
@@ -67,58 +68,78 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
   }
 
   const db = context.get(dbContext)
-  const participant = await db.query.users.findFirst({
-    where: { name: submission.value.name },
-  })
-  if (!participant) {
-    return submission.reply({
-      formErrors: ['User not found'],
-    })
-  }
-  if (participant.id === user.id) {
-    return submission.reply({
-      formErrors: ['You cannot create a channel just for yourself.'],
-    })
-  }
 
-  const [channel] = await db.transaction(async (tx) => {
+  const res = await db.transaction(async (tx) => {
+    const partner = await tx.query.users.findFirst({
+      where: { name: submission.value.name },
+    })
+    if (!partner) {
+      return err(
+        submission.reply({
+          formErrors: ['User not found'],
+        }),
+      )
+    }
+    if (partner.id === user.id) {
+      return err(
+        submission.reply({
+          formErrors: ['You cannot create a channel just for yourself.'],
+        }),
+      )
+    }
+
+    const [channel] = await tx
+      .select({ id: usersToChannels.channelId })
+      .from(usersToChannels)
+      .groupBy(usersToChannels.channelId)
+      .having(
+        and(
+          eq(sql`count(*)`, 2),
+          sql`bool_and(${usersToChannels.userId} IN (${user.id}, ${partner.id}))`,
+        ),
+      )
+      .limit(1)
+
+    if (channel) {
+      return ok(channel)
+    }
+
     const [newChannel] = await tx.insert(channels).values({}).returning()
     if (!newChannel) {
-      throw new Error('Failed to create channel')
+      return err(
+        submission.reply({
+          formErrors: ['Failed to create channel'],
+        }),
+      )
     }
     await tx.insert(usersToChannels).values([
       { userId: user.id, channelId: newChannel.id },
-      { userId: participant.id, channelId: newChannel.id },
+      { userId: partner.id, channelId: newChannel.id },
     ])
-    return [newChannel]
+    return ok(newChannel)
   })
 
-  return {
-    ...submission.reply(),
-    channelId: channel?.id,
-  }
+  return res.match(
+    (ch) => ({
+      ...submission.reply(),
+      channelId: ch.id,
+    }),
+    R.identity(),
+  )
 }
 
 export default function Me({ loaderData, actionData }: Route.ComponentProps) {
-  const { setSecondaryNavbar, setSecondaryNavbarWidth } =
-    useOutletContext<ChannelsOutletContext>()
+  const { setSecondaryNavbar } = useOutletContext<ChannelsOutletContext>()
 
   useEffect(() => {
     setSecondaryNavbar(
       <Navbar channels={loaderData.channels} lastResult={actionData ?? null} />,
     )
-    setSecondaryNavbarWidth(300)
 
     return () => {
       setSecondaryNavbar(null)
-      setSecondaryNavbarWidth(0)
     }
-  }, [
-    loaderData.channels,
-    actionData,
-    setSecondaryNavbar,
-    setSecondaryNavbarWidth,
-  ])
+  }, [loaderData.channels, actionData, setSecondaryNavbar])
 
   return <Outlet />
 }

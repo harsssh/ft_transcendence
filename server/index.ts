@@ -4,6 +4,7 @@ import type { WSContext } from 'hono/ws'
 import { RouterContextProvider } from 'react-router'
 import { createHonoServer } from 'react-router-hono-server/bun'
 import { dbContext } from '../app/contexts/db'
+import { initializeStorage } from '../app/contexts/storage'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import { SendMessageSchema } from '../app/routes/channels+/@me+/$channelId+/model/message'
 import { messages, relations, users } from '../db/schema'
@@ -16,6 +17,9 @@ if (!dbUrl) {
   throw new Error('DATABASE_URL environment variable is not set')
 }
 const db = drizzle(dbUrl, { relations })
+
+// Run storage initialization
+await initializeStorage()
 
 const honoServer = await createHonoServer({
   defaultLogger: false,
@@ -78,8 +82,9 @@ const honoServer = await createHonoServer({
 
             try {
               const data = JSON.parse(event.data as string)
-              const { data: msgContent, success } =
-                SendMessageSchema.safeParse(data)
+              const { data: msgContent, success } = SendMessageSchema.omit({
+                intent: true,
+              }).safeParse(data)
 
               if (!success) {
                 console.error('Invalid message format')

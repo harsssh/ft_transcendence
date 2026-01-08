@@ -10,6 +10,7 @@ export default defineConfig((config) => ({
     reactRouter(),
     tsconfigPaths(),
     reactRouterHonoServer({
+      runtime: 'bun',
       serverEntryPoint: 'server/index.ts',
     }),
   ],

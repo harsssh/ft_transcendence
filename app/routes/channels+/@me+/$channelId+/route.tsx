@@ -1,8 +1,8 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
+  ActionIcon,
   Affix,
-  Avatar,
   Box,
   Button,
   Group,
@@ -11,7 +11,9 @@ import {
   Text,
   TextInput,
 } from '@mantine/core'
-import { IconSend } from '@tabler/icons-react'
+import { useDisclosure } from '@mantine/hooks'
+import { IconSend, IconUserCircle } from '@tabler/icons-react'
+import { differenceInMinutes } from 'date-fns'
 import {
   useCallback,
   useEffect,
@@ -21,18 +23,17 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { Form, useNavigation } from 'react-router'
+import { IconButton } from '../../../_shared/ui/IconButton'
 import type { Route } from './+types/route'
 import { SendMessageSchema } from './model/message'
 import { DateSeparator } from './ui/DateSeparator'
+import { EditProfileContext } from './ui/EditProfileModal'
 import { Message } from './ui/Message'
+import { UserAvatar } from './ui/UserAvatar'
+import { UserProfileSidebar } from './ui/UserProfileSidebar'
 
 export { action } from './api/action.server'
 export { loader } from './api/loader.server'
-
-type MessageEntry = Route.ComponentProps['loaderData']['messages'][number]
-type MessageListItem =
-  | { kind: 'separator'; date: string }
-  | { kind: 'message'; message: MessageEntry }
 
 export default function DMChannel({
   loaderData,
@@ -46,7 +47,6 @@ export default function DMChannel({
   const [messages, setMessages] = useState(initialMessages)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAtBottom, setIsAtBottom] = useState(true)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const pendingMessagesRef = useRef<string[]>([])
@@ -67,8 +67,7 @@ export default function DMChannel({
     if (!viewportRef.current) return true
 
     const { scrollTop, scrollHeight, clientHeight } = viewportRef.current
-    const threshold = 100 // pixels from bottom
-    const atBottom = scrollHeight - scrollTop - clientHeight < threshold
+    const atBottom = scrollHeight - scrollTop - clientHeight < 1
     setIsAtBottom(atBottom)
     return atBottom
   }, [])
@@ -209,7 +208,7 @@ export default function DMChannel({
     }
   }, [navigation.state, actionData, scrollToBottom])
 
-  const messagesWithSeparators = useMemo<MessageListItem[]>(() => {
+  const messagesWithSeparators = useMemo(() => {
     // Use the server snapshot timezone for SSR/hydration, then re-render in client timezone.
     const dateFormatter = new Intl.DateTimeFormat(locale, { timeZone })
 
@@ -219,14 +218,22 @@ export default function DMChannel({
       const previousDate = previousMsg
         ? dateFormatter.format(previousMsg.createdAt)
         : null
-      const entries: MessageListItem[] = []
+      const messageEntry = {
+        kind: 'message',
+        message: {
+          ...message,
+          withProfile:
+            previousMsg?.sender.id !== message.sender.id ||
+            currentDate !== previousDate ||
+            differenceInMinutes(message.createdAt, previousMsg.createdAt) > 5,
+        },
+      } as const
 
       if (currentDate !== previousDate) {
-        entries.push({ kind: 'separator', date: currentDate })
+        return [{ kind: 'separator', date: currentDate } as const, messageEntry]
       }
 
-      entries.push({ kind: 'message', message })
-      return entries
+      return [messageEntry]
     })
   }, [locale, messages, timeZone])
 
@@ -257,37 +264,54 @@ export default function DMChannel({
     },
   })
 
-  return (
+  const [profileSidebarOpened, { toggle: toggleProfileSidebar }] =
+    useDisclosure(false)
+
+  const headerHeight = 48
+
+  const component = (
     <Stack
       gap={0}
-      h="calc(100dvh - var(--app-shell-footer-offset, 0rem))"
+      h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
       style={{
-        minHeight: 0,
-        overflow: 'hidden',
+        borderTop: '1px solid var(--ft-border-color)',
         overscrollBehavior: 'contain',
         position: 'relative',
       }}
     >
-      <Box
-        p="md"
+      <Group
+        h={headerHeight}
+        align="center"
+        justify="space-between"
+        pl="md"
+        pr="md"
+        gap="xs"
         style={{
-          borderBottom: '1px solid var(--mantine-color-dark-4)',
+          borderBottom: '1px solid var(--ft-border-color)',
           position: 'sticky',
           top: 0,
           zIndex: 1,
-          backgroundColor: 'var(--mantine-color-body)',
           flexShrink: 0,
         }}
       >
         <Group>
-          <Avatar radius="xl" color="initials">
-            {partner?.name?.slice(0, 2).toUpperCase() ?? '??'}
-          </Avatar>
-          <Text fw="bold" size="lg">
+          <UserAvatar name={partner?.name} src={partner?.avatarUrl} size="sm" />
+          <Text fw="bold" size="lg" maw="40rem" truncate="end">
             {partner?.name ?? 'Unknown User'}
           </Text>
         </Group>
-      </Box>
+        <ActionIcon.Group>
+          <IconButton
+            label={
+              profileSidebarOpened ? 'Hide User Profile' : 'Show User Profile'
+            }
+            onClick={toggleProfileSidebar}
+            strong={profileSidebarOpened}
+          >
+            <IconUserCircle />
+          </IconButton>
+        </ActionIcon.Group>
+      </Group>
 
       {wsStatus !== 'open' && (
         <Box
@@ -322,7 +346,6 @@ export default function DMChannel({
           >
             <Button
               variant="filled"
-              color="blue"
               size="sm"
               onClick={scrollToBottom}
               style={{ pointerEvents: 'auto' }}
@@ -333,74 +356,97 @@ export default function DMChannel({
         </Affix>
       )}
 
-      <ScrollArea
-        ref={scrollAreaRef}
-        flex={1}
-        p="md"
-        style={{ minHeight: 0 }}
-        styles={{
-          viewport: { overscrollBehavior: 'contain' },
-        }}
-        viewportRef={viewportRef}
-        onScrollPositionChange={checkIfAtBottom}
-      >
-        <Stack gap="xs">
-          {messagesWithSeparators.map((entry, index) => {
-            if (entry.kind === 'separator') {
+      <Group gap={0}>
+        <Stack
+          flex={1}
+          h={`calc(100dvh - var(--app-shell-header-offset, 0rem) - ${headerHeight}px)`}
+          gap={0}
+          justify="end"
+        >
+          <ScrollArea
+            offsetScrollbars="y"
+            overscrollBehavior="contain"
+            viewportRef={viewportRef}
+            onScrollPositionChange={checkIfAtBottom}
+          >
+            {messagesWithSeparators.map((entry, index) => {
+              if (entry.kind === 'separator') {
+                return (
+                  <DateSeparator
+                    key={`separator-${entry.date}-${index}`}
+                    date={entry.date}
+                  />
+                )
+              }
+
+              const isLatest = index === messagesWithSeparators.length - 1
+
               return (
-                <DateSeparator
-                  key={`separator-${entry.date}-${index}`}
-                  date={entry.date}
-                />
+                <div
+                  key={entry.message.id}
+                  ref={isLatest ? latestMessageRef : undefined}
+                  {...(index === messagesWithSeparators.length - 1
+                    ? { style: { paddingBottom: '24px' } }
+                    : {})}
+                >
+                  <Message
+                    loggedInUser={loaderData.loggedInUser}
+                    senderName={entry.message.sender.name}
+                    senderDisplayName={entry.message.sender.displayName}
+                    avatarSrc={entry.message.sender.avatarUrl}
+                    content={entry.message.content}
+                    createdAt={entry.message.createdAt}
+                    withProfile={entry.message.withProfile}
+                  />
+                </div>
               )
-            }
+            })}
+          </ScrollArea>
 
-            const isLatest = index === messagesWithSeparators.length - 1
-
-            return (
-              <div
-                key={entry.message.id}
-                ref={isLatest ? latestMessageRef : undefined}
-              >
-                <Message
-                  senderName={entry.message.sender.name}
-                  content={entry.message.content}
-                  createdAt={entry.message.createdAt}
+          <Box
+            p="md"
+            style={{
+              position: 'sticky',
+              bottom: 0,
+              borderTop: '1px solid var(--ft-border-color)',
+              flexShrink: 0,
+            }}
+          >
+            <Form method="post" {...getFormProps(form)}>
+              <input
+                {...getInputProps(fields.intent, { type: 'hidden' })}
+                value="send-message"
+              />
+              <Group align="flex-start">
+                <TextInput
+                  {...getInputProps(fields.content, { type: 'text' })}
+                  placeholder={`Message @${partner?.name ?? 'user'}`}
+                  style={{ flex: 1 }}
+                  key={fields.content.key}
                 />
-              </div>
-            )
-          })}
+                <Button
+                  type="submit"
+                  loading={isSubmitting}
+                  disabled={wsStatus !== 'open'}
+                >
+                  <IconSend size={16} />
+                </Button>
+              </Group>
+            </Form>
+          </Box>
         </Stack>
-      </ScrollArea>
-
-      <Box
-        p="md"
-        style={{
-          position: 'sticky',
-          bottom: 0,
-          backgroundColor: 'var(--mantine-color-body)',
-          borderTop: '1px solid var(--mantine-color-dark-4)',
-          flexShrink: 0,
-        }}
-      >
-        <Form method="post" {...getFormProps(form)}>
-          <Group align="flex-start">
-            <TextInput
-              {...getInputProps(fields.content, { type: 'text' })}
-              placeholder={`Message @${partner?.name ?? 'user'}`}
-              style={{ flex: 1 }}
-              key={fields.content.key}
-            />
-            <Button
-              type="submit"
-              loading={isSubmitting}
-              disabled={wsStatus !== 'open'}
-            >
-              <IconSend size={16} />
-            </Button>
-          </Group>
-        </Form>
-      </Box>
+        {profileSidebarOpened && <UserProfileSidebar profile={partner} />}
+      </Group>
     </Stack>
+  )
+
+  return (
+    <EditProfileContext.Provider
+      value={{
+        lastResult: actionData ?? null,
+      }}
+    >
+      {component}
+    </EditProfileContext.Provider>
   )
 }

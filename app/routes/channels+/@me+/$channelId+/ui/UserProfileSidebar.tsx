@@ -1,0 +1,48 @@
+import { Box, Stack, Text } from '@mantine/core'
+import { useId } from 'react'
+import { UserAvatar } from './UserAvatar'
+
+type Props = {
+  profile: {
+    name: string
+    displayName: string | null
+    avatarUrl: string | null
+  }
+}
+
+export function UserProfileSidebar({ profile }: Props) {
+  const maskId = useId()
+
+  return (
+    <Stack w={340} h="100%" bg="oklab(0.262384 0.00252247 -0.00889932)" gap={8}>
+      <Box mih={159} pos="relative">
+        <svg
+          viewBox="0 0 340 120"
+          style={{ contain: 'paint', minHeight: '120px' }}
+        >
+          <title>Profile header</title>
+          <mask id={maskId}>
+            <rect fill="white" x="0" y="0" width="100%" height="100%" />
+            <circle fill="black" cx="56" cy="112" r="46" />
+          </mask>
+          <foreignObject width="100%" height="100%" mask={`url(#${maskId})`}>
+            <Box h={120} bg="black" />
+          </foreignObject>
+        </svg>
+        <Box top={72} left={16} pos="absolute">
+          <UserAvatar name={profile.name} size={80} src={profile.avatarUrl} />
+        </Box>
+      </Box>
+      <Stack mr="md" ml="md">
+        <Box>
+          <Text size="xl" fw={700} lh="24px" className="wrap-break-word">
+            {profile.displayName ?? profile.name}
+          </Text>
+          <Text size="sm" lh="18px" className="wrap-break-word">
+            {profile.name}
+          </Text>
+        </Box>
+      </Stack>
+    </Stack>
+  )
+}

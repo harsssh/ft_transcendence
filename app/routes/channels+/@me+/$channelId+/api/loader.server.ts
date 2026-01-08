@@ -68,6 +68,10 @@ export const loader = async ({
         (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
       )
 
+      if (!partner) {
+        return err('NOT_FOUND')
+      }
+
       return ok({
         messages: sortedMessages.map((m) => ({
           id: m.id,
@@ -76,9 +80,16 @@ export const loader = async ({
           sender: {
             id: m.sender.id,
             name: m.sender.name,
+            displayName: m.sender.displayName,
+            avatarUrl: m.sender.avatarUrl,
           },
         })),
-        partner: partner ? { id: partner.id, name: partner.name } : null,
+        partner: {
+          id: partner.id,
+          name: partner.name,
+          displayName: partner.displayName,
+          avatarUrl: partner.avatarUrl,
+        },
         user: { id: user.id, name: user.name },
       })
     })
@@ -94,5 +105,5 @@ export const loader = async ({
 
   const locale = resolveLocale(request.headers.get('accept-language'))
 
-  return { ...result, locale }
+  return { ...result, locale, loggedInUser: user }
 }
