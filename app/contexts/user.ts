@@ -1,6 +1,6 @@
 import { createContext } from 'react-router'
 
-type LoggedInUser = {
+export type LoggedInUser = {
   id: number
   name: string
 }

@@ -27,6 +27,7 @@ import { IconButton } from '../../../_shared/ui/IconButton'
 import type { Route } from './+types/route'
 import { SendMessageSchema } from './model/message'
 import { DateSeparator } from './ui/DateSeparator'
+import { EditProfileContext } from './ui/EditProfileModal'
 import { Message } from './ui/Message'
 import { UserAvatar } from './ui/UserAvatar'
 import { UserProfileSidebar } from './ui/UserProfileSidebar'
@@ -250,6 +251,7 @@ export default function DMChannel({
 
       const messageData = {
         id: Date.now(), // Temporary ID
+        intent: 'send-message',
         content: content.toString(),
       }
 
@@ -268,7 +270,7 @@ export default function DMChannel({
 
   const headerHeight = 48
 
-  return (
+  const component = (
     <Stack
       gap={0}
       h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
@@ -389,7 +391,9 @@ export default function DMChannel({
                     : {})}
                 >
                   <Message
+                    loggedInUser={loaderData.loggedInUser}
                     senderName={entry.message.sender.name}
+                    senderDisplayName={entry.message.sender.displayName}
                     content={entry.message.content}
                     createdAt={entry.message.createdAt}
                     withProfile={entry.message.withProfile}
@@ -409,6 +413,10 @@ export default function DMChannel({
             }}
           >
             <Form method="post" {...getFormProps(form)}>
+              <input
+                {...getInputProps(fields.intent, { type: 'hidden' })}
+                value="send-message"
+              />
               <Group align="flex-start">
                 <TextInput
                   {...getInputProps(fields.content, { type: 'text' })}
@@ -430,5 +438,15 @@ export default function DMChannel({
         {profileSidebarOpened && <UserProfileSidebar profile={partner} />}
       </Group>
     </Stack>
+  )
+
+  return (
+    <EditProfileContext.Provider
+      value={{
+        lastResult: actionData ?? null,
+      }}
+    >
+      {component}
+    </EditProfileContext.Provider>
   )
 }

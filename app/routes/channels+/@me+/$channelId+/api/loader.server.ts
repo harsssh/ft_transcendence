@@ -80,6 +80,7 @@ export const loader = async ({
           sender: {
             id: m.sender.id,
             name: m.sender.name,
+            displayName: m.sender.displayName,
           },
         })),
         partner: {
@@ -102,5 +103,5 @@ export const loader = async ({
 
   const locale = resolveLocale(request.headers.get('accept-language'))
 
-  return { ...result, locale }
+  return { ...result, locale, loggedInUser: user }
 }

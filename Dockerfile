@@ -1,7 +1,7 @@
 FROM oven/bun:1 AS development-dependencies-env
 COPY . /app
 WORKDIR /app
-RUN bun i --frozen-lockfile
+RUN --mount=type=cache,target=/root/.bun/install/cache bun i --frozen-lockfile
 
 FROM oven/bun:1 AS production-dependencies-env
 COPY ./package.json bun.lock /app/
