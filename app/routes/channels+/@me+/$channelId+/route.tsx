@@ -391,6 +391,7 @@ export default function DMChannel({
                 >
                   <Message
                     loggedInUser={loaderData.loggedInUser}
+                    senderId={entry.message.sender.id}
                     senderName={entry.message.sender.name}
                     senderDisplayName={entry.message.sender.displayName}
                     avatarSrc={entry.message.sender.avatarUrl}

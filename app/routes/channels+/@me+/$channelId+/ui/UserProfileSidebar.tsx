@@ -1,9 +1,11 @@
 import { Box, Stack, Text } from '@mantine/core'
 import { useId } from 'react'
+import { useOnlineStatusContext } from '../../../../../contexts/onlineStatus'
 import { UserAvatar } from './UserAvatar'
 
 type Props = {
   profile: {
+    id: number
     name: string
     displayName: string | null
     avatarUrl: string | null
@@ -12,6 +14,8 @@ type Props = {
 
 export function UserProfileSidebar({ profile }: Props) {
   const maskId = useId()
+  const { isUserOnline } = useOnlineStatusContext()
+  const isOnline = isUserOnline(profile.id)
 
   return (
     <Stack w={340} h="100%" bg="oklab(0.262384 0.00252247 -0.00889932)" gap={8}>
@@ -30,7 +34,13 @@ export function UserProfileSidebar({ profile }: Props) {
           </foreignObject>
         </svg>
         <Box top={72} left={16} pos="absolute">
-          <UserAvatar name={profile.name} size={80} src={profile.avatarUrl} />
+          <UserAvatar
+            name={profile.name}
+            size={80}
+            src={profile.avatarUrl}
+            withOnlineStatus
+            isOnline={isOnline}
+          />
         </Box>
       </Box>
       <Stack mr="md" ml="md">
