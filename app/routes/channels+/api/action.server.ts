@@ -33,7 +33,11 @@ export async function action({ request, context }: Route.ActionArgs) {
       })
       .returning({ id: guilds.id })
 
-    if (!newGuild) throw new Error('Failed to create guild')
+    if (!newGuild) {
+      throw new Error(
+        `Failed to create guild: insert returned no row for user ${user.id} and name "${name}"`,
+      )
+    }
 
     await tx.insert(guildMembers).values({
       userId: user.id,
