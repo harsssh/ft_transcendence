@@ -1,22 +1,15 @@
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/node-postgres'
 import type { WSContext } from 'hono/ws'
 import { RouterContextProvider } from 'react-router'
 import { createHonoServer } from 'react-router-hono-server/bun'
-import { dbContext } from '../app/contexts/db'
+import { db, dbContext } from '../app/contexts/db'
 import { initializeStorage } from '../app/contexts/storage'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import { SendMessageSchema } from '../app/routes/channels+/@me+/$channelId+/model/message'
-import { messages, relations, users } from '../db/schema'
+import { messages, users } from '../db/schema'
 
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
-
-const dbUrl = process.env.DATABASE_URL
-if (!dbUrl) {
-  throw new Error('DATABASE_URL environment variable is not set')
-}
-const db = drizzle(dbUrl, { relations })
 
 // Run storage initialization
 await initializeStorage()

@@ -8,8 +8,6 @@ import type { Route } from './+types/route'
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
-export { loader } from './api/loader.server'
-
 export type ChannelsOutletContext = {
   setSecondaryNavbar: (node: React.ReactNode) => void
 }
