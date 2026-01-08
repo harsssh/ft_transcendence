@@ -1,6 +1,7 @@
 services:
   webapp:
     container_name: webapp-prod
+    image: ft_transcendence:prod
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,6 +16,9 @@ services:
       - DATABASE_URL=postgres://app:app@db:5432/app
     ports:
       - "3000:3000"
+    networks:
+      - internal
+      - web
 
   db:
     container_name: db-prod
@@ -32,9 +36,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
 
   storage:
-    container_name: storage-dev
+    container_name: storage-prod
+    image: ft_transcendence:migrate
     build:
       context: ./submodules/minio
       dockerfile: ../../Dockerfile.minio
@@ -47,6 +54,8 @@ services:
       - "9001:9001"
     volumes:
       - storage_data:/data
+    networks:
+      - internal
   
   migrate:
     container_name: migrate-prod
@@ -60,6 +69,14 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgres://app:app@db:5432/app
+    networks:
+      - internal
+  
+networks:
+  internal:
+    name: internal
+  web:
+    name: web
 
 volumes:
   db_data:
