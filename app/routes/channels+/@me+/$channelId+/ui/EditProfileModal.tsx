@@ -202,13 +202,7 @@ function UserProfile(props: {
           </foreignObject>
         </svg>
         <Box top={61} left={16} pos="absolute">
-          <UserAvatar
-            {...props}
-            src={props.avatarUrl}
-            size={80}
-            withOnlineStatus
-            isOnline={true}
-          />
+          <UserAvatar {...props} src={props.avatarUrl} size={80} />
         </Box>
       </Box>
       <Stack pr="md" pl="md" pt={4}>

@@ -8,12 +8,10 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useCallback, useId } from 'react'
-import { useOnlineStatusContext } from '../../../../../contexts/onlineStatus'
 import { EditProfileModal } from './EditProfileModal'
 import { UserAvatar, type UserAvatarProps } from './UserAvatar'
 
-type Props = Omit<UserAvatarProps, 'withOnlineStatus' | 'isOnline'> & {
-  userId: number
+type Props = UserAvatarProps & {
   displayName: string | null
   isEditable: boolean
 }
@@ -23,8 +21,6 @@ export function UserAvatarPopover(props: Props) {
   const [popoverOpened, popoverHandlers] = useDisclosure(false)
   const [editProfileModalOpened, editProfileModalHandlers] =
     useDisclosure(false)
-  const { isUserOnline } = useOnlineStatusContext()
-  const isOnline = isUserOnline(props.userId)
 
   const handleEditProfileClicked = useCallback(() => {
     popoverHandlers.close()
@@ -87,12 +83,7 @@ export function UserAvatarPopover(props: Props) {
                 </foreignObject>
               </svg>
               <Box top={61} left={16} pos="absolute">
-                <UserAvatar
-                  {...props}
-                  size={80}
-                  withOnlineStatus
-                  isOnline={isOnline}
-                />
+                <UserAvatar {...props} size={80} />
               </Box>
             </Box>
             <Stack pr="md" pl="md" pt={4}>

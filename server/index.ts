@@ -12,28 +12,6 @@ import { messages, relations, users } from '../db/schema'
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
 
-// Store presence WebSocket connections (userId -> Set of connections)
-const presenceConnections = new Map<number, Set<WSContext>>()
-// Store all presence subscribers (to broadcast online status updates)
-const presenceSubscribers = new Set<WSContext>()
-
-// Helper to get online user IDs
-function getOnlineUserIds(): number[] {
-  return Array.from(presenceConnections.keys())
-}
-
-// Broadcast online status to all subscribers
-function broadcastOnlineStatus() {
-  const onlineUserIds = getOnlineUserIds()
-  const message = JSON.stringify({
-    type: 'online-users',
-    data: onlineUserIds,
-  })
-  for (const ws of presenceSubscribers) {
-    ws.send(message)
-  }
-}
-
 const dbUrl = process.env.DATABASE_URL
 if (!dbUrl) {
   throw new Error('DATABASE_URL environment variable is not set')
@@ -48,76 +26,6 @@ const honoServer = await createHonoServer({
   useWebSocket: true,
   configure(app, { upgradeWebSocket }) {
     app.get('/api', (c) => c.text('hello'))
-
-    // Presence WebSocket endpoint for online status
-    app.get(
-      '/ws/presence',
-      upgradeWebSocket((c) => {
-        return {
-          async onOpen(_event, ws) {
-            // Authenticate user
-            const session = await getSession(
-              new Request(c.req.url, { headers: c.req.raw.headers }),
-            )
-            const userId = session.get('userId')
-
-            if (!userId) {
-              console.log('Presence WebSocket rejected: not authenticated')
-              ws.close()
-              return
-            }
-            // Store userId with connection
-            ;(ws as WSContext & { userId?: number }).userId = userId
-
-            // Add to presence connections
-            if (!presenceConnections.has(userId)) {
-              presenceConnections.set(userId, new Set())
-            }
-            presenceConnections.get(userId)?.add(ws)
-
-            // Add to subscribers
-            presenceSubscribers.add(ws)
-
-            console.log(`Presence WebSocket opened for user ${userId}`)
-
-            // Send current online users to this client
-            ws.send(
-              JSON.stringify({
-                type: 'online-users',
-                data: getOnlineUserIds(),
-              }),
-            )
-
-            // Broadcast updated online status to all subscribers
-            broadcastOnlineStatus()
-          },
-
-          onClose(_event, ws) {
-            const userId = (ws as WSContext & { userId?: number }).userId
-            if (userId) {
-              const connections = presenceConnections.get(userId)
-              if (connections) {
-                connections.delete(ws)
-                if (connections.size === 0) {
-                  presenceConnections.delete(userId)
-                }
-              }
-              console.log(`Presence WebSocket closed for user ${userId}`)
-            }
-
-            // Remove from subscribers
-            presenceSubscribers.delete(ws)
-
-            // Broadcast updated online status to all subscribers
-            broadcastOnlineStatus()
-          },
-
-          onError(event) {
-            console.error('Presence WebSocket error:', event)
-          },
-        }
-      }),
-    )
 
     // WebSocket endpoint for real-time chat
     app.get(

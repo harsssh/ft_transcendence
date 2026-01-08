@@ -7,7 +7,6 @@ import { UserAvatarPopover } from './UserAvatarPopover'
 
 type Props = {
   createdAt: Date
-  senderId: number
   senderName: string
   senderDisplayName: string | null
   content: string
@@ -18,7 +17,6 @@ type Props = {
 
 export function Message({
   createdAt,
-  senderId,
   senderName,
   senderDisplayName,
   content,
@@ -51,7 +49,6 @@ export function Message({
       {withProfile && (
         <Box style={{ position: 'absolute', left: '16px', top: '2px' }}>
           <UserAvatarPopover
-            userId={senderId}
             name={senderName}
             displayName={senderDisplayName}
             src={avatarSrc}

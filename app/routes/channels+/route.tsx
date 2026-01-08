@@ -2,7 +2,6 @@ import { Avatar, Flex, Stack } from '@mantine/core'
 import { IconMessageCircleFilled } from '@tabler/icons-react'
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router'
-import { OnlineStatusProvider } from '../../contexts/onlineStatus'
 import { authMiddleware } from '../../middlewares/auth'
 import { Scaffold } from '../_shared/ui/Scaffold'
 import type { Route } from './+types/route'
@@ -18,17 +17,15 @@ export default function Channels() {
     useState<React.ReactNode | null>(null)
 
   return (
-    <OnlineStatusProvider>
-      <Scaffold navbar={<Navbar>{secondaryNavbar}</Navbar>} navbarWidth={372}>
-        <Outlet
-          context={
-            {
-              setSecondaryNavbar,
-            } satisfies ChannelsOutletContext
-          }
-        />
-      </Scaffold>
-    </OnlineStatusProvider>
+    <Scaffold navbar={<Navbar>{secondaryNavbar}</Navbar>} navbarWidth={372}>
+      <Outlet
+        context={
+          {
+            setSecondaryNavbar,
+          } satisfies ChannelsOutletContext
+        }
+      />
+    </Scaffold>
   )
 }
 
