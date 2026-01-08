@@ -11,8 +11,6 @@ import { renderToPipeableStream } from 'react-dom/server'
 import type { AppLoadContext, EntryContext } from 'react-router'
 import { ServerRouter } from 'react-router'
 
-console.log('loading entry.server.tsx')
-
 export const streamTimeout = 5_000
 
 export default function handleRequest(
