@@ -115,24 +115,24 @@ function EditProfileForm({ defaultValue, onClose, name }: Props) {
               {...getInputProps(fields.displayName, { type: 'text' })}
               error={fields.displayName.errors}
             />
-            <FileButton
-              onChange={handleAvatarChange}
-              accept="image/*"
-              inputProps={getInputProps(fields.avatarImage, {
-                type: 'file',
-              })}
-            >
-              {(props) => (
-                <Button {...props} variant="outline">
-                  Change Avatar
-                </Button>
-              )}
-            </FileButton>
-            {fields.avatarImage.errors && (
-              <Text size="sm" c="red" mt={4}>
-                {fields.avatarImage.errors}
-              </Text>
-            )}
+            <Group>
+              <Stack>
+                <FileButton
+                  onChange={handleAvatarChange}
+                  accept="image/*"
+                  inputProps={getInputProps(fields.avatarImage, {
+                    type: 'file',
+                  })}
+                >
+                  {(props) => <Button {...props}>Change Avatar</Button>}
+                </FileButton>
+                {fields.avatarImage.errors && (
+                  <Text size="sm" c="red" mt={4}>
+                    {fields.avatarImage.errors}
+                  </Text>
+                )}
+              </Stack>
+            </Group>
           </Stack>
           <Stack gap={0}>
             <Text fw={500} size="md">
