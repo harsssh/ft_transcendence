@@ -41,7 +41,7 @@ services:
 
   storage:
     container_name: storage-prod
-    image: ft_transcendence:migrate
+    image: ft_transcendence:minio
     build:
       context: ./submodules/minio
       dockerfile: ../../Dockerfile.minio
@@ -59,6 +59,7 @@ services:
   
   migrate:
     container_name: migrate-prod
+    image: ft_transcendence:migrate
     build:
       context: .
       dockerfile: Dockerfile
