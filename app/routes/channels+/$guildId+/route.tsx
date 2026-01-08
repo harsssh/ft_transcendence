@@ -1,5 +1,19 @@
-import { Flex, NavLink as MantineNavLink, Text } from '@mantine/core'
-import { IconHash } from '@tabler/icons-react'
+import {
+  Button,
+  Flex,
+  NavLink as MantineNavLink,
+  Menu,
+  Text,
+} from '@mantine/core'
+import {
+  IconChevronDown,
+  IconCookieMan,
+  IconHash,
+  IconLogout,
+  IconPencil,
+  IconPlus,
+  IconTrash,
+} from '@tabler/icons-react'
 import { useEffect } from 'react'
 import { NavLink, useLoaderData, useOutletContext } from 'react-router'
 import { authMiddleware } from '../../../middlewares/auth'
@@ -27,7 +41,37 @@ export default function GuildRoute() {
           className="border-b font-bold truncate"
           style={{ borderColor: 'var(--app-shell-border-color)' }}
         >
-          {guild.name}
+          <Menu position="bottom-start" shadow="md" width={210}>
+            <Menu.Target>
+              <Button
+                variant="light"
+                color="neutral"
+                radius="md"
+                className="rounded-md"
+              >
+                {guild.name}
+                <IconChevronDown size={14} />
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item rightSection={<IconCookieMan size={18} />}>
+                Invite to Server
+              </Menu.Item>
+              <Menu.Item rightSection={<IconPencil size={18} />}>
+                Rename Server
+              </Menu.Item>
+              <Menu.Item rightSection={<IconPlus size={18} />}>
+                Create Channel
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item color="red" rightSection={<IconLogout size={18} />}>
+                Leave Server
+              </Menu.Item>
+              <Menu.Item color="red" rightSection={<IconTrash size={18} />}>
+                Delete Server
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Flex>
         <Flex
           direction="column"
