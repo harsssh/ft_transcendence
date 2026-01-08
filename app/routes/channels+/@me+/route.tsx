@@ -129,25 +129,17 @@ export const action = async ({ context, request }: Route.ActionArgs) => {
 }
 
 export default function Me({ loaderData, actionData }: Route.ComponentProps) {
-  const { setSecondaryNavbar, setSecondaryNavbarWidth } =
-    useOutletContext<ChannelsOutletContext>()
+  const { setSecondaryNavbar } = useOutletContext<ChannelsOutletContext>()
 
   useEffect(() => {
     setSecondaryNavbar(
       <Navbar channels={loaderData.channels} lastResult={actionData ?? null} />,
     )
-    setSecondaryNavbarWidth(Navbar.width)
 
     return () => {
       setSecondaryNavbar(null)
-      setSecondaryNavbarWidth(0)
     }
-  }, [
-    loaderData.channels,
-    actionData,
-    setSecondaryNavbar,
-    setSecondaryNavbarWidth,
-  ])
+  }, [loaderData.channels, actionData, setSecondaryNavbar])
 
   return <Outlet />
 }

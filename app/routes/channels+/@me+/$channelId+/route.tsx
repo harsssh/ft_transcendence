@@ -296,7 +296,7 @@ export default function DMChannel({
         }}
       >
         <Group>
-          <UserAvatar name={partner?.name} size="sm" />
+          <UserAvatar name={partner?.name} src={partner?.avatarUrl} size="sm" />
           <Text fw="bold" size="lg" maw="40rem" truncate="end">
             {partner?.name ?? 'Unknown User'}
           </Text>

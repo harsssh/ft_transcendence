@@ -103,9 +103,10 @@ export function UserAvatarPopover(props: Props) {
         </Popover.Dropdown>
       </Popover>
       <EditProfileModal
+        name={props.name}
         opened={editProfileModalOpened}
         onClose={editProfileModalHandlers.close}
-        defaultValue={{ displayName: props.displayName }}
+        defaultValue={{ displayName: props.displayName, avatarUrl: props.src }}
       />
     </>
   )

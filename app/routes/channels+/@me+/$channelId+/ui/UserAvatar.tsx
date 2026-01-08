@@ -2,7 +2,7 @@ import { Avatar, type MantineSize } from '@mantine/core'
 
 export type UserAvatarProps = {
   name: string | null
-  src?: string | null
+  src: string | null
   size?: number | MantineSize
 }
 

@@ -10,24 +10,18 @@ export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
 export type ChannelsOutletContext = {
   setSecondaryNavbar: (node: React.ReactNode) => void
-  setSecondaryNavbarWidth: (width: number) => void
 }
 
 export default function Channels() {
   const [secondaryNavbar, setSecondaryNavbar] =
     useState<React.ReactNode | null>(null)
-  const [secondaryNavbarWidth, setSecondaryNavbarWidth] = useState<number>(0)
 
   return (
-    <Scaffold
-      navbar={<Navbar>{secondaryNavbar}</Navbar>}
-      navbarWidth={72 + secondaryNavbarWidth}
-    >
+    <Scaffold navbar={<Navbar>{secondaryNavbar}</Navbar>} navbarWidth={372}>
       <Outlet
         context={
           {
             setSecondaryNavbar,
-            setSecondaryNavbarWidth,
           } satisfies ChannelsOutletContext
         }
       />

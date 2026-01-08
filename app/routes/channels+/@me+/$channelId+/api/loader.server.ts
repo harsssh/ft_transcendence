@@ -88,6 +88,7 @@ export const loader = async ({
           id: partner.id,
           name: partner.name,
           displayName: partner.displayName,
+          avatarUrl: partner.avatarUrl,
         },
         user: { id: user.id, name: user.name },
       })
