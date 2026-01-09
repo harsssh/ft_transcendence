@@ -83,7 +83,7 @@ export default function Channels() {
     <Scaffold
       navbar={
         <Navbar guilds={guilds} lastResult={actionData ?? null}>
-          {secondaryNavbar}{' '}
+          {secondaryNavbar}
         </Navbar>
       }
       navbarWidth={72 + secondaryNavbarWidth}
