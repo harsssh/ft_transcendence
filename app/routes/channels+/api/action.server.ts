@@ -53,6 +53,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   return {
     ...submission.reply(),
-    guildId: newGuildId,
+    guildId: newGuildId.toString(),
   }
 }
