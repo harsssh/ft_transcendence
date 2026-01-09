@@ -1,24 +1,33 @@
 import { Avatar, getSize, type MantineSize } from '@mantine/core'
 import { useId } from 'react'
 import * as R from 'remeda'
+import { useOnlineStatus } from '../../../../../contexts/onlineStatus'
 
 export type UserAvatarProps = {
   name: string | null
   src: string | null
   size?: number | MantineSize
 } & (
-  | { withOnlineStatus: true; isOnline: boolean }
-  | { withOnlineStatus?: false; isOnline?: undefined }
+  | {
+      withOnlineStatus: true
+      id: number
+    }
+  | {
+      withOnlineStatus?: false
+      id?: undefined
+    }
 )
 
 export function UserAvatar({
+  id,
   name,
   src,
   size = 40,
   withOnlineStatus,
-  isOnline,
 }: UserAvatarProps) {
   const maskId = useId()
+  const onlineStatus = useOnlineStatus({ id })
+
   if (!withOnlineStatus) {
     return (
       <Avatar src={src} radius="50%" color="initials" size={size}>
@@ -81,9 +90,9 @@ export function UserAvatar({
         height="20%"
         x="75%"
         y="75%"
-        fill={isOnline ? '#45a366' : '#84858d'}
+        fill={onlineStatus === 'online' ? '#45a366' : '#84858d'}
         mask={
-          isOnline
+          onlineStatus === 'online'
             ? `url(#svg-mask-status-online-${maskId})`
             : `url(#svg-mask-status-offline-${maskId})`
         }

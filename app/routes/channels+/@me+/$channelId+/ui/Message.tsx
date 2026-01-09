@@ -1,28 +1,28 @@
 import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
-import { useSyncExternalStore } from 'react'
-import type { LoggedInUser } from '../../../../../contexts/user'
+import { useContext, useSyncExternalStore } from 'react'
+import { LoggedInUserContext } from '../../../../../contexts/user'
 import { UserAvatarPopover } from './UserAvatarPopover'
 
 type Props = {
   createdAt: Date
+  senderId: number
   senderName: string
   senderDisplayName: string | null
   content: string
   avatarSrc?: string | undefined | null
   withProfile?: boolean
-  loggedInUser: LoggedInUser
 }
 
 export function Message({
   createdAt,
+  senderId,
   senderName,
   senderDisplayName,
   content,
   avatarSrc = null,
   withProfile = false,
-  loggedInUser,
 }: Props) {
   // サーバーとクライアントのロケールが異なる場合にhydration errorが発生するため、それを避けるハッチ
   const localeTimeCreatedAt = useSyncExternalStore(
@@ -31,6 +31,7 @@ export function Message({
     () => createdAt.toISOString(),
   )
   const { ref: hoverRef, hovered } = useHover()
+  const loggedInUser = useContext(LoggedInUserContext)
 
   return (
     <Box
@@ -49,10 +50,11 @@ export function Message({
       {withProfile && (
         <Box style={{ position: 'absolute', left: '16px', top: '2px' }}>
           <UserAvatarPopover
+            id={senderId}
             name={senderName}
             displayName={senderDisplayName}
             src={avatarSrc}
-            isEditable={loggedInUser.name === senderName}
+            isEditable={loggedInUser?.name === senderName}
           />
         </Box>
       )}

@@ -1,8 +1,8 @@
-import { createContext } from 'react-router'
+import { createContext as createReactRouterContext } from 'react-router'
 import { createClient } from 'redis'
 
-export const client = await createClient(
+export const presenceClient = await createClient(
   process.env.PRESENCE_DB_URL ? { url: process.env.PRESENCE_DB_URL } : {},
 ).connect()
 
-export const presenceContext = createContext(client)
+export const presenceClientContext = createReactRouterContext(presenceClient)

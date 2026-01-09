@@ -11,7 +11,8 @@ import { useCallback, useId } from 'react'
 import { EditProfileModal } from './EditProfileModal'
 import { UserAvatar, type UserAvatarProps } from './UserAvatar'
 
-type Props = UserAvatarProps & {
+type Props = Omit<UserAvatarProps, 'id' | 'withOnlineStatus'> & {
+  id: number
   displayName: string | null
   isEditable: boolean
 }
@@ -39,7 +40,7 @@ export function UserAvatarPopover(props: Props) {
             className="active:transform-[translateY(1px)]"
             onClick={popoverHandlers.toggle}
           >
-            <UserAvatar {...props} />
+            <UserAvatar {...props} id={undefined} />
           </UnstyledButton>
         </Popover.Target>
         <Popover.Dropdown
@@ -83,7 +84,7 @@ export function UserAvatarPopover(props: Props) {
                 </foreignObject>
               </svg>
               <Box top={61} left={16} pos="absolute">
-                <UserAvatar {...props} size={80} />
+                <UserAvatar size={80} {...props} withOnlineStatus />
               </Box>
             </Box>
             <Stack pr="md" pl="md" pt={4}>
@@ -103,6 +104,7 @@ export function UserAvatarPopover(props: Props) {
         </Popover.Dropdown>
       </Popover>
       <EditProfileModal
+        id={props.id}
         name={props.name}
         opened={editProfileModalOpened}
         onClose={editProfileModalHandlers.close}

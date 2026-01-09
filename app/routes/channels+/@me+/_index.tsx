@@ -25,11 +25,11 @@ import { Form, useSubmit } from 'react-router'
 import * as R from 'remeda'
 import { friendships } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
-import { userContext } from '../../../contexts/user'
+import { loggedInUserContext } from '../../../contexts/user.server'
 import type { Route } from './+types/_index'
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
-  const user = context.get(userContext)
+  const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }
@@ -201,7 +201,7 @@ export const clientAction = async ({
 }
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
-  const user = context.get(userContext)
+  const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }

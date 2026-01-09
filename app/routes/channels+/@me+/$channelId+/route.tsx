@@ -23,6 +23,7 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { Form, useNavigation } from 'react-router'
+import { createWebSocket } from '../../../_shared/lib/websocket'
 import { IconButton } from '../../../_shared/ui/IconButton'
 import type { Route } from './+types/route'
 import {
@@ -35,7 +36,6 @@ import { EditProfileContext } from './ui/EditProfileModal'
 import { Message } from './ui/Message'
 import { UserAvatar } from './ui/UserAvatar'
 import { UserProfileSidebar } from './ui/UserProfileSidebar'
-import { createWebSocket } from '../../../_shared/lib/websocket'
 
 export { action } from './api/action.server'
 export { loader } from './api/loader.server'
@@ -403,7 +403,7 @@ export default function DMChannel({
                     : {})}
                 >
                   <Message
-                    loggedInUser={loaderData.loggedInUser}
+                    senderId={entry.message.sender.id}
                     senderName={entry.message.sender.name}
                     senderDisplayName={entry.message.sender.displayName}
                     avatarSrc={entry.message.sender.avatarUrl}

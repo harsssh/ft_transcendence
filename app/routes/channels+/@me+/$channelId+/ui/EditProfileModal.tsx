@@ -31,6 +31,7 @@ import { UserAvatar } from './UserAvatar'
 type Props = {
   opened: boolean
   onClose: () => void
+  id: number
   name: string | null
   defaultValue: {
     displayName: string | null
@@ -67,7 +68,7 @@ export function EditProfileModal(props: Props) {
   )
 }
 
-function EditProfileForm({ defaultValue, onClose, name }: Props) {
+function EditProfileForm({ defaultValue, onClose, name, id }: Props) {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
 
@@ -136,6 +137,7 @@ function EditProfileForm({ defaultValue, onClose, name }: Props) {
             </Text>
             <UserProfile
               {...{
+                id,
                 name,
                 displayName: fields.displayName.value ?? null,
                 avatarUrl,
@@ -165,6 +167,7 @@ function EditProfileForm({ defaultValue, onClose, name }: Props) {
 }
 
 function UserProfile(props: {
+  id: number
   name: string | null
   displayName: string | null
   avatarUrl: string | null
@@ -199,7 +202,12 @@ function UserProfile(props: {
           </foreignObject>
         </svg>
         <Box top={61} left={16} pos="absolute">
-          <UserAvatar {...props} src={props.avatarUrl} size={80} />
+          <UserAvatar
+            {...props}
+            src={props.avatarUrl}
+            size={80}
+            withOnlineStatus
+          />
         </Box>
       </Box>
       <Stack pr="md" pl="md" pt={4}>

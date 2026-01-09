@@ -6,14 +6,14 @@ import { Outlet, useOutletContext } from 'react-router'
 import * as R from 'remeda'
 import { channels, usersToChannels } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
-import { userContext } from '../../../contexts/user'
+import { loggedInUserContext } from '../../../contexts/user.server'
 import type { ChannelsOutletContext } from '../route'
 import type { Route } from './+types/route'
 import { NewChannelFormSchema } from './model/newChannelForm'
 import { Navbar } from './ui/Navbar'
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
-  const user = context.get(userContext)
+  const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }
@@ -55,7 +55,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 }
 
 export const action = async ({ context, request }: Route.ActionArgs) => {
-  const user = context.get(userContext)
+  const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }
