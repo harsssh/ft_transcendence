@@ -40,9 +40,12 @@ import { loader } from './api/loader.server'
 export { loader, action }
 
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
+import { SignupFormSchema } from '../../_auth+/signup+/model/signupForm'
 import { NewGuildFormSchema } from '../model/newGuildForm'
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
+
+const InviteFriendSchema = SignupFormSchema.pick({ name: true })
 
 export default function GuildRoute() {
   const { guild } = useLoaderData<typeof loader>()
@@ -51,14 +54,30 @@ export default function GuildRoute() {
   const { setSecondaryNavbar, setSecondaryNavbarWidth } =
     useOutletContext<ChannelsOutletContext>()
   const submit = useSubmit()
-  const [opened, { open, close }] = useDisclosure(false)
-  const [form, fields] = useForm({
+  const [renameOpened, { open: openRename, close: closeRename }] =
+    useDisclosure(false)
+  const [inviteOpened, { open: openInvite, close: closeInvite }] =
+    useDisclosure(false)
+
+  const [renameForm, renameFields] = useForm({
+    id: 'rename-server',
     lastResult: actionData,
     constraint: getZodConstraint(NewGuildFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: NewGuildFormSchema })
+    },
+  })
+
+  const [inviteForm, inviteFields] = useForm({
+    id: 'invite-friend',
+    lastResult: actionData,
+    constraint: getZodConstraint(InviteFriendSchema),
+    shouldValidate: 'onBlur',
+    shouldRevalidate: 'onInput',
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: InviteFriendSchema })
     },
   })
 
@@ -116,9 +135,10 @@ export default function GuildRoute() {
 
   useEffect(() => {
     if (actionData?.status === 'success') {
-      close()
+      closeRename()
+      closeInvite()
     }
-  }, [actionData, close])
+  }, [actionData, closeRename, closeInvite])
 
   useEffect(() => {
     setSecondaryNavbarWidth(240)
@@ -144,10 +164,16 @@ export default function GuildRoute() {
               </Button>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Item rightSection={<IconCookieMan size={18} />}>
+              <Menu.Item
+                rightSection={<IconCookieMan size={18} />}
+                onClick={openInvite}
+              >
                 Invite to Server
               </Menu.Item>
-              <Menu.Item rightSection={<IconPencil size={18} />} onClick={open}>
+              <Menu.Item
+                rightSection={<IconPencil size={18} />}
+                onClick={openRename}
+              >
                 Rename Server
               </Menu.Item>
               <Menu.Item rightSection={<IconPlus size={18} />}>
@@ -202,7 +228,8 @@ export default function GuildRoute() {
     setSecondaryNavbarWidth,
     handleDeleteServer,
     handleLeaveServer,
-    open,
+    openRename,
+    openInvite,
   ])
 
   return (
@@ -211,19 +238,24 @@ export default function GuildRoute() {
         <Text c="dimmed">Select a channel</Text>
       </Flex>
 
-      <Modal opened={opened} onClose={close} title="Rename Server" centered>
-        <Form method="post" {...getFormProps(form)}>
+      <Modal
+        opened={renameOpened}
+        onClose={closeRename}
+        title="Rename Server"
+        centered
+      >
+        <Form method="post" {...getFormProps(renameForm)}>
           <Stack gap="sm">
-            {form.errors && (
+            {renameForm.errors && (
               <Alert variant="light" color="red">
-                {form.errors}
+                {renameForm.errors}
               </Alert>
             )}
             <Text size="sm" mb="sm" c="dimmed">
               Enter a new name for your server.
             </Text>
             <TextInput
-              {...getInputProps(fields.name, { type: 'text' })}
+              {...getInputProps(renameFields.name, { type: 'text' })}
               label="Server Name"
               placeholder="Enter server name"
               name="name"
@@ -231,15 +263,52 @@ export default function GuildRoute() {
               data-autofocus
               required
               mb="md"
-              error={fields.name.errors}
+              error={renameFields.name.errors}
             />
           </Stack>
           <input type="hidden" name="intent" value="rename-server" />
           <Group justify="flex-end">
-            <Button variant="default" onClick={close}>
+            <Button variant="default" onClick={closeRename}>
               Cancel
             </Button>
             <Button type="submit">Save</Button>
+          </Group>
+        </Form>
+      </Modal>
+
+      <Modal
+        opened={inviteOpened}
+        onClose={closeInvite}
+        title="Invite Friend"
+        centered
+      >
+        <Form method="post" {...getFormProps(inviteForm)}>
+          <Stack gap="sm">
+            {inviteForm.errors && (
+              <Alert variant="light" color="red">
+                {inviteForm.errors}
+              </Alert>
+            )}
+            <Text size="sm" mb="sm" c="dimmed">
+              You can invite friends with their username.
+            </Text>
+            <TextInput
+              {...getInputProps(inviteFields.name, { type: 'text' })}
+              label="Username"
+              placeholder="Enter username"
+              name="name"
+              data-autofocus
+              required
+              mb="md"
+              error={inviteFields.name.errors}
+            />
+          </Stack>
+          <input type="hidden" name="intent" value="invite-friend" />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeInvite}>
+              Cancel
+            </Button>
+            <Button type="submit">Invite</Button>
           </Group>
         </Form>
       </Modal>
