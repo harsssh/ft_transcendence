@@ -1,11 +1,11 @@
+import { Hono } from 'hono'
+import type { UpgradeWebSocket } from 'hono/ws'
 import { RouterContextProvider } from 'react-router'
 import { createHonoServer } from 'react-router-hono-server/bun'
 import { db, dbContext } from '../app/contexts/db'
 import { initializeStorage } from '../app/contexts/storage'
 import { channels } from './channels'
 import { presence } from './users'
-import { Hono } from 'hono'
-import type { UpgradeWebSocket } from 'hono/ws'
 
 // Run storage initialization
 await initializeStorage()

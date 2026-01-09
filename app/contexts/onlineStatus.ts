@@ -1,9 +1,9 @@
-import { createContext, useContext, useEffect, useState } from 'react'
-import { LoggedInUserContext } from './user'
-import { err, ResultAsync } from 'neverthrow'
-import { hc } from 'hono/client'
-import type { AppType } from '../../server'
 import { useInterval } from '@mantine/hooks'
+import { hc } from 'hono/client'
+import { err, ResultAsync } from 'neverthrow'
+import { createContext, useContext, useEffect, useState } from 'react'
+import type { AppType } from '../../server'
+import { LoggedInUserContext } from './user'
 
 export type OnlineStatus = 'online' | 'offline'
 
