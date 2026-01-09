@@ -1,4 +1,17 @@
-## Docker
+## 環境構築
+
+クローン:
+```
+git clone <url> --recursive
+```
+
+pull時にsubmoduleを更新する:
+```
+git submodule update --init --recursive
+```
+
+
+## 実行方法
 
 開発用:
 
