@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { redirect } from 'react-router'
-import { guilds } from '../../../../../db/schema'
+import { guildMembers, guilds } from '../../../../../db/schema'
 import { dbContext } from '../../../../contexts/db'
 import { userContext } from '../../../../contexts/user'
 import type { Route } from '../+types/route'
@@ -14,6 +14,46 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const db = context.get(dbContext)
   const formData = await request.formData()
   const intent = formData.get('intent')
+
+  if (intent === 'leave-server') {
+    const guildId = Number(params.guildId)
+    if (!guildId || Number.isNaN(guildId)) {
+      return { error: 'Invalid guild ID' }
+    }
+
+    try {
+      const guild = await db.query.guilds.findFirst({
+        where: {
+          id: guildId,
+        },
+      })
+      if (!guild) {
+        return { error: 'Server not found' }
+      }
+    } catch (error) {
+      console.error('Error handling guild action:', error)
+      return {
+        error: 'An unexpected error occurred while processing your request.',
+      }
+    }
+    try {
+      await db
+        .delete(guildMembers)
+        .where(
+          and(
+            eq(guildMembers.userId, user.id),
+            eq(guildMembers.guildId, guildId),
+          ),
+        )
+    } catch (error) {
+      console.error('Error leaving guild:', error)
+      return {
+        error: 'An unexpected error occurred while processing your request.',
+      }
+    }
+
+    throw redirect('/channels/@me')
+  }
 
   if (intent === 'delete-server') {
     const guildId = Number(params.guildId)

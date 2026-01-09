@@ -5,7 +5,7 @@ import {
   Menu,
   Text,
 } from '@mantine/core'
-import { openConfirmModal } from '@mantine/modals'
+import { modals } from '@mantine/modals'
 import {
   IconChevronDown,
   IconCookieMan,
@@ -39,7 +39,7 @@ export default function GuildRoute() {
   const submit = useSubmit()
 
   const handleDeleteServer = useCallback(() => {
-    openConfirmModal({
+    modals.openConfirmModal({
       title: (
         <Text fw={700} className="break-all">
           Delete '{guild.name}'
@@ -59,6 +59,32 @@ export default function GuildRoute() {
       onConfirm: () => {
         const formData = new FormData()
         formData.append('intent', 'delete-server')
+        submit(formData, { method: 'post' })
+      },
+    })
+  }, [guild.name, submit])
+
+  const handleLeaveServer = useCallback(() => {
+    modals.openConfirmModal({
+      title: (
+        <Text fw={700} className="break-all">
+          Leave '{guild.name}'
+        </Text>
+      ),
+      children: (
+        <Text size="sm">
+          Are you sure you want to leave{' '}
+          <Text span fw={700} className="break-all">
+            {guild.name}
+          </Text>
+          ? You won't be able to rejoin this server unless you are re-invited.
+        </Text>
+      ),
+      labels: { confirm: 'Leave Server', cancel: 'Cancel' },
+      confirmProps: { color: 'red' },
+      onConfirm: () => {
+        const formData = new FormData()
+        formData.append('intent', 'leave-server')
         submit(formData, { method: 'post' })
       },
     })
@@ -98,7 +124,11 @@ export default function GuildRoute() {
                 Create Channel
               </Menu.Item>
               <Menu.Divider />
-              <Menu.Item color="red" rightSection={<IconLogout size={18} />}>
+              <Menu.Item
+                color="red"
+                rightSection={<IconLogout size={18} />}
+                onClick={handleLeaveServer}
+              >
                 Leave Server
               </Menu.Item>
               <Menu.Item
@@ -136,7 +166,13 @@ export default function GuildRoute() {
       setSecondaryNavbar(null)
       setSecondaryNavbarWidth(0)
     }
-  }, [guild, setSecondaryNavbar, setSecondaryNavbarWidth, handleDeleteServer])
+  }, [
+    guild,
+    setSecondaryNavbar,
+    setSecondaryNavbarWidth,
+    handleDeleteServer,
+    handleLeaveServer,
+  ])
 
   return (
     <Flex h="100%" align="center" justify="center" direction="column">
