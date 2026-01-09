@@ -27,15 +27,14 @@ import { IconButton } from '../../../_shared/ui/IconButton'
 import type { Route } from './+types/route'
 import {
   MessageSchema,
-  SendMessageSchema,
   type MessageType,
+  SendMessageSchema,
 } from './model/message'
 import { DateSeparator } from './ui/DateSeparator'
 import { EditProfileContext } from './ui/EditProfileModal'
 import { Message } from './ui/Message'
 import { UserAvatar } from './ui/UserAvatar'
 import { UserProfileSidebar } from './ui/UserProfileSidebar'
-import { Result } from 'neverthrow'
 
 export { action } from './api/action.server'
 export { loader } from './api/loader.server'

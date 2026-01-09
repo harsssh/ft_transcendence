@@ -1,13 +1,13 @@
-import { Hono } from 'hono'
-import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import { eq } from 'drizzle-orm'
-import {
-  SendMessageSchema,
-  type MessageType,
-} from '../app/routes/channels+/@me+/$channelId+/model/message'
-import { messages, users } from '../db/schema'
+import { Hono } from 'hono'
 import type { UpgradeWebSocket, WSContext } from 'hono/ws'
 import { db } from '../app/contexts/db'
+import { getSession } from '../app/routes/_auth+/_shared/session.server'
+import {
+  type MessageType,
+  SendMessageSchema,
+} from '../app/routes/channels+/@me+/$channelId+/model/message'
+import { messages, users } from '../db/schema'
 
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
