@@ -3,20 +3,24 @@ import { createHonoServer } from 'react-router-hono-server/bun'
 import { db, dbContext } from '../app/contexts/db'
 import { initializeStorage } from '../app/contexts/storage'
 import { channels } from './channels'
-import { presence } from './presence'
+import { presence } from './users'
+import { Hono } from 'hono'
+import type { UpgradeWebSocket } from 'hono/ws'
 
 // Run storage initialization
 await initializeStorage()
 
-const honoServer = await createHonoServer({
+const createApp = (upgradeWebSocket: UpgradeWebSocket) =>
+  new Hono()
+    .get('/api/health', (c) => c.text('OK'))
+    .route('/api/channels', channels(upgradeWebSocket))
+    .route('/api/presence', presence(upgradeWebSocket))
+
+const server = await createHonoServer({
   defaultLogger: false,
   useWebSocket: true,
   configure(app, { upgradeWebSocket }) {
-    app.get('/api/health', (c) => c.text('OK'))
-
-    // WebSocket endpoint for real-time chat
-    app.route('/api/channels', channels(upgradeWebSocket))
-    app.route('/api/presence', presence(upgradeWebSocket))
+    app.route('/', createApp(upgradeWebSocket))
   },
   getLoadContext() {
     const context = new RouterContextProvider()
@@ -25,4 +29,6 @@ const honoServer = await createHonoServer({
   },
 })
 
-export default honoServer
+export type AppType = ReturnType<typeof createApp>
+
+export default server
