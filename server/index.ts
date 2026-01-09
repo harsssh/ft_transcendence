@@ -11,10 +11,10 @@ const honoServer = await createHonoServer({
   defaultLogger: false,
   useWebSocket: true,
   configure(app, { upgradeWebSocket }) {
-    app.get('/api', (c) => c.text('hello'))
+    app.get('/api/health', (c) => c.text('OK'))
 
     // WebSocket endpoint for real-time chat
-    app.route('/ws/channels/', channels(upgradeWebSocket))
+    app.route('/api/channels', channels(upgradeWebSocket))
   },
   getLoadContext() {
     const context = new RouterContextProvider()

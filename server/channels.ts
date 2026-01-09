@@ -14,7 +14,7 @@ const channelConnections = new Map<string, Set<WSContext>>()
 
 export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
   new Hono().get(
-    '/:channelId',
+    '/:channelId/ws',
     upgradeWebSocket((c) => {
       const channelId = c.req.param('channelId')
 
