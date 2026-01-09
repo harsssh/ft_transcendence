@@ -1,7 +1,10 @@
 import { Hono } from 'hono'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import { eq } from 'drizzle-orm'
-import { SendMessageSchema } from '../app/routes/channels+/@me+/$channelId+/model/message'
+import {
+  SendMessageSchema,
+  type MessageType,
+} from '../app/routes/channels+/@me+/$channelId+/model/message'
 import { messages, users } from '../db/schema'
 import type { UpgradeWebSocket, WSContext } from 'hono/ws'
 import { db } from '../app/contexts/db'
@@ -124,7 +127,12 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
               // Fetch sender info
               const [sender] = await db
-                .select({ id: users.id, name: users.name })
+                .select({
+                  id: users.id,
+                  name: users.name,
+                  displayName: users.displayName,
+                  avatarUrl: users.avatarUrl,
+                })
                 .from(users)
                 .where(eq(users.id, userId))
 
@@ -134,18 +142,11 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
               }
 
               // Prepare broadcast with real DB data
-              const broadcastData = {
-                type: 'message',
-                data: {
-                  id: insertedMessage.id,
-                  content: insertedMessage.content,
-                  createdAt: insertedMessage.createdAt,
-                  sender: {
-                    id: sender.id,
-                    name: sender.name,
-                  },
-                  tempId: data.id, // Client's temp ID for matching
-                },
+              const broadcastData: MessageType = {
+                id: insertedMessage.id,
+                content: insertedMessage.content,
+                createdAt: insertedMessage.createdAt,
+                sender,
               }
 
               // Broadcast to ALL clients (including sender)

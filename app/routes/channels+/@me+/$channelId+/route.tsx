@@ -25,12 +25,17 @@ import {
 import { Form, useNavigation } from 'react-router'
 import { IconButton } from '../../../_shared/ui/IconButton'
 import type { Route } from './+types/route'
-import { SendMessageSchema } from './model/message'
+import {
+  MessageSchema,
+  SendMessageSchema,
+  type MessageType,
+} from './model/message'
 import { DateSeparator } from './ui/DateSeparator'
 import { EditProfileContext } from './ui/EditProfileModal'
 import { Message } from './ui/Message'
 import { UserAvatar } from './ui/UserAvatar'
 import { UserProfileSidebar } from './ui/UserProfileSidebar'
+import { Result } from 'neverthrow'
 
 export { action } from './api/action.server'
 export { loader } from './api/loader.server'
@@ -44,7 +49,7 @@ export default function DMChannel({
   const channelId = params.channelId
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-  const [messages, setMessages] = useState(initialMessages)
+  const [messages, setMessages] = useState<MessageType[]>(initialMessages)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAtBottom, setIsAtBottom] = useState(true)
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -125,28 +130,31 @@ export default function DMChannel({
         if (!mounted) return
         console.log('Message received:', event.data)
         try {
-          const payload = JSON.parse(event.data)
+          const {
+            success,
+            data: newMessage,
+            error,
+          } = MessageSchema.safeParse(JSON.parse(event.data))
+          console.log(event.data)
 
-          if (payload.type === 'message' && payload.data) {
-            const newMessage = {
-              ...payload.data,
-              createdAt: new Date(payload.data.createdAt), // Parse string to Date
+          if (!success) {
+            console.log('Invalid message format:', error)
+            return
+          }
+
+          setMessages((prev) => {
+            // Avoid duplicates
+            if (prev.some((m) => m.id === newMessage.id)) {
+              return prev
             }
+            return [...prev, newMessage]
+          })
 
-            setMessages((prev) => {
-              // Avoid duplicates
-              if (prev.some((m) => m.id === newMessage.id)) {
-                return prev
-              }
-              return [...prev, newMessage]
-            })
-
-            const atBottom = checkIfAtBottom()
-            if (!atBottom) {
-              setUnreadCount((prev) => prev + 1)
-            } else {
-              setTimeout(() => scrollToBottom(), 0)
-            }
+          const atBottom = checkIfAtBottom()
+          if (!atBottom) {
+            setUnreadCount((prev) => prev + 1)
+          } else {
+            setTimeout(() => scrollToBottom(), 0)
           }
         } catch (error) {
           console.error('Error parsing message:', error)
