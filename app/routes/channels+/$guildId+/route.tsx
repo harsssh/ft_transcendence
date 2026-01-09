@@ -1,10 +1,17 @@
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import {
+  Alert,
   Button,
   Flex,
+  Group,
   NavLink as MantineNavLink,
   Menu,
+  Modal,
+  Stack,
   Text,
+  TextInput,
 } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
 import { modals } from '@mantine/modals'
 import {
   IconChevronDown,
@@ -17,7 +24,9 @@ import {
 } from '@tabler/icons-react'
 import { useCallback, useEffect } from 'react'
 import {
+  Form,
   NavLink,
+  useActionData,
   useLoaderData,
   useOutletContext,
   useSubmit,
@@ -30,13 +39,28 @@ import { loader } from './api/loader.server'
 
 export { loader, action }
 
+import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
+import { NewGuildFormSchema } from '../model/newGuildForm'
+
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
 export default function GuildRoute() {
   const { guild } = useLoaderData<typeof loader>()
+  const actionData = useActionData<typeof action>()
+
   const { setSecondaryNavbar, setSecondaryNavbarWidth } =
     useOutletContext<ChannelsOutletContext>()
   const submit = useSubmit()
+  const [opened, { open, close }] = useDisclosure(false)
+  const [form, fields] = useForm({
+    lastResult: actionData,
+    constraint: getZodConstraint(NewGuildFormSchema),
+    shouldValidate: 'onBlur',
+    shouldRevalidate: 'onInput',
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: NewGuildFormSchema })
+    },
+  })
 
   const handleDeleteServer = useCallback(() => {
     modals.openConfirmModal({
@@ -91,6 +115,12 @@ export default function GuildRoute() {
   }, [guild.name, submit])
 
   useEffect(() => {
+    if (actionData?.status === 'success') {
+      close()
+    }
+  }, [actionData, close])
+
+  useEffect(() => {
     setSecondaryNavbarWidth(240)
     setSecondaryNavbar(
       <Flex direction="column" h="100%" w={240}>
@@ -117,7 +147,7 @@ export default function GuildRoute() {
               <Menu.Item rightSection={<IconCookieMan size={18} />}>
                 Invite to Server
               </Menu.Item>
-              <Menu.Item rightSection={<IconPencil size={18} />}>
+              <Menu.Item rightSection={<IconPencil size={18} />} onClick={open}>
                 Rename Server
               </Menu.Item>
               <Menu.Item rightSection={<IconPlus size={18} />}>
@@ -172,11 +202,47 @@ export default function GuildRoute() {
     setSecondaryNavbarWidth,
     handleDeleteServer,
     handleLeaveServer,
+    open,
   ])
 
   return (
-    <Flex h="100%" align="center" justify="center" direction="column">
-      <Text c="dimmed">Select a channel</Text>
-    </Flex>
+    <>
+      <Flex h="100%" align="center" justify="center" direction="column">
+        <Text c="dimmed">Select a channel</Text>
+      </Flex>
+
+      <Modal opened={opened} onClose={close} title="Rename Server" centered>
+        <Form method="post" {...getFormProps(form)}>
+          <Stack gap="sm">
+            {form.errors && (
+              <Alert variant="light" color="red">
+                {form.errors}
+              </Alert>
+            )}
+            <Text size="sm" mb="sm" c="dimmed">
+              Enter a new name for your server.
+            </Text>
+            <TextInput
+              {...getInputProps(fields.name, { type: 'text' })}
+              label="Server Name"
+              placeholder="Enter server name"
+              name="name"
+              defaultValue={guild.name}
+              data-autofocus
+              required
+              mb="md"
+              error={fields.name.errors}
+            />
+          </Stack>
+          <input type="hidden" name="intent" value="rename-server" />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={close}>
+              Cancel
+            </Button>
+            <Button type="submit">Save</Button>
+          </Group>
+        </Form>
+      </Modal>
+    </>
   )
 }
