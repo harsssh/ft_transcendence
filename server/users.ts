@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import type { UpgradeWebSocket } from 'hono/ws'
 import { presenceClient } from '../app/contexts/presence'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
+import { ResultAsync } from 'neverthrow'
 
 export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
   new Hono()
@@ -20,12 +21,22 @@ export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
         return {
           async onOpen() {
             console.log(`Presence ${userId}: online`)
-            await presenceClient.set(`user:${userId}`, 'online')
+            ResultAsync.fromPromise(
+              presenceClient.set(`user:${userId}`, 'online'),
+              (e) => {
+                console.error('Failed to set presence status:', e)
+              },
+            )
           },
 
           async onClose() {
             console.log(`Presence ${userId}: offline`)
-            await presenceClient.set(`user:${userId}`, 'offline')
+            ResultAsync.fromPromise(
+              presenceClient.set(`user:${userId}`, 'offline'),
+              (e) => {
+                console.error('Failed to set presence status:', e)
+              },
+            )
           },
         }
       }),
@@ -41,6 +52,14 @@ export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
       }
 
       const targetUserId = c.req.param('userId')
-      const status = await presenceClient.get(`user:${targetUserId}`)
+      const status = ResultAsync.fromPromise(
+        presenceClient.get(`user:${targetUserId}`),
+        (e) => {
+          console.error('Failed to get presence status:', e)
+        },
+      ).match(
+        (status) => status,
+        () => 'offline',
+      )
       return c.json({ status: status ?? 'offline' })
     })
