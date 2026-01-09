@@ -17,6 +17,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
     '/:channelId/ws',
     upgradeWebSocket((c) => {
       const channelId = c.req.param('channelId')
+      let userId: number | undefined
 
       return {
         async onOpen(_event, ws) {
@@ -24,15 +25,14 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           const session = await getSession(
             new Request(c.req.url, { headers: c.req.raw.headers }),
           )
-          const userId = session.get('userId')
+
+          userId = session.get('userId')
 
           if (!userId) {
             console.log('WebSocket rejected: not authenticated')
             ws.close()
             return
           }
-          // Store userId with connection
-          ;(ws as WSContext & { userId?: number }).userId = userId
 
           // Verify channel membership
           const channel = await db.query.channels.findFirst({
@@ -76,8 +76,6 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
               )
               return
             }
-
-            const userId = (ws as WSContext & { userId?: number }).userId
 
             if (!userId) {
               console.error('User ID not found')
