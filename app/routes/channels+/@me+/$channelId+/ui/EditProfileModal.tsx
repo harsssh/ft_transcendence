@@ -100,10 +100,7 @@ function EditProfileForm({ defaultValue, onClose, name }: Props) {
           {form.errors}
         </Alert>
       )}
-      <input
-        {...getInputProps(fields.intent, { type: 'hidden' })}
-        value="edit-profile"
-      />
+      <input {...getInputProps(fields.intent, { type: 'hidden' })} />
       <Stack>
         <Group justify="center" align="flex-start" gap={36}>
           <Stack flex={1}>
