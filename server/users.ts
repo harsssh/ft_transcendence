@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import type { UpgradeWebSocket } from 'hono/ws'
+import { ResultAsync } from 'neverthrow'
 import { presenceClient } from '../app/contexts/presence'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
-import { ResultAsync } from 'neverthrow'
 
 export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
   new Hono()
@@ -52,7 +52,7 @@ export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
       }
 
       const targetUserId = c.req.param('userId')
-      const status = ResultAsync.fromPromise(
+      const status = await ResultAsync.fromPromise(
         presenceClient.get(`user:${targetUserId}`),
         (e) => {
           console.error('Failed to get presence status:', e)
