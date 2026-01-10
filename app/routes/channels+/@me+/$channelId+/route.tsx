@@ -128,14 +128,12 @@ export default function DMChannel({
 
           ws.onmessage = (event) => {
             if (!mounted) return
-            console.log('Message received:', event.data)
             try {
               const {
                 success,
                 data: newMessage,
                 error,
               } = MessageSchema.safeParse(JSON.parse(event.data))
-              console.log(event.data)
 
               if (!success) {
                 console.log('Invalid message format:', error)
