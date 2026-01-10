@@ -152,6 +152,7 @@ export default function GuildRoute() {
           ? This action cannot be undone.
         </Text>
       ),
+      centered: true,
       labels: { confirm: 'Delete Server', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
       onConfirm: () => {
@@ -178,6 +179,7 @@ export default function GuildRoute() {
           ? You won't be able to rejoin this server unless you are re-invited.
         </Text>
       ),
+      centered: true,
       labels: { confirm: 'Leave Server', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
       onConfirm: () => {
@@ -205,6 +207,7 @@ export default function GuildRoute() {
             ? This action cannot be undone.
           </Text>
         ),
+        centered: true,
         labels: { confirm: 'Delete Channel', cancel: 'Cancel' },
         confirmProps: { color: 'red' },
         onConfirm: () => {
