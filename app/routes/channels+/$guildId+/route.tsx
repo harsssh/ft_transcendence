@@ -256,7 +256,9 @@ export default function GuildRoute() {
                 radius="md"
                 className="rounded-md"
               >
-                <Text fw="bold" truncate="end">{guild.name}</Text>
+                <Text fw="bold" truncate="end">
+                  {guild.name}
+                </Text>
                 <IconChevronDown size={14} style={{ flexShrink: 0 }} />
               </Button>
             </Menu.Target>
