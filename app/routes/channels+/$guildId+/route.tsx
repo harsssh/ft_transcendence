@@ -61,7 +61,11 @@ export default function GuildRoute() {
 
   const [renameForm, renameFields] = useForm({
     id: 'rename-server',
-    lastResult: actionData,
+    defaultValue: { name: guild.name },
+    lastResult:
+      actionData?.initialValue?.['intent'] === 'rename-server'
+        ? actionData
+        : undefined,
     constraint: getZodConstraint(NewGuildFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -72,7 +76,11 @@ export default function GuildRoute() {
 
   const [inviteForm, inviteFields] = useForm({
     id: 'invite-friend',
-    lastResult: actionData,
+    defaultValue: { name: '' },
+    lastResult:
+      actionData?.initialValue?.['intent'] === 'invite-friend'
+        ? actionData
+        : undefined,
     constraint: getZodConstraint(InviteFriendSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -259,8 +267,6 @@ export default function GuildRoute() {
               label="Server Name"
               placeholder="Enter server name"
               name="name"
-              defaultValue={guild.name}
-              data-autofocus
               required
               mb="md"
               error={renameFields.name.errors}
@@ -297,7 +303,6 @@ export default function GuildRoute() {
               label="Username"
               placeholder="Enter username"
               name="name"
-              data-autofocus
               required
               mb="md"
               error={inviteFields.name.errors}
