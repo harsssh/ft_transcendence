@@ -201,7 +201,7 @@ export default function DMChannel({
         clearTimeout(reconnectTimeoutRef.current)
       }
       if (ws?.readyState === WebSocket.OPEN) {
-        ws?.close()
+        ws.close()
       }
     }
   }, [channelId, checkIfAtBottom, scrollToBottom])
