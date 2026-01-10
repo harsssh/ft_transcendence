@@ -21,22 +21,20 @@ export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
         return {
           async onOpen() {
             console.log(`Presence ${userId}: online`)
-            ResultAsync.fromPromise(
-              presenceClient.set(`user:${userId}`, 'online'),
-              (e) => {
-                console.error('Failed to set presence status:', e)
-              },
-            )
+            try {
+              await presenceClient.set(`user:${userId}`, 'online')
+            } catch (e) {
+              console.error('Failed to set presence status:', e)
+            }
           },
 
           async onClose() {
             console.log(`Presence ${userId}: offline`)
-            ResultAsync.fromPromise(
-              presenceClient.set(`user:${userId}`, 'offline'),
-              (e) => {
-                console.error('Failed to set presence status:', e)
-              },
-            )
+            try {
+              await presenceClient.set(`user:${userId}`, 'offline')
+            } catch (e) {
+              console.error('Failed to set presence status:', e)
+            }
           },
         }
       }),
