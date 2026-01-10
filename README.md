@@ -1,15 +1,21 @@
 ## 環境構築
 
-クローン:
+1. 以下のコマンドを実行してクローン
 ```
 git clone <url> --recursive
 ```
 
-pull時にsubmoduleを更新する:
+2. (optional) submoduleを更新。minioが必要な場合は必須
 ```
 git submodule update --init --recursive
 ```
 
+3. `.env.example`をコピーして、`.env`に必須の環境変数を設定
+
+4. `/etc/hosts`を書き換えて`127.0.0.1`を`HOST`で指定したhostnameに紐付け
+```
+127.0.0.1   <HOSTで指定したhostname>
+```
 
 ## 実行方法
 

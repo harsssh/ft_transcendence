@@ -13,10 +13,12 @@ services:
         condition: service_completed_successfully
     environment:
       - NODE_ENV=production
+      - HOST=${HOST:?}
+      - PORT=443
       - DATABASE_URL=postgres://app:app@db:5432/app
       - PRESENCE_DB_URL=redis://presence-db:6379
     ports:
-      - "3000:3000"
+      - "443:443"
     networks:
       - internal
       - web
