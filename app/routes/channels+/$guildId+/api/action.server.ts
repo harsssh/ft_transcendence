@@ -24,6 +24,27 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const formData = await request.formData()
   const intent = formData.get('intent')
 
+  const guild = await db.query.guilds
+    .findFirst({
+      where: {
+        id: guildId,
+      },
+      columns: {
+        ownerId: true,
+      },
+    })
+    .catch((error) => {
+      if (error instanceof Response) throw error
+      console.error('Error handling guild action:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    })
+  if (!guild) {
+    throw new Response('Server not found', { status: 404 })
+  }
+
   if (intent === 'invite-friend') {
     const currentUserMember = await db.query.guildMembers.findFirst({
       where: {
@@ -86,37 +107,17 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'rename-server') {
+    if (guild.ownerId !== user.id) {
+      throw new Response('Only the server owner can rename the server', {
+        status: 403,
+      })
+    }
+
     const submission = parseWithZod(formData, { schema: NewGuildFormSchema })
     if (submission.status !== 'success') {
       return submission.reply()
     }
     const { name } = submission.value
-
-    try {
-      const guild = await db.query.guilds.findFirst({
-        where: {
-          id: guildId,
-        },
-        columns: {
-          ownerId: true,
-        },
-      })
-      if (!guild) {
-        throw new Response('Server not found', { status: 404 })
-      }
-      if (guild.ownerId !== user.id) {
-        throw new Response('Only the server owner can rename the server', {
-          status: 403,
-        })
-      }
-    } catch (error) {
-      if (error instanceof Response) throw error
-      console.error('Error handling guild action:', error)
-      throw new Response(
-        'An unexpected error occurred while processing your request.',
-        { status: 500 },
-      )
-    }
 
     try {
       await db.update(guilds).set({ name }).where(eq(guilds.id, guildId))
@@ -136,24 +137,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       return submission.reply()
     }
     const { name } = submission.value
-
-    try {
-      const guild = await db.query.guilds.findFirst({
-        where: {
-          id: guildId,
-        },
-      })
-      if (!guild) {
-        throw new Response('Server not found', { status: 404 })
-      }
-    } catch (error) {
-      if (error instanceof Response) throw error
-      console.error('Error handling guild action:', error)
-      throw new Response(
-        'An unexpected error occurred while processing your request.',
-        { status: 500 },
-      )
-    }
 
     try {
       const [_newChannel] = await db
@@ -179,23 +162,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
   if (intent === 'leave-server') {
     try {
-      const guild = await db.query.guilds.findFirst({
-        where: {
-          id: guildId,
-        },
-      })
-      if (!guild) {
-        throw new Response('Server not found', { status: 404 })
-      }
-    } catch (error) {
-      if (error instanceof Response) throw error
-      console.error('Error handling guild action:', error)
-      throw new Response(
-        'An unexpected error occurred while processing your request.',
-        { status: 500 },
-      )
-    }
-    try {
       await db
         .delete(guildMembers)
         .where(
@@ -216,30 +182,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'delete-server') {
-    try {
-      const guild = await db.query.guilds.findFirst({
-        where: {
-          id: guildId,
-        },
-        columns: {
-          ownerId: true,
-        },
+    if (guild.ownerId !== user.id) {
+      throw new Response('Only the server owner can delete the server', {
+        status: 403,
       })
-      if (!guild) {
-        throw new Response('Server not found', { status: 404 })
-      }
-      if (guild.ownerId !== user.id) {
-        throw new Response('Only the server owner can delete the server', {
-          status: 403,
-        })
-      }
-    } catch (error) {
-      if (error instanceof Response) throw error
-      console.error('Error handling guild action:', error)
-      throw new Response(
-        'An unexpected error occurred while processing your request.',
-        { status: 500 },
-      )
     }
 
     try {
