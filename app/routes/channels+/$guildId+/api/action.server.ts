@@ -1,12 +1,13 @@
 import { parseWithZod } from '@conform-to/zod/v4'
 import { and, eq } from 'drizzle-orm'
 import { redirect } from 'react-router'
-import { guildMembers, guilds } from '../../../../../db/schema'
+import { channels, guildMembers, guilds } from '../../../../../db/schema'
 import { dbContext } from '../../../../contexts/db'
 import { userContext } from '../../../../contexts/user'
 import { SignupFormSchema } from '../../../_auth+/signup+/model/signupForm'
 import { NewGuildFormSchema } from '../../model/newGuildForm'
 import type { Route } from '../+types/route'
+import { NewChannelFormSchema } from '../model/newChannelForm'
 
 export async function action({ request, context, params }: Route.ActionArgs) {
   const user = context.get(userContext)
@@ -126,6 +127,58 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       await db.update(guilds).set({ name }).where(eq(guilds.id, guildId))
     } catch (error) {
       console.error('Error renaming guild:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+    return submission.reply()
+  }
+
+  if (intent === 'create-channel') {
+    const guildId = Number(params.guildId)
+    if (!guildId || Number.isNaN(guildId)) {
+      throw new Response('Invalid guild ID', { status: 400 })
+    }
+
+    const submission = parseWithZod(formData, { schema: NewChannelFormSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { name } = submission.value
+
+    try {
+      const guild = await db.query.guilds.findFirst({
+        where: {
+          id: guildId,
+        },
+      })
+      if (!guild) {
+        throw new Response('Server not found', { status: 404 })
+      }
+    } catch (error) {
+      if (error instanceof Response) throw error
+      console.error('Error handling guild action:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    try {
+      const [_newChannel] = await db
+        .insert(channels)
+        .values({
+          name: name,
+          guildId: guildId,
+        })
+        .returning()
+
+      // TODO:
+      // throw redirect(`/channels/${guildId}/${newChannel?.id}`)
+    } catch (error) {
+      if (error instanceof Response) throw error
+      console.error('Error creating channel in guild:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },

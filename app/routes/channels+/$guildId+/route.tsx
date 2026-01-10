@@ -42,6 +42,7 @@ export { loader, action }
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import { SignupFormSchema } from '../../_auth+/signup+/model/signupForm'
 import { NewGuildFormSchema } from '../model/newGuildForm'
+import { NewChannelFormSchema } from './model/newChannelForm'
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
@@ -58,6 +59,10 @@ export default function GuildRoute() {
     useDisclosure(false)
   const [inviteOpened, { open: openInvite, close: closeInvite }] =
     useDisclosure(false)
+  const [
+    createChannelOpened,
+    { open: openCreateChannel, close: closeCreateChannel },
+  ] = useDisclosure(false)
 
   const [renameForm, renameFields] = useForm({
     id: 'rename-server',
@@ -86,6 +91,21 @@ export default function GuildRoute() {
     shouldRevalidate: 'onInput',
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: InviteFriendSchema })
+    },
+  })
+
+  const [createChannelForm, createChannelFields] = useForm({
+    id: 'create-channel',
+    defaultValue: { name: '' },
+    lastResult:
+      actionData?.initialValue?.['intent'] === 'create-channel'
+        ? actionData
+        : undefined,
+    constraint: getZodConstraint(NewChannelFormSchema),
+    shouldValidate: 'onBlur',
+    shouldRevalidate: 'onInput',
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: NewChannelFormSchema })
     },
   })
 
@@ -145,8 +165,9 @@ export default function GuildRoute() {
     if (actionData?.status === 'success') {
       closeRename()
       closeInvite()
+      closeCreateChannel()
     }
-  }, [actionData, closeRename, closeInvite])
+  }, [actionData, closeRename, closeInvite, closeCreateChannel])
 
   useEffect(() => {
     setSecondaryNavbarWidth(240)
@@ -184,7 +205,10 @@ export default function GuildRoute() {
               >
                 Rename Server
               </Menu.Item>
-              <Menu.Item rightSection={<IconPlus size={18} />}>
+              <Menu.Item
+                rightSection={<IconPlus size={18} />}
+                onClick={openCreateChannel}
+              >
                 Create Channel
               </Menu.Item>
               <Menu.Divider />
@@ -238,6 +262,7 @@ export default function GuildRoute() {
     handleLeaveServer,
     openRename,
     openInvite,
+    openCreateChannel,
   ])
 
   return (
@@ -314,6 +339,39 @@ export default function GuildRoute() {
               Cancel
             </Button>
             <Button type="submit">Invite</Button>
+          </Group>
+        </Form>
+      </Modal>
+
+      <Modal
+        opened={createChannelOpened}
+        onClose={closeCreateChannel}
+        title="Create Channel"
+        centered
+      >
+        <Form method="post" {...getFormProps(createChannelForm)}>
+          <Stack gap="sm">
+            {createChannelForm.errors && (
+              <Alert variant="light" color="red">
+                {createChannelForm.errors}
+              </Alert>
+            )}
+            <TextInput
+              {...getInputProps(createChannelFields.name, { type: 'text' })}
+              label="Channel Name"
+              placeholder="new-channel"
+              name="name"
+              required
+              mb="md"
+              error={createChannelFields.name.errors}
+            />
+          </Stack>
+          <input type="hidden" name="intent" value="create-channel" />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeCreateChannel}>
+              Cancel
+            </Button>
+            <Button type="submit">createChannel</Button>
           </Group>
         </Form>
       </Modal>
