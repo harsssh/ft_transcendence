@@ -15,16 +15,16 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     throw new Response('Unauthorized', { status: 401 })
   }
 
+  const guildId = Number(params.guildId)
+  if (!guildId || Number.isNaN(guildId)) {
+    throw new Response('Invalid guild ID', { status: 400 })
+  }
+
   const db = context.get(dbContext)
   const formData = await request.formData()
   const intent = formData.get('intent')
 
   if (intent === 'invite-friend') {
-    const guildId = Number(params.guildId)
-    if (!guildId || Number.isNaN(guildId)) {
-      throw new Response('Invalid guild ID', { status: 400 })
-    }
-
     const currentUserMember = await db.query.guildMembers.findFirst({
       where: {
         userId: user.id,
@@ -86,11 +86,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'rename-server') {
-    const guildId = Number(params.guildId)
-    if (!guildId || Number.isNaN(guildId)) {
-      throw new Response('Invalid guild ID', { status: 400 })
-    }
-
     const submission = parseWithZod(formData, { schema: NewGuildFormSchema })
     if (submission.status !== 'success') {
       return submission.reply()
@@ -136,11 +131,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'create-channel') {
-    const guildId = Number(params.guildId)
-    if (!guildId || Number.isNaN(guildId)) {
-      throw new Response('Invalid guild ID', { status: 400 })
-    }
-
     const submission = parseWithZod(formData, { schema: NewChannelFormSchema })
     if (submission.status !== 'success') {
       return submission.reply()
@@ -188,11 +178,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'leave-server') {
-    const guildId = Number(params.guildId)
-    if (!guildId || Number.isNaN(guildId)) {
-      throw new Response('Invalid guild ID', { status: 400 })
-    }
-
     try {
       const guild = await db.query.guilds.findFirst({
         where: {
@@ -231,11 +216,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'delete-server') {
-    const guildId = Number(params.guildId)
-    if (!guildId || Number.isNaN(guildId)) {
-      throw new Response('Invalid guild ID', { status: 400 })
-    }
-
     try {
       const guild = await db.query.guilds.findFirst({
         where: {
