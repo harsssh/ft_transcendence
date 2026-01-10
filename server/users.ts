@@ -4,6 +4,8 @@ import { ResultAsync } from 'neverthrow'
 import { presenceClient } from '../app/contexts/presence'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 
+const PRESENCE_EXPIRATION_SECONDS = 60 * 5 // 5 minutes
+
 export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
   new Hono()
     .get(
@@ -31,7 +33,9 @@ export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
           async onClose() {
             console.log(`Presence ${userId}: offline`)
             try {
-              await presenceClient.set(`user:${userId}`, 'offline')
+              await presenceClient.set(`user:${userId}`, 'offline', {
+                expiration: { type: 'EX', value: PRESENCE_EXPIRATION_SECONDS },
+              })
             } catch (e) {
               console.error('Failed to set presence status:', e)
             }
