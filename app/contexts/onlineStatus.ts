@@ -21,6 +21,7 @@ type Props = {
 
 const ONLINE_STATUS_UPDATE_INTERVAL_MS = 5000
 
+// TODO: ポーリングが最適かどうか考え直す
 export function useOnlineStatus({ id }: Props) {
   const status = useContext(OnlineStatusContext)
   const loggedInUser = useContext(LoggedInUserContext)
