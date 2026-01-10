@@ -238,9 +238,9 @@ export default function GuildRoute() {
   ])
 
   useEffect(() => {
-    setSecondaryNavbarWidth(240)
+    setSecondaryNavbarWidth(300)
     setSecondaryNavbar(
-      <Flex direction="column" h="100%" w={240}>
+      <Flex direction="column" h="100%" w={300}>
         <Flex
           h={48}
           align="center"
