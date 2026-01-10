@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { type MiddlewareFunction, redirect } from 'react-router'
 import { users } from '../../db/schema'
 import { dbContext } from '../contexts/db'
-import { userContext } from '../contexts/user'
+import { loggedInUserContext } from '../contexts/user.server'
 import {
   destroySession,
   getSession,
@@ -29,7 +29,7 @@ export const authMiddleware: MiddlewareFunction<Response> = async ({
         },
       })
     }
-    context.set(userContext, user)
+    context.set(loggedInUserContext, user)
   } catch (e) {
     console.error(e)
     return redirect('/signin', {

@@ -1,7 +1,7 @@
 import { err, ok, ResultAsync } from 'neverthrow'
 import z from 'zod'
 import { dbContext } from '../../../../../contexts/db'
-import { userContext } from '../../../../../contexts/user'
+import { loggedInUserContext } from '../../../../../contexts/user.server'
 import type { Route } from '../+types/route'
 
 const DEFAULT_LOCALE = 'en-US'
@@ -24,7 +24,7 @@ export const loader = async ({
   params,
   request,
 }: Route.LoaderArgs) => {
-  const user = context.get(userContext)
+  const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }

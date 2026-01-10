@@ -23,9 +23,14 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { Form, useNavigation } from 'react-router'
+import { createWebSocket } from '../../../_shared/lib/websocket'
 import { IconButton } from '../../../_shared/ui/IconButton'
 import type { Route } from './+types/route'
-import { SendMessageSchema } from './model/message'
+import {
+  MessageSchema,
+  type MessageType,
+  SendMessageSchema,
+} from './model/message'
 import { DateSeparator } from './ui/DateSeparator'
 import { EditProfileContext } from './ui/EditProfileModal'
 import { Message } from './ui/Message'
@@ -44,7 +49,7 @@ export default function DMChannel({
   const channelId = params.channelId
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-  const [messages, setMessages] = useState(initialMessages)
+  const [messages, setMessages] = useState<MessageType[]>(initialMessages)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAtBottom, setIsAtBottom] = useState(true)
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -102,83 +107,89 @@ export default function DMChannel({
     let ws: WebSocket | null = null
 
     const connect = () => {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const wsUrl = `${protocol}//${window.location.host}/ws/channels/${channelId}`
-      ws = new WebSocket(wsUrl)
+      createWebSocket(`/api/channels/${channelId}/ws`).match(
+        (socket) => {
+          ws = socket
 
-      ws.onopen = () => {
-        if (!mounted) return
-        console.log(`WebSocket connected`)
-        setWsStatus('open')
-        reconnectAttemptsRef.current = 0
+          ws.onopen = () => {
+            if (!mounted) return
+            console.log(`WebSocket connected`)
+            setWsStatus('open')
+            reconnectAttemptsRef.current = 0
 
-        // Send pending messages
-        if (pendingMessagesRef.current.length > 0) {
-          for (const message of pendingMessagesRef.current) {
-            ws?.send(message)
-          }
-          pendingMessagesRef.current = []
-        }
-      }
-
-      ws.onmessage = (event) => {
-        if (!mounted) return
-        console.log('Message received:', event.data)
-        try {
-          const payload = JSON.parse(event.data)
-
-          if (payload.type === 'message' && payload.data) {
-            const newMessage = {
-              ...payload.data,
-              createdAt: new Date(payload.data.createdAt), // Parse string to Date
-            }
-
-            setMessages((prev) => {
-              // Avoid duplicates
-              if (prev.some((m) => m.id === newMessage.id)) {
-                return prev
+            // Send pending messages
+            if (pendingMessagesRef.current.length > 0) {
+              for (const message of pendingMessagesRef.current) {
+                ws?.send(message)
               }
-              return [...prev, newMessage]
-            })
-
-            const atBottom = checkIfAtBottom()
-            if (!atBottom) {
-              setUnreadCount((prev) => prev + 1)
-            } else {
-              setTimeout(() => scrollToBottom(), 0)
+              pendingMessagesRef.current = []
             }
           }
-        } catch (error) {
-          console.error('Error parsing message:', error)
-        }
-      }
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error)
-      }
+          ws.onmessage = (event) => {
+            if (!mounted) return
+            try {
+              const {
+                success,
+                data: newMessage,
+                error,
+              } = MessageSchema.safeParse(JSON.parse(event.data))
 
-      ws.onclose = () => {
-        if (!mounted) return
-        console.log('WebSocket disconnected')
-        setWsStatus('closed')
+              if (!success) {
+                console.log('Invalid message format:', error)
+                return
+              }
 
-        // Reconnect with exponential backoff
-        if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-          const delay = Math.min(
-            1000 * 2 ** reconnectAttemptsRef.current,
-            30000,
-          )
-          console.log(
-            `Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1})`,
-          )
-          reconnectTimeoutRef.current = window.setTimeout(() => {
-            reconnectAttemptsRef.current++
-            connect()
-          }, delay)
-        }
-      }
+              setMessages((prev) => {
+                // Avoid duplicates
+                if (prev.some((m) => m.id === newMessage.id)) {
+                  return prev
+                }
+                return [...prev, newMessage]
+              })
 
-      wsRef.current = ws
+              const atBottom = checkIfAtBottom()
+              if (!atBottom) {
+                setUnreadCount((prev) => prev + 1)
+              } else {
+                setTimeout(() => scrollToBottom(), 0)
+              }
+            } catch (error) {
+              console.error('Error parsing message:', error)
+            }
+          }
+
+          ws.onerror = (error) => {
+            console.error('WebSocket error:', error)
+          }
+
+          ws.onclose = () => {
+            if (!mounted) return
+            console.log('WebSocket disconnected')
+            setWsStatus('closed')
+
+            // Reconnect with exponential backoff
+            if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+              const delay = Math.min(
+                1000 * 2 ** reconnectAttemptsRef.current,
+                30000,
+              )
+              console.log(
+                `Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1})`,
+              )
+              reconnectTimeoutRef.current = window.setTimeout(() => {
+                reconnectAttemptsRef.current++
+                connect()
+              }, delay)
+            }
+          }
+
+          wsRef.current = ws
+        },
+        (error) => {
+          console.log('WebSocket connection failed:', error)
+        },
+      )
     }
 
     setWsStatus('connecting')
@@ -189,7 +200,9 @@ export default function DMChannel({
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
       }
-      ws?.close()
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.close()
+      }
     }
   }, [channelId, checkIfAtBottom, scrollToBottom])
 
@@ -390,7 +403,7 @@ export default function DMChannel({
                     : {})}
                 >
                   <Message
-                    loggedInUser={loaderData.loggedInUser}
+                    senderId={entry.message.sender.id}
                     senderName={entry.message.sender.name}
                     senderDisplayName={entry.message.sender.displayName}
                     avatarSrc={entry.message.sender.avatarUrl}

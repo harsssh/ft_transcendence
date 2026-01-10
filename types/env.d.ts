@@ -5,5 +5,6 @@ declare module 'bun' {
     MINIO_ACCESS_KEY?: string
     MINIO_SECRET_KEY?: string
     MINIO_PUBLIC_ENDPOINT?: string
+    PRESENCE_DB_URL?: string
   }
 }

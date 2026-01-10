@@ -4,6 +4,7 @@ import { UserAvatar } from './UserAvatar'
 
 type Props = {
   profile: {
+    id: number
     name: string
     displayName: string | null
     avatarUrl: string | null
@@ -30,7 +31,13 @@ export function UserProfileSidebar({ profile }: Props) {
           </foreignObject>
         </svg>
         <Box top={72} left={16} pos="absolute">
-          <UserAvatar name={profile.name} size={80} src={profile.avatarUrl} />
+          <UserAvatar
+            id={profile.id}
+            name={profile.name}
+            size={80}
+            src={profile.avatarUrl}
+            withOnlineStatus
+          />
         </Box>
       </Box>
       <Stack mr="md" ml="md">

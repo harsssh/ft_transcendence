@@ -9,7 +9,7 @@ import {
   MINIO_PUBLIC_ENDPOINT,
   storageContext,
 } from '../../../../../contexts/storage'
-import { userContext } from '../../../../../contexts/user'
+import { loggedInUserContext } from '../../../../../contexts/user.server'
 import type { Route } from '../+types/route'
 import { SendMessageSchema } from '../model/message'
 import { EditProfileSchema } from '../model/profile'
@@ -19,7 +19,7 @@ export const action = async ({
   request,
   params,
 }: Route.ActionArgs) => {
-  const user = context.get(userContext)
+  const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }
