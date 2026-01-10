@@ -62,7 +62,7 @@ services:
     container_name: redis-prod
     image: redis:8.4
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "--raw", "ping"]
       interval: 1s
       timeout: 5s
       retries: 10
