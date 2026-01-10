@@ -160,6 +160,31 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return submission.reply()
   }
 
+  if (intent === 'delete-channel') {
+    if (guild.ownerId !== user.id) {
+      throw new Response('Only the server owner can delete the channel', {
+        status: 403,
+      })
+    }
+
+    const channelId = Number(formData.get('channelId'))
+    if (!channelId || Number.isNaN(channelId)) {
+      throw new Response('Invalid channel ID', { status: 400 })
+    }
+
+    try {
+      await db.delete(channels).where(eq(channels.id, channelId))
+    } catch (error) {
+      console.error('Error deleting channel:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    throw redirect(`/channels/${guildId}`)
+  }
+
   if (intent === 'leave-server') {
     try {
       await db

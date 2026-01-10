@@ -1,5 +1,6 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import {
+  ActionIcon,
   Alert,
   Button,
   Flex,
@@ -20,6 +21,7 @@ import {
   IconLogout,
   IconPencil,
   IconPlus,
+  IconSettings,
   IconTrash,
 } from '@tabler/icons-react'
 import { useCallback, useEffect } from 'react'
@@ -161,6 +163,36 @@ export default function GuildRoute() {
     })
   }, [guild.name, submit])
 
+  const handleDeleteChannel = useCallback(
+    (targetChannel: (typeof guild.channels)[number]) => {
+      modals.openConfirmModal({
+        title: (
+          <Text fw={700} className="break-all">
+            Delete '{targetChannel.name}'
+          </Text>
+        ),
+        children: (
+          <Text size="sm">
+            Are you sure you want to delete{' '}
+            <Text span fw={700} className="break-all">
+              #{targetChannel.name}
+            </Text>
+            ? This action cannot be undone.
+          </Text>
+        ),
+        labels: { confirm: 'Delete Channel', cancel: 'Cancel' },
+        confirmProps: { color: 'red' },
+        onConfirm: () => {
+          const formData = new FormData()
+          formData.append('intent', 'delete-channel')
+          formData.append('channelId', String(targetChannel.id))
+          submit(formData, { method: 'post' })
+        },
+      })
+    },
+    [submit],
+  )
+
   useEffect(() => {
     if (actionData?.status === 'success') {
       closeRename()
@@ -242,6 +274,36 @@ export default function GuildRoute() {
               to={`/channels/${guild.id}/${channel.id}`}
               label={channel.name}
               leftSection={<IconHash size={20} stroke={2} />}
+              rightSection={
+                <Menu position="bottom" shadow="md" width={210}>
+                  <Menu.Target>
+                    <ActionIcon
+                      variant="subtle"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault()
+                      }}
+                    >
+                      <IconSettings
+                        className="text-zinc-500 hover:text-zinc-200 transion-colors"
+                        size={16}
+                      />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      color="red"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleDeleteChannel(channel)
+                      }}
+                      rightSection={<IconTrash size={18} />}
+                    >
+                      Delete Channel
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              }
               variant="light"
               className="rounded-md"
             />
@@ -263,6 +325,7 @@ export default function GuildRoute() {
     openRename,
     openInvite,
     openCreateChannel,
+    handleDeleteChannel,
   ])
 
   return (
