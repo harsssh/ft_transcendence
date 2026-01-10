@@ -17,7 +17,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
     '/:channelId/ws',
     upgradeWebSocket((c) => {
       const channelId = c.req.param('channelId')
-      let userId: number | undefined
+      let connectedUserId: number | undefined
 
       return {
         async onOpen(_event, ws) {
@@ -26,9 +26,9 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
             new Request(c.req.url, { headers: c.req.raw.headers }),
           )
 
-          userId = session.get('userId')
+          connectedUserId = session.get('userId')
 
-          if (!userId) {
+          if (!connectedUserId) {
             console.log('WebSocket rejected: not authenticated')
             ws.close()
             return
@@ -44,7 +44,10 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
             },
           })
 
-          if (!channel || !channel.participants.some((p) => p.id === userId)) {
+          if (
+            !channel ||
+            !channel.participants.some((p) => p.id === connectedUserId)
+          ) {
             console.log('WebSocket rejected: user not a participant of channel')
             ws.close()
             return
@@ -59,6 +62,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
         async onMessage(event, ws) {
           console.log(`Message received: ${event.data}`)
+          const userId = connectedUserId
 
           try {
             const data = JSON.parse(event.data as string)
