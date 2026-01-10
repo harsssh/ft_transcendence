@@ -186,7 +186,9 @@ export default function DMChannel({
 
           wsRef.current = ws
         },
-        () => {},
+        (error) => {
+          console.log('WebSocket connection failed:', error)
+        },
       )
     }
 
