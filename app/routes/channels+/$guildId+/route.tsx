@@ -24,7 +24,7 @@ import {
   IconSettings,
   IconTrash,
 } from '@tabler/icons-react'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Form,
   NavLink,
@@ -57,16 +57,26 @@ export default function GuildRoute() {
   const { setSecondaryNavbar, setSecondaryNavbarWidth } =
     useOutletContext<ChannelsOutletContext>()
   const submit = useSubmit()
-  const [renameOpened, { open: openRename, close: closeRename }] =
-    useDisclosure(false)
+  const [
+    renameServerOpened,
+    { open: openRenameServer, close: closeRenameServer },
+  ] = useDisclosure(false)
   const [inviteOpened, { open: openInvite, close: closeInvite }] =
     useDisclosure(false)
   const [
     createChannelOpened,
     { open: openCreateChannel, close: closeCreateChannel },
   ] = useDisclosure(false)
+  const [
+    renameChannelOpened,
+    { open: openRenameChannel, close: closeRenameChannel },
+  ] = useDisclosure(false)
 
-  const [renameForm, renameFields] = useForm({
+  const [targetChannel, setTargetChannel] = useState<
+    (typeof guild.channels)[number] | null
+  >(null)
+
+  const [renameServerForm, renameServerFields] = useForm({
     id: 'rename-server',
     defaultValue: { name: guild.name },
     lastResult:
@@ -101,6 +111,21 @@ export default function GuildRoute() {
     defaultValue: { name: '' },
     lastResult:
       actionData?.initialValue?.['intent'] === 'create-channel'
+        ? actionData
+        : undefined,
+    constraint: getZodConstraint(NewChannelFormSchema),
+    shouldValidate: 'onBlur',
+    shouldRevalidate: 'onInput',
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: NewChannelFormSchema })
+    },
+  })
+
+  const [renameChannelForm, renameChannelFields] = useForm({
+    id: 'rename-channel',
+    defaultValue: { name: '' },
+    lastResult:
+      actionData?.initialValue?.['intent'] === 'rename-channel'
         ? actionData
         : undefined,
     constraint: getZodConstraint(NewChannelFormSchema),
@@ -195,11 +220,19 @@ export default function GuildRoute() {
 
   useEffect(() => {
     if (actionData?.status === 'success') {
-      closeRename()
+      closeRenameServer()
       closeInvite()
       closeCreateChannel()
+      closeRenameChannel()
+      setTargetChannel(null)
     }
-  }, [actionData, closeRename, closeInvite, closeCreateChannel])
+  }, [
+    actionData,
+    closeRenameServer,
+    closeInvite,
+    closeCreateChannel,
+    closeRenameChannel,
+  ])
 
   useEffect(() => {
     setSecondaryNavbarWidth(240)
@@ -233,7 +266,7 @@ export default function GuildRoute() {
               </Menu.Item>
               <Menu.Item
                 rightSection={<IconPencil size={18} />}
-                onClick={openRename}
+                onClick={openRenameServer}
               >
                 Rename Server
               </Menu.Item>
@@ -281,6 +314,7 @@ export default function GuildRoute() {
                       variant="subtle"
                       size="sm"
                       onClick={(e) => {
+                        e.stopPropagation()
                         e.preventDefault()
                       }}
                     >
@@ -291,6 +325,17 @@ export default function GuildRoute() {
                     </ActionIcon>
                   </Menu.Target>
                   <Menu.Dropdown>
+                    <Menu.Item
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setTargetChannel(channel)
+                        openRenameChannel()
+                      }}
+                      rightSection={<IconPencil size={18} />}
+                    >
+                      Rename Channel
+                    </Menu.Item>
+                    <Menu.Divider />
                     <Menu.Item
                       color="red"
                       onClick={(e) => {
@@ -322,9 +367,10 @@ export default function GuildRoute() {
     setSecondaryNavbarWidth,
     handleDeleteServer,
     handleLeaveServer,
-    openRename,
+    openRenameServer,
     openInvite,
     openCreateChannel,
+    openRenameChannel,
     handleDeleteChannel,
   ])
 
@@ -335,34 +381,34 @@ export default function GuildRoute() {
       </Flex>
 
       <Modal
-        opened={renameOpened}
-        onClose={closeRename}
+        opened={renameServerOpened}
+        onClose={closeRenameServer}
         title="Rename Server"
         centered
       >
-        <Form method="post" {...getFormProps(renameForm)}>
+        <Form method="post" {...getFormProps(renameServerForm)}>
           <Stack gap="sm">
-            {renameForm.errors && (
+            {renameServerForm.errors && (
               <Alert variant="light" color="red">
-                {renameForm.errors}
+                {renameServerForm.errors}
               </Alert>
             )}
             <Text size="sm" mb="sm" c="dimmed">
               Enter a new name for your server.
             </Text>
             <TextInput
-              {...getInputProps(renameFields.name, { type: 'text' })}
+              {...getInputProps(renameServerFields.name, { type: 'text' })}
               label="Server Name"
               placeholder="Enter server name"
               name="name"
               required
               mb="md"
-              error={renameFields.name.errors}
+              error={renameServerFields.name.errors}
             />
           </Stack>
           <input type="hidden" name="intent" value="rename-server" />
           <Group justify="flex-end">
-            <Button variant="default" onClick={closeRename}>
+            <Button variant="default" onClick={closeRenameServer}>
               Cancel
             </Button>
             <Button type="submit">Save</Button>
@@ -435,6 +481,50 @@ export default function GuildRoute() {
               Cancel
             </Button>
             <Button type="submit">createChannel</Button>
+          </Group>
+        </Form>
+      </Modal>
+
+      <Modal
+        opened={renameChannelOpened}
+        onClose={closeRenameChannel}
+        title="Rename Channel"
+        centered
+      >
+        <Form
+          method="post"
+          {...getFormProps(renameChannelForm)}
+          key={targetChannel?.id}
+        >
+          <Stack gap="sm">
+            {renameChannelForm.errors && (
+              <Alert variant="light" color="red">
+                {renameChannelForm.errors}
+              </Alert>
+            )}
+            <Text size="sm" mb="sm" c="dimmed">
+              Enter a new name for the channel.
+            </Text>
+            <TextInput
+              {...getInputProps(renameChannelFields.name, { type: 'text' })}
+              defaultValue={targetChannel?.name ?? ''}
+              label="Channel Name"
+              placeholder="Enter channel name"
+              name="name"
+              required
+              mb="md"
+              error={renameChannelFields.name.errors}
+            />
+          </Stack>
+          <input type="hidden" name="intent" value="rename-channel" />
+          {targetChannel && (
+            <input type="hidden" name="channelId" value={targetChannel.id} />
+          )}
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeRenameChannel}>
+              Cancel
+            </Button>
+            <Button type="submit">Save</Button>
           </Group>
         </Form>
       </Modal>

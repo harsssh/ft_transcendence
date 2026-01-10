@@ -45,19 +45,19 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     throw new Response('Server not found', { status: 404 })
   }
 
-  if (intent === 'invite-friend') {
-    const currentUserMember = await db.query.guildMembers.findFirst({
-      where: {
-        userId: user.id,
-        guildId: guildId,
-      },
+  const currentUserMember = await db.query.guildMembers.findFirst({
+    where: {
+      userId: user.id,
+      guildId: guildId,
+    },
+  })
+  if (!currentUserMember) {
+    throw new Response('Only the server member can perform this action', {
+      status: 403,
     })
-    if (!currentUserMember) {
-      throw new Response('Only the server member can invite a friend', {
-        status: 403,
-      })
-    }
+  }
 
+  if (intent === 'invite-friend') {
     const InviteFriendSchema = SignupFormSchema.pick({ name: true })
     const submission = parseWithZod(formData, { schema: InviteFriendSchema })
     if (submission.status !== 'success') {
@@ -152,6 +152,30 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     } catch (error) {
       if (error instanceof Response) throw error
       console.error('Error creating channel in guild:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+    return submission.reply()
+  }
+
+  if (intent === 'rename-channel') {
+    const channelId = Number(formData.get('channelId'))
+    if (!channelId || Number.isNaN(channelId)) {
+      throw new Response('Invalid channel ID', { status: 400 })
+    }
+
+    const submission = parseWithZod(formData, { schema: NewChannelFormSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { name } = submission.value
+
+    try {
+      await db.update(channels).set({ name }).where(eq(channels.id, channelId))
+    } catch (error) {
+      console.error('Error renaming channel:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
