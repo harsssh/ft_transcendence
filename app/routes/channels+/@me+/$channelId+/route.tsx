@@ -436,7 +436,7 @@ export default function DMChannel({
   return (
     <EditProfileContext.Provider
       value={{
-        lastResult: null,
+        lastResult: actionData ?? null,
       }}
     >
       {component}
