@@ -60,5 +60,5 @@ export async function initializeStorage() {
 export const storageContext = createContext(s3Client)
 
 export const AVATAR_BUCKET = 'avatars'
-export const MINIO_PUBLIC_ENDPOINT =
-  process.env.MINIO_PUBLIC_ENDPOINT ?? 'http://localhost:9000'
+
+export const MINIO_PUBLIC_ENDPOINT = process.env.MINIO_PUBLIC_ENDPOINT

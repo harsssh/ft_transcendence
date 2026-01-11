@@ -12,9 +12,10 @@ git submodule update --init --recursive
 
 3. `.env.example`をコピーして、`.env`に必須の環境変数を設定
 
-4. `/etc/hosts`を書き換えて`127.0.0.1`を`HOST`で指定したhostnameに紐付け
+4. `/etc/hosts`を書き換えて`WEBAPP_HOST`と`STORAGE_HOST`で指定したドメインと127.0.0.1をbind
 ```
-127.0.0.1   <HOSTで指定したhostname>
+127.0.0.1   <WEBAPP_HOSTで指定したhostname>
+127.0.0.1   <STORAGE_HOSTで指定したhostname>
 ```
 
 ## 実行方法
