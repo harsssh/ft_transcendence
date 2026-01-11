@@ -6,8 +6,30 @@ services:
       context: .
       dockerfile: Dockerfile
     command: bun start
+    healthcheck:
+      test: 
+        - CMD-SHELL
+        - /bin/bash
+        - -c
+        - |
+          response=`curl -s -w "%{http_code}" https://localhost:3000/api/health`
+          status_code=$${response: -3}
+          if [ "$$status_code" -ne 200 ]; then
+            echo healthcheck failed: webapp returned $$status_code: $$response
+            exit 1
+          fi
+          
+          echo "webapp is healthy"
+          exit 0
+      interval: 1s
+      timeout: 5s
+      retries: 10
     depends_on:
       db:
+        condition: service_healthy
+      presence-db:
+        condition: service_healthy
+      storage:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
@@ -28,9 +50,9 @@ services:
     image: nginx:latest
     depends_on:
       webapp:
-        condition: service_started
+        condition: service_healthy
       storage:
-        condition: service_started
+        condition: service_healthy
     environment:
       WEBAPP_HOST: ${WEBAPP_HOST:?}
       STORAGE_HOST: ${STORAGE_HOST:?}
@@ -41,6 +63,31 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    healthcheck:
+      test: 
+        - CMD-SHELL
+        - /bin/bash
+        - -c
+        - |
+          response=`curl -s -w "%{http_code}" https://$$WEBAPP_HOST/api/health`
+          status_code=$${response: -3}
+          if [ "$$status_code" -ne 200 ]; then
+            echo healthcheck failed: webapp returned $$status_code: $$response
+            exit 1
+          fi
+
+          response=`curl -s -w "%{http_code}" https://$$STORAGE_HOST/minio/health/live`
+          status_code=$${response: -3}
+          if [ "$$status_code" -ne 200 ]; then
+            echo healthcheck failed: storage returned $$status_code: $$response
+            exit 1
+          fi
+
+          echo "all services healthy"
+          exit 0
+      interval: 1s
+      timeout: 5s
+      retries: 10
     networks:
       - proxy
 
@@ -68,6 +115,11 @@ services:
       context: ./submodules/minio
       dockerfile: ../../Dockerfile.minio
     command: server /data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?}
