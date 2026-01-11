@@ -66,9 +66,8 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
           try {
             const data = JSON.parse(event.data as string)
-            const { data: msgContent, success } = SendMessageSchema.omit({
-              intent: true,
-            }).safeParse(data)
+            const { data: msgContent, success } =
+              SendMessageSchema.safeParse(data)
 
             if (!success) {
               console.error('Invalid message format')
