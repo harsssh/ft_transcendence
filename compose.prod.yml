@@ -6,32 +6,100 @@ services:
       context: .
       dockerfile: Dockerfile
     command: bun start
+    healthcheck:
+      test: 
+        - CMD-SHELL
+        - /bin/bash
+        - -c
+        - |
+          response=`curl -s -w "%{http_code}" http://localhost:3000/api/health`
+          status_code=$${response: -3}
+          if [ "$$status_code" -ne 200 ]; then
+            echo healthcheck failed: webapp returned $$status_code: $$response
+            exit 1
+          fi
+          
+          echo "webapp is healthy"
+          exit 0
+      interval: 1s
+      timeout: 5s
+      retries: 10
     depends_on:
       db:
+        condition: service_healthy
+      presence-db:
+        condition: service_healthy
+      storage:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgres://app:app@db:5432/app
+      - HOST=${WEBAPP_HOST:?}
+      - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/app
       - PRESENCE_DB_URL=redis://presence-db:6379
-    ports:
-      - "3000:3000"
+      - STORAGE_PUBLIC_ENDPOINT=https://${STORAGE_HOST:?}
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:?}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:?}
     networks:
+      - proxy
       - internal
-      - web
+
+  proxy:
+    container_name: proxy-prod
+    image: nginx:latest
+    depends_on:
+      webapp:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+    environment:
+      WEBAPP_HOST: ${WEBAPP_HOST:?}
+      STORAGE_HOST: ${STORAGE_HOST:?}
+    volumes:
+      - ./nginx/entrypoints/:/docker-entrypoint.d/99-user-scripts/:ro
+      - ./nginx/templates/:/etc/nginx/templates/:ro
+      - .secrets/ssl_certs:/etc/nginx/ssl/
+    ports:
+      - "80:80"
+      - "443:443"
+    healthcheck:
+      test: 
+        - CMD-SHELL
+        - /bin/bash
+        - -c
+        - |
+          response=`curl -s -w "%{http_code}" https://$$WEBAPP_HOST/api/health`
+          status_code=$${response: -3}
+          if [ "$$status_code" -ne 200 ]; then
+            echo healthcheck failed: webapp returned $$status_code: $$response
+            exit 1
+          fi
+
+          response=`curl -s -w "%{http_code}" https://$$STORAGE_HOST/minio/health/live`
+          status_code=$${response: -3}
+          if [ "$$status_code" -ne 200 ]; then
+            echo healthcheck failed: storage returned $$status_code: $$response
+            exit 1
+          fi
+
+          echo "all services healthy"
+          exit 0
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      - proxy
 
   db:
     container_name: db-prod
     image: postgres:18
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
+      POSTGRES_USER: ${POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: app
     volumes:
       - db_data:/var/lib/postgresql
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
       interval: 1s
@@ -46,16 +114,19 @@ services:
     build:
       context: ./submodules/minio
       dockerfile: ../../Dockerfile.minio
-    command: server /data --console-address :9001
+    command: server /data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?}
     volumes:
       - storage_data:/data
     networks:
+      - proxy
       - internal
 
   presence-db:
@@ -66,8 +137,6 @@ services:
       interval: 1s
       timeout: 5s
       retries: 10
-    ports:
-      - "6379:6379"
     networks:
       - internal
   
@@ -83,16 +152,14 @@ services:
         condition: service_healthy
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgres://app:app@db:5432/app
+      - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/app
     networks:
       - internal
-  
-networks:
-  internal:
-    name: internal
-  web:
-    name: web
 
+networks:
+  proxy:
+  internal:
+  
 volumes:
   db_data:
   storage_data:

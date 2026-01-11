@@ -1,6 +1,7 @@
 import { err, ok, ResultAsync } from 'neverthrow'
 import z from 'zod'
 import { dbContext } from '../../../../../contexts/db'
+import { STORAGE_PUBLIC_ENDPOINT } from '../../../../../contexts/storage'
 import { loggedInUserContext } from '../../../../../contexts/user.server'
 import type { Route } from '../+types/route'
 
@@ -81,7 +82,7 @@ export const loader = async ({
             id: m.sender.id,
             name: m.sender.name,
             displayName: m.sender.displayName,
-            avatarUrl: m.sender.avatarUrl,
+            avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`,
           },
         })),
         partner: {
