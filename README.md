@@ -12,9 +12,9 @@ git submodule update --init --recursive
 
 3. `.env.example`をコピーして、`.env`に必須の環境変数を設定
 
-4. `/etc/hosts`を書き換えて`WEBAPP_HOST`と`STORAGE_HOST`で指定したドメインと127.0.0.1をbind
+4. `/etc/hosts`を書き換えて`WEBAPP_HOST` `STORAGE_HOST` `KIBANA_HOST` で指定したドメインと127.0.0.1をbind
 ```
-127.0.0.1   <WEBAPP_HOSTで指定したhostname> <STORAGE_HOSTで指定したhostname>
+127.0.0.1   <WEBAPP_HOSTで指定したhostname> <STORAGE_HOSTで指定したhostname> <KIBANA_HOSTで指定したhostname>
 ```
 
 ## 実行方法
@@ -30,6 +30,27 @@ docker compose up
 ```sh
 docker compose -f compose.prod.yml up
 ```
+
+## サービスへのアクセス
+
+### 開発環境
+
+- Web Application: http://localhost:5173
+- MinIO Console: http://localhost:9001
+- PostgreSQL: localhost:5432
+- Redis: localhost:6379
+- Elasticsearch: http://localhost:9200
+- Kibana: http://localhost:5601
+
+### 本番環境
+
+- Web Application: https://${WEBAPP_HOST}
+- MinIO: https://${STORAGE_HOST}
+- Kibana: https://${KIBANA_HOST}
+
+Kibanaへのログイン:
+- Username: `elastic`
+- Password: `.env`ファイルの`ELASTIC_PASSWORD`で設定した値
 
 ## 開発フロー
 
