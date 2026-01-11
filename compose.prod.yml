@@ -19,6 +19,9 @@ services:
       - STORAGE_PUBLIC_ENDPOINT=https://${STORAGE_HOST:?}
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:?}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:?}
+    networks:
+      - proxy
+      - internal
 
   proxy:
     container_name: proxy-prod
@@ -38,6 +41,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    networks:
+      - proxy
 
   db:
     container_name: db-prod
@@ -53,6 +58,8 @@ services:
       interval: 1s
       timeout: 5s
       retries: 10
+    networks:
+      - internal
 
   storage:
     container_name: storage-prod
@@ -66,6 +73,9 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?}
     volumes:
       - storage_data:/data
+    networks:
+      - proxy
+      - internal
 
   presence-db:
     container_name: redis-prod
@@ -75,6 +85,8 @@ services:
       interval: 1s
       timeout: 5s
       retries: 10
+    networks:
+      - internal
   
   migrate:
     container_name: migrate-prod
@@ -89,6 +101,12 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/app
+    networks:
+      - internal
+
+networks:
+  proxy:
+  internal:
   
 volumes:
   db_data:
