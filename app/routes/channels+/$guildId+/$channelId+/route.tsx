@@ -1,7 +1,6 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
-  ActionIcon,
   Affix,
   Box,
   Button,
@@ -11,8 +10,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
-import { IconSend, IconUserCircle } from '@tabler/icons-react'
+import { IconHash, IconSend } from '@tabler/icons-react'
 import { differenceInMinutes } from 'date-fns'
 import {
   useCallback,
@@ -23,12 +21,9 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { createWebSocket } from '../../../_shared/lib/websocket'
-import { IconButton } from '../../../_shared/ui/IconButton'
 import { DateSeparator } from '../../ui/DateSeparator'
 import { EditProfileContext } from '../../ui/EditProfileModal'
 import { Message } from '../../ui/Message'
-import { UserAvatar } from '../../ui/UserAvatar'
-import { UserProfileSidebar } from '../../ui/UserProfileSidebar'
 import type { Route } from './+types/route'
 import {
   MessageSchema,
@@ -39,12 +34,12 @@ import {
 export { action } from './api/action.server'
 export { loader } from './api/loader.server'
 
-export default function DMChannel({
+export default function ChannelRoute({
   loaderData,
   params,
   actionData,
 }: Route.ComponentProps) {
-  const { messages: initialMessages, partner, locale } = loaderData
+  const { messages: initialMessages, channel, locale } = loaderData
   const channelId = params.channelId
   const [messages, setMessages] = useState<MessageType[]>(initialMessages)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -104,7 +99,7 @@ export default function DMChannel({
     let ws: WebSocket | null = null
 
     const connect = () => {
-      createWebSocket(`/api/channels/${channelId}/ws`).match(
+      createWebSocket(`/api/channels/guild/${channelId}/ws`).match(
         (socket) => {
           ws = socket
 
@@ -263,9 +258,6 @@ export default function DMChannel({
     },
   })
 
-  const [profileSidebarOpened, { toggle: toggleProfileSidebar }] =
-    useDisclosure(false)
-
   const headerHeight = 48
 
   const component = (
@@ -294,22 +286,11 @@ export default function DMChannel({
         }}
       >
         <Group>
-          <UserAvatar name={partner?.name} src={partner?.avatarUrl} size="sm" />
+          <IconHash size={20} />
           <Text fw="bold" size="lg" maw="40rem" truncate="end">
-            {partner?.name ?? 'Unknown User'}
+            {channel?.name ?? 'unknown-channel'}
           </Text>
         </Group>
-        <ActionIcon.Group>
-          <IconButton
-            label={
-              profileSidebarOpened ? 'Hide User Profile' : 'Show User Profile'
-            }
-            onClick={toggleProfileSidebar}
-            strong={profileSidebarOpened}
-          >
-            <IconUserCircle />
-          </IconButton>
-        </ActionIcon.Group>
       </Group>
 
       {wsStatus !== 'open' && (
@@ -416,7 +397,7 @@ export default function DMChannel({
                 <TextInput
                   {...getInputProps(fields.content, { type: 'text' })}
                   key={fields.content.key}
-                  placeholder={`Message @${partner?.name ?? 'user'}`}
+                  placeholder={`Message #${channel?.name ?? 'channel'}`}
                   style={{ flex: 1 }}
                   disabled={wsStatus !== 'open'}
                   error={fields.content.errors?.[0]}
@@ -428,7 +409,6 @@ export default function DMChannel({
             </form>
           </Box>
         </Stack>
-        {profileSidebarOpened && <UserProfileSidebar profile={partner} />}
       </Group>
     </Stack>
   )

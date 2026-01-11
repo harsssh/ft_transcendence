@@ -28,6 +28,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   Form,
   NavLink,
+  Outlet,
   useActionData,
   useLoaderData,
   useOutletContext,
@@ -379,9 +380,7 @@ export default function GuildRoute() {
 
   return (
     <>
-      <Flex h="100%" align="center" justify="center" direction="column">
-        <Text c="dimmed">Select a channel</Text>
-      </Flex>
+      <Outlet />
 
       <Modal
         opened={renameServerOpened}
