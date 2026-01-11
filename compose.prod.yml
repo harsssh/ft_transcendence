@@ -60,7 +60,7 @@ services:
     build:
       context: ./submodules/minio
       dockerfile: ../../Dockerfile.minio
-    command: server /data --console-address :9001
+    command: server /data
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?}
