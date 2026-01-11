@@ -42,7 +42,10 @@ export const guildMembers = p.pgTable(
       .references(() => guilds.id, { onDelete: 'cascade' }),
     joinedAt: p.timestamp('joined_at').defaultNow().notNull(),
   },
-  (t) => [p.primaryKey({ columns: [t.userId, t.guildId] })],
+  (t) => [
+    p.primaryKey({ columns: [t.userId, t.guildId] }),
+    p.index('guild_members_guild_id_idx').on(t.guildId),
+  ],
 )
 
 export const usersToChannels = p.pgTable(
