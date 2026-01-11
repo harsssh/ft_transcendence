@@ -143,7 +143,10 @@ export const relations = defineRelations(
         from: r.guilds.id.through(r.guildMembers.guildId),
         to: r.users.id.through(r.guildMembers.userId),
       }),
-      channels: r.many.channels(),
+      channels: r.many.channels({
+        from: r.guilds.id,
+        to: r.channels.guildId,
+      }),
     },
     guildMembers: {
       user: r.one.users({
