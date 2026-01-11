@@ -4,11 +4,7 @@ import { eq } from 'drizzle-orm'
 import z from 'zod'
 import { messages, users } from '../../../../../../db/schema'
 import { dbContext } from '../../../../../contexts/db'
-import {
-  AVATAR_BUCKET,
-  MINIO_PUBLIC_ENDPOINT,
-  storageContext,
-} from '../../../../../contexts/storage'
+import { AVATAR_BUCKET, storageContext } from '../../../../../contexts/storage'
 import { loggedInUserContext } from '../../../../../contexts/user.server'
 import type { Route } from '../+types/route'
 import { SendMessageSchema } from '../model/message'
