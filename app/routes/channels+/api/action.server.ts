@@ -1,13 +1,13 @@
 import { parseWithZod } from '@conform-to/zod/v4'
 import { channels, guildMembers, guilds } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
-import { userContext } from '../../../contexts/user'
+import { loggedInUserContext } from '../../../contexts/user.server'
 import type { Route } from '../+types/route'
 import { NewGuildFormSchema } from '../model/newGuildForm'
 
 export async function action({ request, context }: Route.ActionArgs) {
   const db = context.get(dbContext)
-  const user = context.get(userContext)
+  const user = context.get(loggedInUserContext)
 
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })

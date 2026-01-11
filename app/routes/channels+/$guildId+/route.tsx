@@ -43,6 +43,7 @@ export { loader, action }
 
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import { SignupFormSchema } from '../../_auth+/signup+/model/signupForm'
+import { SecondaryNavbar } from '../../_shared/ui/SecondaryNavbar'
 import { NewGuildFormSchema } from '../model/newGuildForm'
 import { NewChannelFormSchema } from './model/newChannelForm'
 
@@ -54,8 +55,7 @@ export default function GuildRoute() {
   const { guild } = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
 
-  const { setSecondaryNavbar, setSecondaryNavbarWidth } =
-    useOutletContext<ChannelsOutletContext>()
+  const { setSecondaryNavbar } = useOutletContext<ChannelsOutletContext>()
   const submit = useSubmit()
   const [
     renameServerOpened,
@@ -80,7 +80,7 @@ export default function GuildRoute() {
     id: 'rename-server',
     defaultValue: { name: guild.name },
     lastResult:
-      actionData?.initialValue?.['intent'] === 'rename-server'
+      actionData?.initialValue?.intent === 'rename-server'
         ? actionData
         : undefined,
     constraint: getZodConstraint(NewGuildFormSchema),
@@ -238,138 +238,137 @@ export default function GuildRoute() {
   ])
 
   useEffect(() => {
-    setSecondaryNavbarWidth(300)
     setSecondaryNavbar(
-      <Flex direction="column" h="100%" w={300}>
-        <Flex
-          h={48}
-          align="center"
-          px="md"
-          className="border-b font-bold truncate"
-          style={{ borderColor: 'var(--app-shell-border-color)' }}
-        >
-          <Menu position="bottom-start" shadow="md" width={210}>
-            <Menu.Target>
-              <Button
+      <SecondaryNavbar>
+        <Flex direction="column" h="100%" w={300}>
+          <Flex
+            h={48}
+            align="center"
+            px="md"
+            className="border-b font-bold truncate"
+            style={{ borderColor: 'var(--app-shell-border-color)' }}
+          >
+            <Menu position="bottom-start" shadow="md" width={210}>
+              <Menu.Target>
+                <Button
+                  variant="light"
+                  color="neutral"
+                  radius="md"
+                  className="rounded-md"
+                >
+                  <Text fw="bold" truncate="end">
+                    {guild.name}
+                  </Text>
+                  <IconChevronDown size={14} style={{ flexShrink: 0 }} />
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  rightSection={<IconCookieMan size={18} />}
+                  onClick={openInvite}
+                >
+                  Invite to Server
+                </Menu.Item>
+                <Menu.Item
+                  rightSection={<IconPencil size={18} />}
+                  onClick={openRenameServer}
+                >
+                  Rename Server
+                </Menu.Item>
+                <Menu.Item
+                  rightSection={<IconPlus size={18} />}
+                  onClick={openCreateChannel}
+                >
+                  Create Channel
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  rightSection={<IconLogout size={18} />}
+                  onClick={handleLeaveServer}
+                >
+                  Leave Server
+                </Menu.Item>
+                <Menu.Item
+                  color="red"
+                  rightSection={<IconTrash size={18} />}
+                  onClick={handleDeleteServer}
+                >
+                  Delete Server
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Flex>
+          <Flex
+            direction="column"
+            p="xs"
+            gap={2}
+            className="flex-1 overflow-y-auto"
+          >
+            {guild.channels.map((channel) => (
+              <MantineNavLink
+                key={channel.id}
+                component={NavLink}
+                to={`/channels/${guild.id}/${channel.id}`}
+                label={channel.name}
+                leftSection={<IconHash size={20} stroke={2} />}
+                rightSection={
+                  <Menu position="bottom" shadow="md" width={210}>
+                    <Menu.Target>
+                      <ActionIcon
+                        variant="subtle"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          e.preventDefault()
+                        }}
+                      >
+                        <IconSettings
+                          className="text-zinc-500 hover:text-zinc-200 transion-colors"
+                          size={16}
+                        />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setTargetChannel(channel)
+                          openRenameChannel()
+                        }}
+                        rightSection={<IconPencil size={18} />}
+                      >
+                        Rename Channel
+                      </Menu.Item>
+                      <Menu.Divider />
+                      <Menu.Item
+                        color="red"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          handleDeleteChannel(channel)
+                        }}
+                        rightSection={<IconTrash size={18} />}
+                      >
+                        Delete Channel
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                }
                 variant="light"
-                color="neutral"
-                radius="md"
                 className="rounded-md"
-              >
-                <Text fw="bold" truncate="end">
-                  {guild.name}
-                </Text>
-                <IconChevronDown size={14} style={{ flexShrink: 0 }} />
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item
-                rightSection={<IconCookieMan size={18} />}
-                onClick={openInvite}
-              >
-                Invite to Server
-              </Menu.Item>
-              <Menu.Item
-                rightSection={<IconPencil size={18} />}
-                onClick={openRenameServer}
-              >
-                Rename Server
-              </Menu.Item>
-              <Menu.Item
-                rightSection={<IconPlus size={18} />}
-                onClick={openCreateChannel}
-              >
-                Create Channel
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item
-                color="red"
-                rightSection={<IconLogout size={18} />}
-                onClick={handleLeaveServer}
-              >
-                Leave Server
-              </Menu.Item>
-              <Menu.Item
-                color="red"
-                rightSection={<IconTrash size={18} />}
-                onClick={handleDeleteServer}
-              >
-                Delete Server
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+              />
+            ))}
+          </Flex>
         </Flex>
-        <Flex
-          direction="column"
-          p="xs"
-          gap={2}
-          className="flex-1 overflow-y-auto"
-        >
-          {guild.channels.map((channel) => (
-            <MantineNavLink
-              key={channel.id}
-              component={NavLink}
-              to={`/channels/${guild.id}/${channel.id}`}
-              label={channel.name}
-              leftSection={<IconHash size={20} stroke={2} />}
-              rightSection={
-                <Menu position="bottom" shadow="md" width={210}>
-                  <Menu.Target>
-                    <ActionIcon
-                      variant="subtle"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        e.preventDefault()
-                      }}
-                    >
-                      <IconSettings
-                        className="text-zinc-500 hover:text-zinc-200 transion-colors"
-                        size={16}
-                      />
-                    </ActionIcon>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setTargetChannel(channel)
-                        openRenameChannel()
-                      }}
-                      rightSection={<IconPencil size={18} />}
-                    >
-                      Rename Channel
-                    </Menu.Item>
-                    <Menu.Divider />
-                    <Menu.Item
-                      color="red"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handleDeleteChannel(channel)
-                      }}
-                      rightSection={<IconTrash size={18} />}
-                    >
-                      Delete Channel
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              }
-              variant="light"
-              className="rounded-md"
-            />
-          ))}
-        </Flex>
-      </Flex>,
+      </SecondaryNavbar>,
     )
 
     return () => {
       setSecondaryNavbar(null)
-      setSecondaryNavbarWidth(0)
     }
   }, [
     guild,
     setSecondaryNavbar,
-    setSecondaryNavbarWidth,
     handleDeleteServer,
     handleLeaveServer,
     openRenameServer,

@@ -21,37 +21,25 @@ import {
   IconCirclePlusFilled,
   IconMessageCircleFilled,
 } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
-import {
-  Form,
-  NavLink,
-  Outlet,
-  useActionData,
-  useLoaderData,
-  useNavigate,
-  useNavigation,
-} from 'react-router'
+import { useEffect, useRef, useState } from 'react'
+import { Form, NavLink, Outlet, useNavigate, useNavigation } from 'react-router'
 import { dbContext } from '../../contexts/db'
-import { userContext } from '../../contexts/user'
+import {
+  type OnlineStatus,
+  OnlineStatusContext,
+} from '../../contexts/onlineStatus'
+import { LoggedInUserContext } from '../../contexts/user'
+import { loggedInUserContext } from '../../contexts/user.server'
 import { authMiddleware } from '../../middlewares/auth'
+import { createWebSocket } from '../_shared/lib/websocket'
 import { Scaffold } from '../_shared/ui/Scaffold'
 import type { Route } from './+types/route'
-
-import { action } from './api/action.server'
-
-export { action }
-
 import { NewGuildFormSchema } from './model/newGuildForm'
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
-export type ChannelsOutletContext = {
-  setSecondaryNavbar: (node: React.ReactNode) => void
-  setSecondaryNavbarWidth: (width: number) => void
-}
-
-export async function loader({ context }: Route.LoaderArgs) {
-  const user = context.get(userContext)
+export const loader = async ({ context }: Route.LoaderArgs) => {
+  const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }
@@ -68,35 +56,77 @@ export async function loader({ context }: Route.LoaderArgs) {
   })
 
   return {
+    user,
     guilds: currentUser?.guilds ?? [],
   }
 }
 
-export default function Channels() {
-  const { guilds } = useLoaderData<typeof loader>()
-  const actionData = useActionData<typeof action>()
+export { action } from './api/action.server'
+
+export type ChannelsOutletContext = {
+  setSecondaryNavbar: (node: React.ReactNode) => void
+}
+
+export default function Channels({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const [secondaryNavbar, setSecondaryNavbar] =
     useState<React.ReactNode | null>(null)
-  const [secondaryNavbarWidth, setSecondaryNavbarWidth] = useState<number>(0)
+  const [status, setStatus] = useState<OnlineStatus>('offline')
+  const wsRef = useRef<WebSocket | null>(null)
+
+  useEffect(() => {
+    createWebSocket(`/api/presence/ws`).match(
+      (ws) => {
+        wsRef.current = ws
+
+        ws.onopen = () => {
+          setStatus('online')
+        }
+
+        ws.onerror = (err) => {
+          console.log('Presence websocket error:', err)
+        }
+
+        ws.onclose = () => {
+          setStatus('offline')
+        }
+      },
+      () => {},
+    )
+
+    return () => {
+      const state = wsRef.current?.readyState
+      if (state === WebSocket.OPEN) {
+        wsRef.current?.close()
+      }
+      setStatus('offline')
+      wsRef.current = null
+    }
+  }, [])
 
   return (
-    <Scaffold
-      navbar={
-        <Navbar guilds={guilds} lastResult={actionData ?? null}>
-          {secondaryNavbar}
-        </Navbar>
-      }
-      navbarWidth={72 + secondaryNavbarWidth}
-    >
-      <Outlet
-        context={
-          {
-            setSecondaryNavbar,
-            setSecondaryNavbarWidth,
-          } satisfies ChannelsOutletContext
-        }
-      />
-    </Scaffold>
+    <LoggedInUserContext.Provider value={loaderData.user}>
+      <OnlineStatusContext.Provider value={status}>
+        <Scaffold
+          navbar={
+            <Navbar guilds={loaderData.guilds} lastResult={actionData ?? null}>
+              {secondaryNavbar}
+            </Navbar>
+          }
+          navbarWidth={372}
+        >
+          <Outlet
+            context={
+              {
+                setSecondaryNavbar,
+              } satisfies ChannelsOutletContext
+            }
+          />
+        </Scaffold>
+      </OnlineStatusContext.Provider>
+    </LoggedInUserContext.Provider>
   )
 }
 
@@ -135,14 +165,7 @@ function Navbar({ children, guilds, lastResult }: NavbarProps) {
       wrap="nowrap"
       h="100%"
     >
-      <Stack
-        p="sm"
-        align="center"
-        justify="flex-start"
-        h="100%"
-        className="border-r gap-4"
-        style={{ borderRightColor: 'var(--app-shell-border-color)' }}
-      >
+      <Stack p="sm" align="center" justify="flex-start" h="100%">
         <Tooltip label="Direct Messages" position="right" withArrow>
           <NavLink to="/channels/@me">
             {({ isActive }) => (

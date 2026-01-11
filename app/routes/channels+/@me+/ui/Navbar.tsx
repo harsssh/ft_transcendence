@@ -8,6 +8,7 @@ import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   ActionIcon,
   Alert,
+  Box,
   Button,
   Group,
   Modal,
@@ -19,6 +20,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconPlus } from '@tabler/icons-react'
 import { useEffect } from 'react'
 import { Form, Link, useNavigate, useNavigation } from 'react-router'
+import { SecondaryNavbar } from '../../../_shared/ui/SecondaryNavbar'
 import type { Channel } from '../model/channel'
 import { NewChannelFormSchema } from '../model/newChannelForm'
 
@@ -51,8 +53,15 @@ export function Navbar({ channels, lastResult }: Props) {
 
   return (
     <>
-      <Stack gap="sm" w="100%" p="sm" h="100%">
-        <Group justify="space-between" align="center">
+      <SecondaryNavbar>
+        <Group
+          justify="space-between"
+          align="center"
+          h="48"
+          pl="sm"
+          pr="sm"
+          className="border-b"
+        >
           <Text fw="bold" size="sm">
             Direct Messages
           </Text>
@@ -66,11 +75,15 @@ export function Navbar({ channels, lastResult }: Props) {
           </ActionIcon>
         </Group>
         {channels.map((ch) => (
-          <Link key={ch.id} to={`/channels/@me/${ch.id}`}>
-            <Text>{ch.name}</Text>
-          </Link>
+          <Box key={ch.id} pl="sm" pr="sm" w="100%">
+            <Link to={`/channels/@me/${ch.id}`}>
+              <Text c="text-muted" truncate="end">
+                {ch.name}
+              </Text>
+            </Link>
+          </Box>
         ))}
-      </Stack>
+      </SecondaryNavbar>
 
       <Modal opened={opened} onClose={close} title="Create DM Channel" centered>
         <Form method="post" action="/channels/@me" {...getFormProps(form)}>

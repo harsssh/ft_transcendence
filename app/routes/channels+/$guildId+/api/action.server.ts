@@ -3,14 +3,14 @@ import { and, eq } from 'drizzle-orm'
 import { redirect } from 'react-router'
 import { channels, guildMembers, guilds } from '../../../../../db/schema'
 import { dbContext } from '../../../../contexts/db'
-import { userContext } from '../../../../contexts/user'
+import { loggedInUserContext } from '../../../../contexts/user.server'
 import { SignupFormSchema } from '../../../_auth+/signup+/model/signupForm'
 import { NewGuildFormSchema } from '../../model/newGuildForm'
 import type { Route } from '../+types/route'
 import { NewChannelFormSchema } from '../model/newChannelForm'
 
 export async function action({ request, context, params }: Route.ActionArgs) {
-  const user = context.get(userContext)
+  const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }

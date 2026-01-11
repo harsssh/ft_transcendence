@@ -1,8 +1,4 @@
-import { createContext } from 'react-router'
+import { createContext } from 'react'
+import type { LoggedInUser } from './user.server'
 
-type LoggedInUser = {
-  id: number
-  name: string
-}
-
-export const userContext = createContext<LoggedInUser | null>(null)
+export const LoggedInUserContext = createContext<LoggedInUser | null>(null)

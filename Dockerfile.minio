@@ -1,0 +1,30 @@
+FROM golang:1.24-alpine AS build
+
+ENV GOPATH=/go
+ENV CGO_ENABLED=0
+
+WORKDIR /build
+
+# 必要なツール
+RUN apk add --no-cache ca-certificates
+
+# ホストのソースをコピー
+COPY . /build/minio
+
+# MinIOをビルド
+RUN cd /build/minio && \
+    go build -o /go/bin/minio
+
+# 最終イメージ
+FROM alpine:latest
+
+COPY --from=build /go/bin/minio /usr/bin/minio
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+RUN chmod +x /usr/bin/minio && \
+    mkdir -p /data
+
+EXPOSE 9000 9001
+
+ENTRYPOINT ["/usr/bin/minio"]
+CMD ["server", "/data", "--console-address", ":9001"]

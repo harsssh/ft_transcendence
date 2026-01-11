@@ -1,6 +1,7 @@
 services:
   webapp:
     container_name: webapp-prod
+    image: ft_transcendence:prod
     build:
       context: .
       dockerfile: Dockerfile
@@ -8,11 +9,17 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgres://app:app@db:5432/app
+      - PRESENCE_DB_URL=redis://presence-db:6379
     ports:
       - "3000:3000"
+    networks:
+      - internal
+      - web
 
   db:
     container_name: db-prod
@@ -27,9 +34,65 @@ services:
       - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
-      interval: 10s
+      interval: 1s
       timeout: 5s
-      retries: 5
+      retries: 10
+    networks:
+      - internal
+
+  storage:
+    container_name: storage-prod
+    image: ft_transcendence:minio
+    build:
+      context: ./submodules/minio
+      dockerfile: ../../Dockerfile.minio
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - storage_data:/data
+    networks:
+      - internal
+
+  presence-db:
+    container_name: redis-prod
+    image: redis:8.4
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "ping"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "6379:6379"
+    networks:
+      - internal
+  
+  migrate:
+    container_name: migrate-prod
+    image: ft_transcendence:migrate
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate-env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://app:app@db:5432/app
+    networks:
+      - internal
+  
+networks:
+  internal:
+    name: internal
+  web:
+    name: web
 
 volumes:
   db_data:
+  storage_data:

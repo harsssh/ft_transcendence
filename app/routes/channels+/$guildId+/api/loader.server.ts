@@ -1,9 +1,9 @@
 import { dbContext } from '../../../../contexts/db'
-import { userContext } from '../../../../contexts/user'
+import { loggedInUserContext } from '../../../../contexts/user.server'
 import type { Route } from '../+types/route'
 
 export async function loader({ params, context }: Route.LoaderArgs) {
-  const user = context.get(userContext)
+  const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }
