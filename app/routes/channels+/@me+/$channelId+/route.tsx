@@ -22,7 +22,6 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
-import { Form, useNavigation } from 'react-router'
 import { createWebSocket } from '../../../_shared/lib/websocket'
 import { IconButton } from '../../../_shared/ui/IconButton'
 import type { Route } from './+types/route'
@@ -42,13 +41,10 @@ export { loader } from './api/loader.server'
 
 export default function DMChannel({
   loaderData,
-  actionData,
   params,
 }: Route.ComponentProps) {
   const { messages: initialMessages, partner, locale } = loaderData
   const channelId = params.channelId
-  const navigation = useNavigation()
-  const isSubmitting = navigation.state === 'submitting'
   const [messages, setMessages] = useState<MessageType[]>(initialMessages)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAtBottom, setIsAtBottom] = useState(true)
@@ -212,15 +208,6 @@ export default function DMChannel({
     setUnreadCount(0)
   }, [initialMessages])
 
-  // Handle form submission success - scroll to bottom
-  useEffect(() => {
-    if (navigation.state === 'idle' && actionData?.status === 'success') {
-      setTimeout(() => {
-        scrollToBottom()
-      }, 0)
-    }
-  }, [navigation.state, actionData, scrollToBottom])
-
   const messagesWithSeparators = useMemo(() => {
     // Use the server snapshot timezone for SSR/hydration, then re-render in client timezone.
     const dateFormatter = new Intl.DateTimeFormat(locale, { timeZone })
@@ -251,7 +238,6 @@ export default function DMChannel({
   }, [locale, messages, timeZone])
 
   const [form, fields] = useForm({
-    lastResult: actionData,
     constraint: getZodConstraint(SendMessageSchema),
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: SendMessageSchema })
@@ -263,7 +249,6 @@ export default function DMChannel({
       event.preventDefault()
 
       const messageData = {
-        id: Date.now(), // Temporary ID
         content: content.toString(),
       }
 
@@ -425,27 +410,24 @@ export default function DMChannel({
               flexShrink: 0,
             }}
           >
-            <Form method="post" {...getFormProps(form)}>
-              <input
-                {...getInputProps(fields.intent, { type: 'hidden' })}
-                value="send-message"
-              />
+            <form {...getFormProps(form)}>
               <Group align="flex-start">
                 <TextInput
                   {...getInputProps(fields.content, { type: 'text' })}
+                  key={fields.content.key}
                   placeholder={`Message @${partner?.name ?? 'user'}`}
                   style={{ flex: 1 }}
-                  key={fields.content.key}
+                  disabled={wsStatus !== 'open'}
+                  error={fields.content.errors?.[0]}
                 />
                 <Button
                   type="submit"
-                  loading={isSubmitting}
                   disabled={wsStatus !== 'open'}
                 >
                   <IconSend size={16} />
                 </Button>
               </Group>
-            </Form>
+            </form>
           </Box>
         </Stack>
         {profileSidebarOpened && <UserProfileSidebar profile={partner} />}
@@ -456,7 +438,7 @@ export default function DMChannel({
   return (
     <EditProfileContext.Provider
       value={{
-        lastResult: actionData ?? null,
+        lastResult: null,
       }}
     >
       {component}

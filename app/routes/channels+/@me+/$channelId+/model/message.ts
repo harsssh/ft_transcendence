@@ -15,6 +15,5 @@ export const MessageSchema = z.object({
 export type MessageType = z.infer<typeof MessageSchema>
 
 export const SendMessageSchema = z.object({
-  intent: z.literal('send-message'),
   content: z.string().min(1, 'Message cannot be empty').max(2000),
 })
