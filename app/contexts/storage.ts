@@ -7,17 +7,17 @@ import {
 import { createContext } from 'react-router'
 
 export const AVATAR_BUCKET = 'avatars'
-export const MINIO_PUBLIC_ENDPOINT =
-  process.env.NODE_ENV === 'production' && process.env.MINIO_PUBLIC_ENDPOINT
-    ? process.env.MINIO_PUBLIC_ENDPOINT
+export const STORAGE_PUBLIC_ENDPOINT =
+  process.env.NODE_ENV === 'production' && process.env.STORAGE_PUBLIC_ENDPOINT
+    ? process.env.STORAGE_PUBLIC_ENDPOINT
     : 'http://localhost:9000'
 
 const s3Client = new S3Client({
-  endpoint: process.env.MINIO_ENDPOINT ?? 'http://storage:9000',
+  endpoint: 'http://storage:9000',
   region: 'us-east-1',
   credentials: {
-    accessKeyId: process.env.MINIO_ACCESS_KEY ?? 'minioadmin',
-    secretAccessKey: process.env.MINIO_SECRET_KEY ?? 'minioadmin',
+    accessKeyId: process.env.MINIO_ACCESS_KEY,
+    secretAccessKey: process.env.MINIO_SECRET_KEY,
   },
   forcePathStyle: true,
 })

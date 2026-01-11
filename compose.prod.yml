@@ -14,9 +14,11 @@ services:
     environment:
       - NODE_ENV=production
       - HOST=${WEBAPP_HOST:?}
-      - DATABASE_URL=postgres://app:app@db:5432/app
+      - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/app
       - PRESENCE_DB_URL=redis://presence-db:6379
-      - MINIO_PUBLIC_ENDPOINT=https://${STORAGE_HOST:?}
+      - STORAGE_PUBLIC_ENDPOINT=https://${STORAGE_HOST:?}
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:?}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:?}
 
   proxy:
     container_name: proxy-prod
@@ -41,8 +43,8 @@ services:
     container_name: db-prod
     image: postgres:18
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
+      POSTGRES_USER: ${POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: app
     volumes:
       - db_data:/var/lib/postgresql
@@ -60,8 +62,8 @@ services:
       dockerfile: ../../Dockerfile.minio
     command: server /data --console-address :9001
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?}
     volumes:
       - storage_data:/data
 
@@ -86,7 +88,7 @@ services:
         condition: service_healthy
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgres://app:app@db:5432/app
+      - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/app
   
 volumes:
   db_data:
