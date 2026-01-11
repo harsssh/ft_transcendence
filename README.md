@@ -1,15 +1,21 @@
 ## 環境構築
 
-クローン:
+1. 以下のコマンドを実行してクローン
 ```
 git clone <url> --recursive
 ```
 
-pull時にsubmoduleを更新する:
+2. submoduleを更新
 ```
 git submodule update --init --recursive
 ```
 
+3. `.env.example`をコピーして、`.env`に必須の環境変数を設定
+
+4. `/etc/hosts`を書き換えて`WEBAPP_HOST`と`STORAGE_HOST`で指定したドメインと127.0.0.1をbind
+```
+127.0.0.1   <WEBAPP_HOSTで指定したhostname> <STORAGE_HOSTで指定したhostname>
+```
 
 ## 実行方法
 
