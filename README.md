@@ -5,7 +5,7 @@
 git clone <url> --recursive
 ```
 
-2. (optional) submoduleを更新。minioが必要な場合は必須
+2. submoduleを更新
 ```
 git submodule update --init --recursive
 ```
