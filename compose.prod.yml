@@ -12,7 +12,7 @@ services:
         - /bin/bash
         - -c
         - |
-          response=`curl -s -w "%{http_code}" https://localhost:3000/api/health`
+          response=`curl -s -w "%{http_code}" http://localhost:3000/api/health`
           status_code=$${response: -3}
           if [ "$$status_code" -ne 200 ]; then
             echo healthcheck failed: webapp returned $$status_code: $$response
