@@ -14,12 +14,18 @@ server {
     listen 80;
     server_name ${WEBAPP_HOST} ${STORAGE_HOST};
 
-    return 301 http://$host$request_uri;
+    return 301 https://$host$request_uri;
 }
 
 server {
-    listen 443;
+    listen 443 ssl;
     server_name ${STORAGE_HOST};
+
+    ssl_certificate /etc/nginx/ssl/server.crt;
+    ssl_certificate_key /etc/nginx/ssl/server.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
 
     client_max_body_size 100m;
 
@@ -41,8 +47,14 @@ server {
 }
 
 server {
-    listen 443;
+    listen 443 ssl;
     server_name ${WEBAPP_HOST};
+
+    ssl_certificate /etc/nginx/ssl/server.crt;
+    ssl_certificate_key /etc/nginx/ssl/server.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
 
     client_max_body_size 100m;
 

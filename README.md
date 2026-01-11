@@ -14,8 +14,7 @@ git submodule update --init --recursive
 
 4. `/etc/hosts`を書き換えて`WEBAPP_HOST`と`STORAGE_HOST`で指定したドメインと127.0.0.1をbind
 ```
-127.0.0.1   <WEBAPP_HOSTで指定したhostname>
-127.0.0.1   <STORAGE_HOSTで指定したhostname>
+127.0.0.1   <WEBAPP_HOSTで指定したhostname> <STORAGE_HOSTで指定したhostname>
 ```
 
 ## 実行方法

@@ -7,7 +7,7 @@ import {
 import { createContext } from 'react-router'
 
 const s3Client = new S3Client({
-  endpoint: process.env.MINIO_ENDPOINT ?? 'http://storage:9000',
+  endpoint: process.env.MINIO_PUBLIC_ENDPOINT,
   region: 'us-east-1',
   credentials: {
     accessKeyId: process.env.MINIO_ACCESS_KEY ?? 'minioadmin',

@@ -16,7 +16,7 @@ services:
       - HOST=${WEBAPP_HOST:?}
       - DATABASE_URL=postgres://app:app@db:5432/app
       - PRESENCE_DB_URL=redis://presence-db:6379
-      - MINIO_PUBLIC_ENDPOINT=http://${STORAGE_HOST:?}
+      - MINIO_PUBLIC_ENDPOINT=https://${STORAGE_HOST:?}
 
   proxy:
     container_name: proxy-prod
@@ -30,8 +30,11 @@ services:
       WEBAPP_HOST: ${WEBAPP_HOST:?}
       STORAGE_HOST: ${STORAGE_HOST:?}
     volumes:
+      - ./nginx/entrypoints/:/docker-entrypoint.d/99-user-scripts/:ro
       - ./nginx/templates/:/etc/nginx/templates/:ro
+      - .secrets/ssl_certs:/etc/nginx/ssl/
     ports:
+      - "80:80"
       - "443:443"
 
   db:
@@ -88,3 +91,4 @@ services:
 volumes:
   db_data:
   storage_data:
+  ssl_certs:
