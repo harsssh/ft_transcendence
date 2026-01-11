@@ -58,7 +58,7 @@ export const action = async ({
         }),
       )
 
-      avatarUrl = `${MINIO_PUBLIC_ENDPOINT}/${AVATAR_BUCKET}/${fileName}`
+      avatarUrl = `${AVATAR_BUCKET}/${fileName}`
     }
 
     await db

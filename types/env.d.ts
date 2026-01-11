@@ -4,7 +4,8 @@ declare module 'bun' {
     DATABASE_URL: string
     MINIO_ACCESS_KEY?: string
     MINIO_SECRET_KEY?: string
-    MINIO_PUBLIC_ENDPOINT: string
+    MINIO_ENDPOINT?: string
+    MINIO_PUBLIC_ENDPOINT?: string
     PRESENCE_DB_URL?: string
   }
 }

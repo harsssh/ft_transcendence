@@ -16,6 +16,7 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgres://app:app@db:5432/app
       - PRESENCE_DB_URL=redis://presence-db:6379
+      - MINIO_ENDPOINT=http://storage:9000
     volumes:
       - .:/app
       - /app/node_modules
