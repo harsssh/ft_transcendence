@@ -420,10 +420,7 @@ export default function DMChannel({
                   disabled={wsStatus !== 'open'}
                   error={fields.content.errors?.[0]}
                 />
-                <Button
-                  type="submit"
-                  disabled={wsStatus !== 'open'}
-                >
+                <Button type="submit" disabled={wsStatus !== 'open'}>
                   <IconSend size={16} />
                 </Button>
               </Group>

@@ -8,10 +8,7 @@ import { loggedInUserContext } from '../../../../../contexts/user.server'
 import type { Route } from '../+types/route'
 import { EditProfileSchema } from '../model/profile'
 
-export const action = async ({
-  context,
-  request,
-}: Route.ActionArgs) => {
+export const action = async ({ context, request }: Route.ActionArgs) => {
   const user = context.get(loggedInUserContext)
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
