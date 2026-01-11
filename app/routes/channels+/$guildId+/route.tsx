@@ -246,7 +246,6 @@ export default function GuildRoute() {
             align="center"
             px="md"
             className="border-b font-bold truncate"
-            style={{ borderColor: 'var(--app-shell-border-color)' }}
           >
             <Menu position="bottom-start" shadow="md" width={210}>
               <Menu.Target>
