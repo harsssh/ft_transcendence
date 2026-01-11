@@ -42,6 +42,7 @@ export { loader } from './api/loader.server'
 export default function DMChannel({
   loaderData,
   params,
+  actionData,
 }: Route.ComponentProps) {
   const { messages: initialMessages, partner, locale } = loaderData
   const channelId = params.channelId
