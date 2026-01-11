@@ -14,10 +14,15 @@ RUN --mount=type=bind,target=. go build -o /go/bin/minio && \
 FROM base AS download-mc
 ARG TARGETARCH
 
-RUN apk add -U --no-cache curl
+RUN apk add -U --no-cache curl && \
+    go install aead.dev/minisign/cmd/minisign@v0.2.1
 
 RUN curl -q https://dl.min.io/client/mc/release/linux-${TARGETARCH}/mc -o /go/bin/mc && \
+    curl -s -q https://dl.min.io/client/mc/release/linux-${TARGETARCH}/mc.minisig -o /go/bin/mc.minisig && \
+    curl -s -q https://dl.min.io/client/mc/release/linux-${TARGETARCH}/mc.sha256sum -o /go/bin/mc.sha256sum && \
     chmod +x /go/bin/mc
+
+RUN minisign -Vqm /go/bin/mc -x /go/bin/mc.minisig -P RWTx5Zr1tiHQLwG9keckT0c45M3AGeHD6IvimQHpyRywVWGbP1aVSGav
 
 FROM alpine:latest
 
