@@ -80,7 +80,7 @@ export default function GuildRoute() {
     id: 'rename-server',
     defaultValue: { name: guild.name },
     lastResult:
-      actionData?.initialValue?.intent === 'rename-server'
+      actionData?.initialValue?.['intent'] === 'rename-server'
         ? actionData
         : undefined,
     constraint: getZodConstraint(NewGuildFormSchema),
