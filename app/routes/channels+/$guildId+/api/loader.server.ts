@@ -40,5 +40,5 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     })
   }
 
-  return { guild }
+  return { guild, loggedInUser: { id: user.id } }
 }

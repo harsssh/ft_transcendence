@@ -53,8 +53,10 @@ export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 const InviteFriendSchema = SignupFormSchema.pick({ name: true })
 
 export default function GuildRoute() {
-  const { guild } = useLoaderData<typeof loader>()
+  const { guild, loggedInUser } = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
+
+  const isOwner = guild.ownerId === loggedInUser.id
 
   const { setSecondaryNavbar } = useOutletContext<ChannelsOutletContext>()
   const submit = useSubmit()
@@ -269,12 +271,14 @@ export default function GuildRoute() {
                 >
                   Invite to Server
                 </Menu.Item>
-                <Menu.Item
-                  rightSection={<IconPencil size={18} />}
-                  onClick={openRenameServer}
-                >
-                  Rename Server
-                </Menu.Item>
+                {isOwner && (
+                  <Menu.Item
+                    rightSection={<IconPencil size={18} />}
+                    onClick={openRenameServer}
+                  >
+                    Rename Server
+                  </Menu.Item>
+                )}
                 <Menu.Item
                   rightSection={<IconPlus size={18} />}
                   onClick={openCreateChannel}
@@ -289,13 +293,15 @@ export default function GuildRoute() {
                 >
                   Leave Server
                 </Menu.Item>
-                <Menu.Item
-                  color="red"
-                  rightSection={<IconTrash size={18} />}
-                  onClick={handleDeleteServer}
-                >
-                  Delete Server
-                </Menu.Item>
+                {isOwner && (
+                  <Menu.Item
+                    color="red"
+                    rightSection={<IconTrash size={18} />}
+                    onClick={handleDeleteServer}
+                  >
+                    Delete Server
+                  </Menu.Item>
+                )}
               </Menu.Dropdown>
             </Menu>
           </Flex>
@@ -340,17 +346,21 @@ export default function GuildRoute() {
                       >
                         Rename Channel
                       </Menu.Item>
-                      <Menu.Divider />
-                      <Menu.Item
-                        color="red"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          handleDeleteChannel(channel)
-                        }}
-                        rightSection={<IconTrash size={18} />}
-                      >
-                        Delete Channel
-                      </Menu.Item>
+                      {isOwner && (
+                        <>
+                          <Menu.Divider />
+                          <Menu.Item
+                            color="red"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              handleDeleteChannel(channel)
+                            }}
+                            rightSection={<IconTrash size={18} />}
+                          >
+                            Delete Channel
+                          </Menu.Item>
+                        </>
+                      )}
                     </Menu.Dropdown>
                   </Menu>
                 }
@@ -376,6 +386,7 @@ export default function GuildRoute() {
     openCreateChannel,
     openRenameChannel,
     handleDeleteChannel,
+    isOwner,
   ])
 
   return (
