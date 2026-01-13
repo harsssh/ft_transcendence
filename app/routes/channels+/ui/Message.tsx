@@ -2,7 +2,7 @@ import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
 import { useContext, useSyncExternalStore } from 'react'
-import { LoggedInUserContext } from '../../../../../contexts/user'
+import { LoggedInUserContext } from '../../../contexts/user'
 import { UserAvatarPopover } from './UserAvatarPopover'
 
 type Props = {

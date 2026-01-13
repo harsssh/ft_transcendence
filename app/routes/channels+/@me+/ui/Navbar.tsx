@@ -20,6 +20,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconPlus } from '@tabler/icons-react'
 import { useEffect } from 'react'
 import { Form, Link, useNavigate, useNavigation } from 'react-router'
+import { SecondaryNavbar } from '../../../_shared/ui/SecondaryNavbar'
 import type { Channel } from '../model/channel'
 import { NewChannelFormSchema } from '../model/newChannelForm'
 
@@ -28,13 +29,7 @@ type Props = {
   lastResult: (SubmissionResult<string[]> & { channelId?: string }) | null
 }
 
-const NAVBAR_WIDTH = 300
-
-export const Navbar = Object.assign(NavbarRoot, {
-  width: NAVBAR_WIDTH,
-})
-
-function NavbarRoot({ channels, lastResult }: Props) {
+export function Navbar({ channels, lastResult }: Props) {
   const [opened, { open, close }] = useDisclosure(false)
   const [form, fields] = useForm({
     lastResult,
@@ -58,16 +53,7 @@ function NavbarRoot({ channels, lastResult }: Props) {
 
   return (
     <>
-      <Stack
-        gap="sm"
-        w={NAVBAR_WIDTH}
-        h="100%"
-        style={{
-          borderInlineStart: '1px solid var(--ft-border-color)',
-          borderStartStartRadius: '12px',
-          borderTop: '1px solid var(--ft-border-color)',
-        }}
-      >
+      <SecondaryNavbar>
         <Group
           justify="space-between"
           align="center"
@@ -97,7 +83,7 @@ function NavbarRoot({ channels, lastResult }: Props) {
             </Link>
           </Box>
         ))}
-      </Stack>
+      </SecondaryNavbar>
 
       <Modal opened={opened} onClose={close} title="Create DM Channel" centered>
         <Form method="post" action="/channels/@me" {...getFormProps(form)}>

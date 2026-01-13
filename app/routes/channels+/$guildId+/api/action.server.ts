@@ -1,0 +1,254 @@
+import { parseWithZod } from '@conform-to/zod/v4'
+import { and, eq } from 'drizzle-orm'
+import { redirect } from 'react-router'
+import { channels, guildMembers, guilds } from '../../../../../db/schema'
+import { dbContext } from '../../../../contexts/db'
+import { loggedInUserContext } from '../../../../contexts/user.server'
+import { SignupFormSchema } from '../../../_auth+/signup+/model/signupForm'
+import { NewGuildFormSchema } from '../../model/newGuildForm'
+import type { Route } from '../+types/route'
+import { NewChannelFormSchema } from '../model/newChannelForm'
+
+export async function action({ request, context, params }: Route.ActionArgs) {
+  const user = context.get(loggedInUserContext)
+  if (!user) {
+    throw new Response('Unauthorized', { status: 401 })
+  }
+
+  const guildId = Number(params.guildId)
+  if (!guildId || Number.isNaN(guildId)) {
+    throw new Response('Invalid guild ID', { status: 400 })
+  }
+
+  const db = context.get(dbContext)
+  const formData = await request.formData()
+  const intent = formData.get('intent')
+
+  const guild = await db.query.guilds
+    .findFirst({
+      where: {
+        id: guildId,
+      },
+      columns: {
+        ownerId: true,
+      },
+    })
+    .catch((error) => {
+      if (error instanceof Response) throw error
+      console.error('Error handling guild action:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    })
+  if (!guild) {
+    throw new Response('Server not found', { status: 404 })
+  }
+
+  const currentUserMember = await db.query.guildMembers.findFirst({
+    where: {
+      userId: user.id,
+      guildId: guildId,
+    },
+  })
+  if (!currentUserMember) {
+    throw new Response('Only the server member can perform this action', {
+      status: 403,
+    })
+  }
+
+  if (intent === 'invite-friend') {
+    const InviteFriendSchema = SignupFormSchema.pick({ name: true })
+    const submission = parseWithZod(formData, { schema: InviteFriendSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { name: username } = submission.value
+
+    const targetUser = await db.query.users.findFirst({
+      where: {
+        name: username,
+      },
+    })
+
+    if (!targetUser) {
+      return submission.reply({
+        formErrors: ['User not found'],
+      })
+    }
+
+    const existingMember = await db.query.guildMembers.findFirst({
+      where: {
+        userId: targetUser.id,
+        guildId: guildId,
+      },
+    })
+
+    if (existingMember) {
+      return submission.reply({
+        formErrors: ['User is already a member of this server'],
+      })
+    }
+
+    try {
+      await db.insert(guildMembers).values({
+        userId: targetUser.id,
+        guildId: guildId,
+      })
+    } catch (error) {
+      console.error('Error inviting user:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    return submission.reply()
+  }
+
+  if (intent === 'rename-server') {
+    if (guild.ownerId !== user.id) {
+      throw new Response('Only the server owner can rename the server', {
+        status: 403,
+      })
+    }
+
+    const submission = parseWithZod(formData, { schema: NewGuildFormSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { name } = submission.value
+
+    try {
+      await db.update(guilds).set({ name }).where(eq(guilds.id, guildId))
+    } catch (error) {
+      console.error('Error renaming guild:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+    return submission.reply()
+  }
+
+  if (intent === 'create-channel') {
+    const submission = parseWithZod(formData, { schema: NewChannelFormSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { name } = submission.value
+
+    try {
+      const [_newChannel] = await db
+        .insert(channels)
+        .values({
+          name: name,
+          guildId: guildId,
+        })
+        .returning()
+
+      // TODO:
+      // throw redirect(`/channels/${guildId}/${newChannel?.id}`)
+    } catch (error) {
+      if (error instanceof Response) throw error
+      console.error('Error creating channel in guild:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+    return submission.reply()
+  }
+
+  if (intent === 'rename-channel') {
+    const channelId = Number(formData.get('channelId'))
+    if (!channelId || Number.isNaN(channelId)) {
+      throw new Response('Invalid channel ID', { status: 400 })
+    }
+
+    const submission = parseWithZod(formData, { schema: NewChannelFormSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { name } = submission.value
+
+    try {
+      await db.update(channels).set({ name }).where(eq(channels.id, channelId))
+    } catch (error) {
+      console.error('Error renaming channel:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+    return submission.reply()
+  }
+
+  if (intent === 'delete-channel') {
+    if (guild.ownerId !== user.id) {
+      throw new Response('Only the server owner can delete the channel', {
+        status: 403,
+      })
+    }
+
+    const channelId = Number(formData.get('channelId'))
+    if (!channelId || Number.isNaN(channelId)) {
+      throw new Response('Invalid channel ID', { status: 400 })
+    }
+
+    try {
+      await db.delete(channels).where(eq(channels.id, channelId))
+    } catch (error) {
+      console.error('Error deleting channel:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    throw redirect(`/channels/${guildId}`)
+  }
+
+  if (intent === 'leave-server') {
+    try {
+      await db
+        .delete(guildMembers)
+        .where(
+          and(
+            eq(guildMembers.userId, user.id),
+            eq(guildMembers.guildId, guildId),
+          ),
+        )
+    } catch (error) {
+      console.error('Error leaving guild:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    throw redirect('/channels/@me')
+  }
+
+  if (intent === 'delete-server') {
+    if (guild.ownerId !== user.id) {
+      throw new Response('Only the server owner can delete the server', {
+        status: 403,
+      })
+    }
+
+    try {
+      await db.delete(guilds).where(eq(guilds.id, guildId))
+    } catch (error) {
+      console.error('Error deleting guild:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    throw redirect('/channels/@me')
+  }
+
+  return null
+}
