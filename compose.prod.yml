@@ -202,8 +202,9 @@ services:
         fi;
         echo "Setting file permissions"
         chown -R root:root config/certs;
-        find . -type d -exec chmod 750 \{\} \;;
-        find . -type f -exec chmod 640 \{\} \;;
+        find config/certs -type d -exec chmod 750 \{\} \;;
+        find config/certs -type f -exec chmod 640 \{\} \;;
+        find config/certs -type f -name "*.crt" -exec chmod 644 \{\} \;;
         echo "Waiting for Elasticsearch availability";
         until curl -s --cacert config/certs/ca/ca.crt https://es01:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
@@ -291,6 +292,69 @@ services:
       - proxy
       - internal
 
+  setup-logstash-jdbc:
+    container_name: setup-logstash-jdbc-prod
+    image: curlimages/curl:8.5.0
+    user: "0"
+    command:
+      - sh
+      - -c
+      - |
+        set -eu
+        JAR=/jdbc/postgresql.jar
+        if [ -f "$${JAR}" ]; then
+          echo "PostgreSQL JDBC already present"
+          exit 0
+        fi
+        echo "Downloading PostgreSQL JDBC driver..."
+        curl -fsSL -o "$${JAR}" https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar
+        chmod 644 "$${JAR}"
+        echo "Done"
+    volumes:
+      - logstash-jdbc:/jdbc
+    networks:
+      - internal
+
+  logstash:
+    container_name: logstash-prod
+    depends_on:
+      es01:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      setup-logstash-jdbc:
+        condition: service_completed_successfully
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+    user: root
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER:?}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
+    volumes:
+      - certs-elastic:/usr/share/logstash/config/certs:ro
+      - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./elk/logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - logstash-jdbc:/usr/share/logstash/vendor/jar/jdbc:ro
+    networks:
+      - internal
+
+  setup-kibana-data-views:
+    container_name: setup-kibana-data-views-prod
+    image: curlimages/curl:8.5.0
+    depends_on:
+      kibana:
+        condition: service_healthy
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    volumes:
+      - ./elk/kibana/setup-data-views.sh:/scripts/setup-data-views.sh:ro
+    command: ["sh", "/scripts/setup-data-views.sh"]
+    networks:
+      - internal
+
 networks:
   proxy:
   internal:
@@ -301,3 +365,4 @@ volumes:
   es01-data-prod:
   kibana-data-prod:
   certs-elastic:
+  logstash-jdbc:
