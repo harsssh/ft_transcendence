@@ -5,8 +5,8 @@ import { users } from '../../../../../../db/schema'
 import { dbContext } from '../../../../../contexts/db'
 import { AVATAR_BUCKET, storageContext } from '../../../../../contexts/storage'
 import { loggedInUserContext } from '../../../../../contexts/user.server'
+import { EditProfileSchema } from '../../../_text/model/profile'
 import type { Route } from '../+types/route'
-import { EditProfileSchema } from '../model/profile'
 
 export const action = async ({ context, request }: Route.ActionArgs) => {
   const user = context.get(loggedInUserContext)

@@ -25,7 +25,7 @@ import {
   useState,
 } from 'react'
 import { Form, useNavigation } from 'react-router'
-import { EditProfileSchema } from '../@me+/$channelId+/model/profile'
+import { EditProfileSchema } from '../_text/model/profile'
 import { UserAvatar } from './UserAvatar'
 
 type Props = {

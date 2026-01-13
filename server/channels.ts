@@ -2,11 +2,12 @@ import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import type { UpgradeWebSocket, WSContext } from 'hono/ws'
 import { db } from '../app/contexts/db'
+import { STORAGE_PUBLIC_ENDPOINT } from '../app/contexts/storage'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import {
   type MessageType,
   SendMessageSchema,
-} from '../app/routes/channels+/@me+/$channelId+/model/message'
+} from '../app/routes/channels+/_text/model/message'
 import { messages, users } from '../db/schema'
 
 // Store WebSocket connections per channel
@@ -150,7 +151,10 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   id: insertedMessage.id,
                   content: insertedMessage.content,
                   createdAt: insertedMessage.createdAt,
-                  sender,
+                  sender: {
+                    ...sender,
+                    avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${sender.avatarUrl}`,
+                  },
                 }
 
                 // Broadcast to ALL clients (including sender)
