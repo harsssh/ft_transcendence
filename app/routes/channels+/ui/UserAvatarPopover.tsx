@@ -1,6 +1,8 @@
 import {
+  Badge,
   Box,
   Button,
+  Group,
   Popover,
   Stack,
   Text,
@@ -11,10 +13,17 @@ import { useCallback, useId } from 'react'
 import { EditProfileModal } from './EditProfileModal'
 import { UserAvatar, type UserAvatarProps } from './UserAvatar'
 
+export type Role = {
+  id: number
+  name: string
+  color: string
+}
+
 type Props = Omit<UserAvatarProps, 'id' | 'withOnlineStatus'> & {
   id: number
   displayName: string | null
   isEditable: boolean
+  roles?: Role[] | undefined
 }
 
 export function UserAvatarPopover(props: Props) {
@@ -96,6 +105,23 @@ export function UserAvatarPopover(props: Props) {
                   {props.name}
                 </Text>
               </Box>
+              {props.roles && props.roles.length > 0 && (
+                <Box>
+                  <Group gap={4}>
+                    {props.roles.map((role) => (
+                      <Badge
+                        key={role.id}
+                        color={role.color}
+                        variant="dot"
+                        size="sm"
+                        tt="none"
+                      >
+                        {role.name}
+                      </Badge>
+                    ))}
+                  </Group>
+                </Box>
+              )}
               {props.isEditable && (
                 <Button onClick={handleEditProfileClicked}>Edit Profile</Button>
               )}

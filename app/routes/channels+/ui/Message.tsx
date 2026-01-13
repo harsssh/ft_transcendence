@@ -3,7 +3,7 @@ import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
 import { useContext, useSyncExternalStore } from 'react'
 import { LoggedInUserContext } from '../../../contexts/user'
-import { UserAvatarPopover } from './UserAvatarPopover'
+import { type Role, UserAvatarPopover } from './UserAvatarPopover'
 
 type Props = {
   createdAt: Date
@@ -13,6 +13,7 @@ type Props = {
   content: string
   avatarSrc?: string | undefined | null
   withProfile?: boolean
+  roles?: Role[]
 }
 
 export function Message({
@@ -23,6 +24,7 @@ export function Message({
   content,
   avatarSrc = null,
   withProfile = false,
+  roles,
 }: Props) {
   // サーバーとクライアントのロケールが異なる場合にhydration errorが発生するため、それを避けるハッチ
   const localeTimeCreatedAt = useSyncExternalStore(
@@ -55,6 +57,7 @@ export function Message({
             displayName={senderDisplayName}
             src={avatarSrc}
             isEditable={loggedInUser?.name === senderName}
+            roles={roles}
           />
         </Box>
       )}
