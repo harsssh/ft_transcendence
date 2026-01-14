@@ -40,5 +40,22 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     })
   }
 
-  return { guild, loggedInUser: { id: user.id } }
+  const roles = await db.query.usersToRoles.findMany({
+    where: {
+      userId: user.id,
+    },
+    with: {
+      role: {
+        where: {
+          guildId: guildId,
+        },
+      },
+    },
+  })
+  const role = roles
+    .map((r) => r.role)
+    .filter((r) => r !== null)
+    .reduce((acc, r) => acc | r!.permissions, 0)
+
+  return { guild, loggedInUser: { id: user.id, role: role } }
 }
