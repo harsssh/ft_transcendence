@@ -135,22 +135,15 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     }
 
     try {
-      await db.insert(usersToRoles).values({
-        userId: targetUser.id,
-        roleId: defaultUserRole.id,
-      })
-    } catch (error) {
-      console.error('Error inviting user:', error)
-      throw new Response(
-        'An unexpected error occurred while processing your request.',
-        { status: 500 },
-      )
-    }
-
-    try {
-      await db.insert(guildMembers).values({
-        userId: targetUser.id,
-        guildId: guildId,
+      await db.transaction(async (tx) => {
+        await tx.insert(guildMembers).values({
+          userId: targetUser.id,
+          guildId: guildId,
+        })
+        await tx.insert(usersToRoles).values({
+          userId: targetUser.id,
+          roleId: defaultUserRole.id,
+        })
       })
     } catch (error) {
       console.error('Error inviting user:', error)
