@@ -101,6 +101,33 @@ export const friendships = p.pgTable(
   (t) => [p.primaryKey({ columns: [t.userId, t.friendId] })],
 )
 
+export const roles = p.pgTable('roles', {
+  id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+  guildId: p
+    .integer('guild_id')
+    .references(() => guilds.id, { onDelete: 'cascade' })
+    .notNull(),
+  name: p.varchar({ length: 255 }).notNull(),
+  color: p.varchar({ length: 128 }).notNull(),
+  permissions: p.integer().notNull().default(0),
+  createdAt: p.timestamp('created_at').defaultNow().notNull(),
+})
+
+export const usersToRoles = p.pgTable(
+  'users_roles',
+  {
+    userId: p
+      .integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    roleId: p
+      .integer('role_id')
+      .notNull()
+      .references(() => roles.id, { onDelete: 'cascade' }),
+  },
+  (t) => [p.primaryKey({ columns: [t.userId, t.roleId] })],
+)
+
 export const relations = defineRelations(
   {
     users,
@@ -110,6 +137,8 @@ export const relations = defineRelations(
     usersToChannels,
     messages,
     friendships,
+    roles,
+    usersToRoles,
   },
   (r) => ({
     users: {
@@ -132,6 +161,10 @@ export const relations = defineRelations(
       receivedFriendships: r.many.friendships({
         alias: 'friendship_friend',
       }),
+      roles: r.many.roles({
+        from: r.users.id.through(r.usersToRoles.userId),
+        to: r.roles.id.through(r.usersToRoles.roleId),
+      }),
     },
     guilds: {
       owner: r.one.users({
@@ -146,6 +179,10 @@ export const relations = defineRelations(
       channels: r.many.channels({
         from: r.guilds.id,
         to: r.channels.guildId,
+      }),
+      roles: r.many.roles({
+        from: r.guilds.id,
+        to: r.roles.guildId,
       }),
     },
     guildMembers: {
@@ -188,6 +225,26 @@ export const relations = defineRelations(
         from: r.friendships.friendId,
         to: r.users.id,
         alias: 'friendship_friend',
+      }),
+    },
+    roles: {
+      guild: r.one.guilds({
+        from: r.roles.guildId,
+        to: r.guilds.id,
+      }),
+      members: r.many.users({
+        from: r.roles.id.through(r.usersToRoles.roleId),
+        to: r.users.id.through(r.usersToRoles.userId),
+      }),
+    },
+    usersToRoles: {
+      user: r.one.users({
+        from: r.usersToRoles.userId,
+        to: r.users.id,
+      }),
+      role: r.one.roles({
+        from: r.usersToRoles.roleId,
+        to: r.roles.id,
       }),
     },
   }),
