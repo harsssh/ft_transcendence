@@ -1,7 +1,7 @@
 import { parseWithZod } from '@conform-to/zod/v4'
 import { and, eq } from 'drizzle-orm'
 import { redirect } from 'react-router'
-import { channels, guildMembers, guilds } from '../../../../../db/schema'
+import { channels, guildMembers, guilds, usersToRoles } from '../../../../../db/schema'
 import { dbContext } from '../../../../contexts/db'
 import { loggedInUserContext } from '../../../../contexts/user.server'
 import { SignupFormSchema } from '../../../_auth+/signup+/model/signupForm'
@@ -88,6 +88,26 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       return submission.reply({
         formErrors: ['User is already a member of this server'],
       })
+    }
+
+    const defaultUserRole = await db.query.roles.findFirst({
+      where: {
+        guildId: guildId,
+        name: "user",
+      },
+    })
+
+    try {
+      await db.insert(usersToRoles).values({
+        userId: targetUser.id,
+        roleId: defaultUserRole.id,
+      })
+    } catch (error) {
+      console.error('Error inviting user:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
     }
 
     try {
