@@ -385,6 +385,7 @@ export function TextChannelView({
                     content={entry.message.content}
                     createdAt={entry.message.createdAt}
                     withProfile={entry.message.withProfile}
+                    roles={entry.message.sender.roles}
                   />
                 </div>
               )
