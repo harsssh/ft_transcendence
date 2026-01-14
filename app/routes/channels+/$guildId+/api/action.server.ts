@@ -263,6 +263,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'leave-server') {
+    if (guild.ownerId === user.id) {
+      throw new Response('the server owner cannot leave the server', {
+        status: 403,
+      })
+    }
+
     try {
       await db
         .delete(guildMembers)

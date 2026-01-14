@@ -57,6 +57,7 @@ export default function GuildRoute() {
   const { guild, loggedInUser } = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
 
+  const isOwner = guild.ownerId === loggedInUser.id
   const canManageGuild = hasPermission(
     loggedInUser.permissionsMask,
     Permissions.MANAGE_GUILD,
@@ -300,13 +301,15 @@ export default function GuildRoute() {
                   Create Channel
                 </Menu.Item>
                 <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  rightSection={<IconLogout size={18} />}
-                  onClick={handleLeaveServer}
-                >
-                  Leave Server
-                </Menu.Item>
+                {!isOwner && (
+                  <Menu.Item
+                    color="red"
+                    rightSection={<IconLogout size={18} />}
+                    onClick={handleLeaveServer}
+                  >
+                    Leave Server
+                  </Menu.Item>
+                )}
                 {canManageGuild && (
                   <Menu.Item
                     color="red"
@@ -403,6 +406,7 @@ export default function GuildRoute() {
     canManageGuild,
     canManageChannels,
     canCreateInvite,
+    isOwner,
   ])
 
   return (
