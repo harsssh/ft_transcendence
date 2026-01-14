@@ -168,6 +168,9 @@ services:
   
   setup-elastic:
     container_name: setup-elastic-prod
+    depends_on:
+      es01:
+        condition: service_started
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs-elastic:/usr/share/elasticsearch/config/certs
@@ -221,9 +224,6 @@ services:
   
   es01:
     container_name: elasticsearch-prod
-    depends_on:
-      setup-elastic:
-        condition: service_healthy
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs-elastic:/usr/share/elasticsearch/config/certs
