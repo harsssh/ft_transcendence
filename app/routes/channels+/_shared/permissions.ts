@@ -20,7 +20,3 @@ export function hasPermission(
   }
   return (userPermissions & requiredPermission) === requiredPermission
 }
-
-export function computePermissions(roles: { permissions: number }[]): number {
-  return roles.reduce((acc, role) => acc | role.permissions, 0)
-}
