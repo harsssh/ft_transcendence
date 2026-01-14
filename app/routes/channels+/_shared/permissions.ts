@@ -10,7 +10,7 @@ export const Permissions = {
 
 export function hasPermission(
   userPermissions: number,
-  permission: number,
+  requiredPermission: number,
 ): boolean {
   if (
     (userPermissions & Permissions.ADMINISTRATOR) ===
@@ -18,7 +18,7 @@ export function hasPermission(
   ) {
     return true
   }
-  return (userPermissions & permission) === permission
+  return (userPermissions & requiredPermission) === requiredPermission
 }
 
 export function computePermissions(roles: { permissions: number }[]): number {
