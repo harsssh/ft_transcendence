@@ -1,11 +1,17 @@
 import { parseWithZod } from '@conform-to/zod/v4'
-import { channels, guildMembers, guilds, roles, usersToRoles } from '../../../../db/schema'
+import colors from 'tailwindcss/colors'
+import {
+  channels,
+  guildMembers,
+  guilds,
+  roles,
+  usersToRoles,
+} from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { loggedInUserContext } from '../../../contexts/user.server'
+import { Permissions } from '../_shared/permissions'
 import type { Route } from '../+types/route'
 import { NewGuildFormSchema } from '../model/newGuildForm'
-import colors from 'tailwindcss/colors'
-import { Permissions } from '../_shared/permissions'
 
 export async function action({ request, context }: Route.ActionArgs) {
   const db = context.get(dbContext)
@@ -49,6 +55,9 @@ export async function action({ request, context }: Route.ActionArgs) {
         permissions: Permissions.ADMINISTRATOR,
       })
       .returning({ id: roles.id })
+    if (!adminRole) {
+      throw new Error(`Failed to create admin role for guild ${newGuild.id}"`)
+    }
 
     const userPermissions =
       Permissions.MANAGE_CHANNELS |
