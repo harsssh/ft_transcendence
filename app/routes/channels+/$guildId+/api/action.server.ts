@@ -1,7 +1,12 @@
 import { parseWithZod } from '@conform-to/zod/v4'
 import { and, eq } from 'drizzle-orm'
 import { redirect } from 'react-router'
-import { channels, guildMembers, guilds, usersToRoles } from '../../../../../db/schema'
+import {
+  channels,
+  guildMembers,
+  guilds,
+  usersToRoles,
+} from '../../../../../db/schema'
 import { dbContext } from '../../../../contexts/db'
 import { loggedInUserContext } from '../../../../contexts/user.server'
 import { SignupFormSchema } from '../../../_auth+/signup+/model/signupForm'
@@ -93,7 +98,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const defaultUserRole = await db.query.roles.findFirst({
       where: {
         guildId: guildId,
-        name: "user",
+        name: 'user',
       },
     })
 
