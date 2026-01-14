@@ -102,6 +102,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       },
     })
 
+    if (!defaultUserRole) {
+      return submission.reply({
+        formErrors: ['User role not found in this guild'],
+      })
+    }
+
     try {
       await db.insert(usersToRoles).values({
         userId: targetUser.id,
