@@ -1,9 +1,11 @@
 import { parseWithZod } from '@conform-to/zod/v4'
-import { channels, guildMembers, guilds } from '../../../../db/schema'
+import { channels, guildMembers, guilds, roles, usersToRoles } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { loggedInUserContext } from '../../../contexts/user.server'
 import type { Route } from '../+types/route'
 import { NewGuildFormSchema } from '../model/newGuildForm'
+import colors from 'tailwindcss/colors'
+import { Permissions } from '../_shared/permissions'
 
 export async function action({ request, context }: Route.ActionArgs) {
   const db = context.get(dbContext)
@@ -38,9 +40,43 @@ export async function action({ request, context }: Route.ActionArgs) {
       )
     }
 
+    const [adminRole] = await tx
+      .insert(roles)
+      .values({
+        guildId: newGuild.id,
+        name: 'admin',
+        color: colors.blue[500],
+        permissions: Permissions.ADMINISTRATOR,
+      })
+      .returning({ id: roles.id })
+
+    const userPermissions =
+      Permissions.MANAGE_CHANNELS |
+      Permissions.CREATE_INVITE |
+      Permissions.SEND_MESSAGES
+    await tx.insert(roles).values({
+      guildId: newGuild.id,
+      name: 'user',
+      color: colors.yellow[500],
+      permissions: userPermissions,
+    })
+
+    const guestPermissions = Permissions.SEND_MESSAGES
+    await tx.insert(roles).values({
+      guildId: newGuild.id,
+      name: 'guest',
+      color: colors.neutral[500],
+      permissions: guestPermissions,
+    })
+
     await tx.insert(guildMembers).values({
       userId: user.id,
       guildId: newGuild.id,
+    })
+
+    await tx.insert(usersToRoles).values({
+      userId: user.id,
+      roleId: adminRole.id,
     })
 
     await tx.insert(channels).values({
