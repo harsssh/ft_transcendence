@@ -294,12 +294,14 @@ export default function GuildRoute() {
                     Rename Server
                   </Menu.Item>
                 )}
-                <Menu.Item
-                  rightSection={<IconPlus size={18} />}
-                  onClick={openCreateChannel}
-                >
-                  Create Channel
-                </Menu.Item>
+                {canManageChannels && (
+                  <Menu.Item
+                    rightSection={<IconPlus size={18} />}
+                    onClick={openCreateChannel}
+                  >
+                    Create Channel
+                  </Menu.Item>
+                )}
                 <Menu.Divider />
                 {!isOwner && (
                   <Menu.Item
