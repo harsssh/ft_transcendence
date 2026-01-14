@@ -1,5 +1,5 @@
 import { parseWithZod } from '@conform-to/zod/v4'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { redirect } from 'react-router'
 import {
   channels,
@@ -263,14 +263,36 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     }
 
     try {
-      await db
-        .delete(guildMembers)
-        .where(
-          and(
-            eq(guildMembers.userId, user.id),
-            eq(guildMembers.guildId, guildId),
-          ),
-        )
+      await db.transaction(async (tx) => {
+        const guildRoles = await tx.query.roles.findMany({
+          where: {
+            guildId: guildId,
+          },
+          columns: {
+            id: true,
+          },
+        })
+        const guildRoleIds = guildRoles.map((r) => r.id)
+        if (guildRoleIds.length > 0) {
+          await tx
+            .delete(usersToRoles)
+            .where(
+              and(
+                eq(usersToRoles.userId, user.id),
+                inArray(usersToRoles.roleId, guildRoleIds),
+              ),
+            )
+        }
+
+        await tx
+          .delete(guildMembers)
+          .where(
+            and(
+              eq(guildMembers.userId, user.id),
+              eq(guildMembers.guildId, guildId),
+            ),
+          )
+      })
     } catch (error) {
       console.error('Error leaving guild:', error)
       throw new Response(
