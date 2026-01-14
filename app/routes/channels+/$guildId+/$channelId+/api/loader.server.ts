@@ -99,7 +99,7 @@ export const loader = async ({
             name: m.sender.name,
             displayName: m.sender.displayName,
             avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`,
-            roles: m.sender.roles.map((role) => ({
+            roles: (m.sender.roles ?? []).map((role) => ({
               id: role.id,
               name: role.name,
               color: role.color,
