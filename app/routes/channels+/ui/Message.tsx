@@ -13,7 +13,7 @@ type Props = {
   content: string
   avatarSrc?: string | undefined | null
   withProfile?: boolean
-  roles?: Role[]
+  roles?: Role[] | undefined
 }
 
 export function Message({
