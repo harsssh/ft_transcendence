@@ -52,10 +52,13 @@ export async function loader({ params, context }: Route.LoaderArgs) {
       },
     },
   })
-  const role = roles
+  const userPermissions = roles
     .map((r) => r.role)
     .filter((r) => r !== null)
-    .reduce((acc, r) => acc | r!.permissions, 0)
+    .reduce((acc, r) => acc | r?.permissions, 0)
 
-  return { guild, loggedInUser: { id: user.id, role: role } }
+  return {
+    guild,
+    loggedInUser: { id: user.id, permissionsMask: userPermissions },
+  }
 }
