@@ -10,6 +10,7 @@ import {
 import { dbContext } from '../../../../contexts/db'
 import { loggedInUserContext } from '../../../../contexts/user.server'
 import { SignupFormSchema } from '../../../_auth+/signup+/model/signupForm'
+import { hasPermission, Permissions } from '../../_shared/permissions'
 import { NewGuildFormSchema } from '../../model/newGuildForm'
 import type { Route } from '../+types/route'
 import { NewChannelFormSchema } from '../model/newChannelForm'
@@ -62,7 +63,32 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     })
   }
 
+  const roles = await db.query.usersToRoles.findMany({
+    where: {
+      userId: user.id,
+    },
+    with: {
+      role: {
+        where: {
+          guildId: guildId,
+        },
+      },
+    },
+  })
+  const userPermissions = roles
+    .map((r) => r.role)
+    .filter((r) => r !== null)
+    .reduce((acc, r) => acc | r?.permissions, 0)
+
+  const checkPermission = (requiredPermission: number) => {
+    if (!hasPermission(userPermissions, requiredPermission)) {
+      throw new Response('Forbidden: Insufficient permissions', { status: 403 })
+    }
+  }
+
   if (intent === 'invite-friend') {
+    checkPermission(Permissions.CREATE_INVITE)
+
     const InviteFriendSchema = SignupFormSchema.pick({ name: true })
     const submission = parseWithZod(formData, { schema: InviteFriendSchema })
     if (submission.status !== 'success') {
@@ -138,11 +164,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'rename-server') {
-    if (guild.ownerId !== user.id) {
-      throw new Response('Only the server owner can rename the server', {
-        status: 403,
-      })
-    }
+    checkPermission(Permissions.MANAGE_GUILD)
 
     const submission = parseWithZod(formData, { schema: NewGuildFormSchema })
     if (submission.status !== 'success') {
@@ -163,6 +185,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'create-channel') {
+    checkPermission(Permissions.MANAGE_CHANNELS)
+
     const submission = parseWithZod(formData, { schema: NewChannelFormSchema })
     if (submission.status !== 'success') {
       return submission.reply()
@@ -192,6 +216,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'rename-channel') {
+    checkPermission(Permissions.MANAGE_CHANNELS)
+
     const channelId = Number(formData.get('channelId'))
     if (!channelId || Number.isNaN(channelId)) {
       throw new Response('Invalid channel ID', { status: 400 })
@@ -216,11 +242,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'delete-channel') {
-    if (guild.ownerId !== user.id) {
-      throw new Response('Only the server owner can delete the channel', {
-        status: 403,
-      })
-    }
+    checkPermission(Permissions.MANAGE_CHANNELS)
 
     const channelId = Number(formData.get('channelId'))
     if (!channelId || Number.isNaN(channelId)) {
