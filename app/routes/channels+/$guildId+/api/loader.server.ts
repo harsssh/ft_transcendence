@@ -21,6 +21,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     },
     with: {
       channels: true,
+      roles: true,
     },
   })
 
@@ -59,6 +60,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   return {
     guild,
-    loggedInUser: { id: user.id, permissionsMask: userPermissions },
+    loggedInUser: {
+      id: user.id,
+      name: user.name,
+      permissionsMask: userPermissions,
+    },
   }
 }

@@ -1,8 +1,8 @@
 import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
-import { useContext, useSyncExternalStore } from 'react'
-import { LoggedInUserContext } from '../../../contexts/user'
+import { useSyncExternalStore } from 'react'
+import type { GuildOutletContext } from '../$guildId+/route'
 import { type Role, UserAvatarPopover } from './UserAvatarPopover'
 
 type Props = {
@@ -14,6 +14,8 @@ type Props = {
   avatarSrc?: string | undefined | null
   withProfile?: boolean
   roles?: Role[] | undefined
+  guild?: GuildOutletContext['guild'] | undefined
+  loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
 }
 
 export function Message({
@@ -25,6 +27,8 @@ export function Message({
   avatarSrc = null,
   withProfile = false,
   roles,
+  guild,
+  loggedInUser,
 }: Props) {
   // サーバーとクライアントのロケールが異なる場合にhydration errorが発生するため、それを避けるハッチ
   const localeTimeCreatedAt = useSyncExternalStore(
@@ -33,7 +37,6 @@ export function Message({
     () => createdAt.toISOString(),
   )
   const { ref: hoverRef, hovered } = useHover()
-  const loggedInUser = useContext(LoggedInUserContext)
 
   return (
     <Box
@@ -58,6 +61,8 @@ export function Message({
             src={avatarSrc}
             isEditable={loggedInUser?.name === senderName}
             roles={roles}
+            guild={guild}
+            loggedInUser={loggedInUser}
           />
         </Box>
       )}

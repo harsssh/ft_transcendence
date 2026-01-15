@@ -53,6 +53,11 @@ export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
 const InviteFriendSchema = SignupFormSchema.pick({ name: true })
 
+export type GuildOutletContext = {
+  guild: Awaited<ReturnType<typeof loader>>['guild']
+  loggedInUser: Awaited<ReturnType<typeof loader>>['loggedInUser']
+}
+
 export default function GuildRoute() {
   const { guild, loggedInUser } = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
@@ -413,7 +418,7 @@ export default function GuildRoute() {
 
   return (
     <>
-      <Outlet />
+      <Outlet context={{ guild, loggedInUser } satisfies GuildOutletContext} />
 
       <Modal
         opened={renameServerOpened}

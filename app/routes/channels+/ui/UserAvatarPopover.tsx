@@ -10,6 +10,7 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useCallback, useId } from 'react'
+import type { GuildOutletContext } from '../$guildId+/route'
 import { EditProfileModal } from './EditProfileModal'
 import { UserAvatar, type UserAvatarProps } from './UserAvatar'
 
@@ -24,6 +25,8 @@ type Props = Omit<UserAvatarProps, 'id' | 'withOnlineStatus'> & {
   displayName: string | null
   isEditable: boolean
   roles?: Role[] | undefined
+  guild?: GuildOutletContext['guild'] | undefined
+  loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
 }
 
 export function UserAvatarPopover(props: Props) {
