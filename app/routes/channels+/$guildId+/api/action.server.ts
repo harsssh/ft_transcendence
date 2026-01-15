@@ -11,6 +11,7 @@ import { dbContext } from '../../../../contexts/db'
 import { loggedInUserContext } from '../../../../contexts/user.server'
 import { SignupFormSchema } from '../../../_auth+/signup+/model/signupForm'
 import { hasPermission, Permissions } from '../../_shared/permissions'
+import { KickMemberSchema } from '../../model/kickMemberForm'
 import { NewGuildFormSchema } from '../../model/newGuildForm'
 import type { Route } from '../+types/route'
 import { NewChannelFormSchema } from '../model/newChannelForm'
@@ -322,6 +323,82 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     }
 
     throw redirect('/channels/@me')
+  }
+
+  if (intent === 'kick-member') {
+    checkPermission(Permissions.KICK_MEMBERS)
+
+    const submission = parseWithZod(formData, { schema: KickMemberSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { userId: targetUserId } = submission.value
+
+    if (guild.ownerId === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot kick the server owner'],
+      })
+    }
+
+    if (user.id === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot kick yourself'],
+      })
+    }
+
+    const existingMember = await db.query.guildMembers.findFirst({
+      where: {
+        userId: targetUserId,
+        guildId: guildId,
+      },
+    })
+
+    if (!existingMember) {
+      return submission.reply({
+        formErrors: ['User is not a member of this server'],
+      })
+    }
+
+    try {
+      await db.transaction(async (tx) => {
+        const guildRoles = await tx.query.roles.findMany({
+          where: {
+            guildId: guildId,
+          },
+          columns: {
+            id: true,
+          },
+        })
+        const guildRoleIds = guildRoles.map((r) => r.id)
+        if (guildRoleIds.length > 0) {
+          await tx
+            .delete(usersToRoles)
+            .where(
+              and(
+                eq(usersToRoles.userId, targetUserId),
+                inArray(usersToRoles.roleId, guildRoleIds),
+              ),
+            )
+        }
+
+        await tx
+          .delete(guildMembers)
+          .where(
+            and(
+              eq(guildMembers.userId, targetUserId),
+              eq(guildMembers.guildId, guildId),
+            ),
+          )
+      })
+    } catch (error) {
+      console.error('Error kicking member:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    return submission.reply()
   }
 
   return null

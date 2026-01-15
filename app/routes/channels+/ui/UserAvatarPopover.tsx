@@ -9,7 +9,10 @@ import {
   UnstyledButton,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { modals } from '@mantine/modals'
 import { useCallback, useId } from 'react'
+import { useSubmit } from 'react-router'
+import { hasPermission, Permissions } from '../_shared/permissions'
 import type { GuildOutletContext } from '../$guildId+/route'
 import { EditProfileModal } from './EditProfileModal'
 import { UserAvatar, type UserAvatarProps } from './UserAvatar'
@@ -30,15 +33,56 @@ type Props = Omit<UserAvatarProps, 'id' | 'withOnlineStatus'> & {
 }
 
 export function UserAvatarPopover(props: Props) {
+  const { guild, loggedInUser } = props
   const maskId = useId()
   const [popoverOpened, popoverHandlers] = useDisclosure(false)
   const [editProfileModalOpened, editProfileModalHandlers] =
     useDisclosure(false)
+  const canKick =
+    guild && loggedInUser
+      ? hasPermission(loggedInUser.permissionsMask, Permissions.KICK_MEMBERS)
+      : false
 
   const handleEditProfileClicked = useCallback(() => {
     popoverHandlers.close()
     editProfileModalHandlers.open()
   }, [editProfileModalHandlers, popoverHandlers])
+
+  const submit = useSubmit()
+  const handleKickMember = useCallback(() => {
+    if (!guild) {
+      return
+    }
+    modals.openConfirmModal({
+      title: (
+        <Text fw={700} className="break-all">
+          Kick '{props.displayName ?? props.name}' from Server
+        </Text>
+      ),
+      children: (
+        <Text size="sm">
+          Are you sure you want to kick{' '}
+          <Text span fw={700} c="blue" className="break-all" inherit>
+            {props.displayName ?? props.name}
+          </Text>{' '}
+          from the server? They will be able to rejoin again with a new invite.
+        </Text>
+      ),
+      centered: true,
+      labels: { confirm: 'Kick', cancel: 'Cancel' },
+      confirmProps: { color: 'red' },
+      onConfirm: () => {
+        const formData = new FormData()
+        formData.append('intent', 'kick-member')
+        formData.append('userId', String(props.id))
+        submit(formData, {
+          method: 'post',
+          action: `/channels/${guild.id}`,
+        })
+        popoverHandlers.close()
+      },
+    })
+  }, [guild, submit, props.id, props.displayName, props.name, popoverHandlers])
 
   return (
     <>
@@ -127,6 +171,11 @@ export function UserAvatarPopover(props: Props) {
               )}
               {props.isEditable && (
                 <Button onClick={handleEditProfileClicked}>Edit Profile</Button>
+              )}
+              {canKick && loggedInUser?.id !== props.id && (
+                <Button color="red" onClick={handleKickMember}>
+                  Kick
+                </Button>
               )}
             </Stack>
           </Stack>
