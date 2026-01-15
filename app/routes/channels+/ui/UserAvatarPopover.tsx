@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   Badge,
   Box,
   Button,
@@ -10,6 +11,7 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { modals } from '@mantine/modals'
+import { IconPlus } from '@tabler/icons-react'
 import { useCallback, useId } from 'react'
 import { useSubmit } from 'react-router'
 import { hasPermission, Permissions } from '../_shared/permissions'
@@ -41,6 +43,10 @@ export function UserAvatarPopover(props: Props) {
   const canKick =
     guild && loggedInUser
       ? hasPermission(loggedInUser.permissionsMask, Permissions.KICK_MEMBERS)
+      : false
+  const canManageRoles =
+    guild && loggedInUser
+      ? hasPermission(loggedInUser.permissionsMask, Permissions.MANAGE_ROLES)
       : false
 
   const handleEditProfileClicked = useCallback(() => {
@@ -166,6 +172,16 @@ export function UserAvatarPopover(props: Props) {
                         {role.name}
                       </Badge>
                     ))}
+                    {canManageRoles && (
+                      <ActionIcon
+                        variant="default"
+                        size={18}
+                        radius="xl"
+                        aria-label="Manage Roles"
+                      >
+                        <IconPlus size={10} />
+                      </ActionIcon>
+                    )}
                   </Group>
                 </Box>
               )}
