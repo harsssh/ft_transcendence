@@ -40,7 +40,10 @@ export function UserAvatarPopover(props: Props) {
   const [editProfileModalOpened, editProfileModalHandlers] =
     useDisclosure(false)
   const canKick =
-    guild && loggedInUser
+    guild &&
+    loggedInUser &&
+    loggedInUser.id !== props.id &&
+    guild.ownerId !== props.id
       ? hasPermission(loggedInUser.permissionsMask, Permissions.KICK_MEMBERS)
       : false
   const canManageRoles =
@@ -184,7 +187,7 @@ export function UserAvatarPopover(props: Props) {
               {props.isEditable && (
                 <Button onClick={handleEditProfileClicked}>Edit Profile</Button>
               )}
-              {canKick && loggedInUser?.id !== props.id && (
+              {canKick && (
                 <Button color="red" onClick={handleKickMember}>
                   Kick
                 </Button>
