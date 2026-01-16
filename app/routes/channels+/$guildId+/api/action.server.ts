@@ -11,6 +11,7 @@ import { dbContext } from '../../../../contexts/db'
 import { loggedInUserContext } from '../../../../contexts/user.server'
 import { SignupFormSchema } from '../../../_auth+/signup+/model/signupForm'
 import { hasPermission, Permissions } from '../../_shared/permissions'
+import { AssignRoleSchema } from '../../model/assignRoleForm'
 import { KickMemberSchema } from '../../model/kickMemberForm'
 import { NewGuildFormSchema } from '../../model/newGuildForm'
 import type { Route } from '../+types/route'
@@ -392,6 +393,60 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       })
     } catch (error) {
       console.error('Error kicking member:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    return submission.reply()
+  }
+
+  if (intent === 'assign-role') {
+    checkPermission(Permissions.MANAGE_ROLES)
+
+    const submission = parseWithZod(formData, { schema: AssignRoleSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { userId: targetUserId, roleId: targetRoleId } = submission.value
+
+    const existingMember = await db.query.guildMembers.findFirst({
+      where: {
+        userId: targetUserId,
+        guildId: guildId,
+      },
+    })
+
+    if (!existingMember) {
+      return submission.reply({
+        formErrors: ['User is not a member of this server'],
+      })
+    }
+
+    const targetRole = await db.query.roles.findFirst({
+      where: {
+        id: targetRoleId,
+        guildId: guildId,
+      },
+    })
+
+    if (!targetRole) {
+      return submission.reply({
+        formErrors: ['Role not found in this guild'],
+      })
+    }
+
+    try {
+      await db
+        .insert(usersToRoles)
+        .values({
+          userId: targetUserId,
+          roleId: targetRoleId,
+        })
+        .onConflictDoNothing()
+    } catch (error) {
+      console.error('Error assigning role:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },

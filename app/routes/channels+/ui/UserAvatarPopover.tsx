@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   Badge,
   Box,
   Button,
@@ -11,12 +10,12 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { modals } from '@mantine/modals'
-import { IconPlus } from '@tabler/icons-react'
 import { useCallback, useId } from 'react'
 import { useSubmit } from 'react-router'
 import { hasPermission, Permissions } from '../_shared/permissions'
 import type { GuildOutletContext } from '../$guildId+/route'
 import { EditProfileModal } from './EditProfileModal'
+import { RoleManagementPopover } from './RoleManagementPopover'
 import { UserAvatar, type UserAvatarProps } from './UserAvatar'
 
 export type Role = {
@@ -158,10 +157,10 @@ export function UserAvatarPopover(props: Props) {
                   {props.name}
                 </Text>
               </Box>
-              {props.roles && props.roles.length > 0 && (
+              {(props.roles && props.roles.length > 0) || canManageRoles ? (
                 <Box>
                   <Group gap={4}>
-                    {props.roles.map((role) => (
+                    {props.roles?.map((role) => (
                       <Badge
                         key={role.id}
                         color={role.color}
@@ -173,18 +172,15 @@ export function UserAvatarPopover(props: Props) {
                       </Badge>
                     ))}
                     {canManageRoles && (
-                      <ActionIcon
-                        variant="default"
-                        size={18}
-                        radius="xl"
-                        aria-label="Manage Roles"
-                      >
-                        <IconPlus size={10} />
-                      </ActionIcon>
+                      <RoleManagementPopover
+                        id={props.id}
+                        guild={guild}
+                        roles={props.roles}
+                      />
                     )}
                   </Group>
                 </Box>
-              )}
+              ) : null}
               {props.isEditable && (
                 <Button onClick={handleEditProfileClicked}>Edit Profile</Button>
               )}
