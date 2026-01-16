@@ -101,17 +101,21 @@ export const friendships = p.pgTable(
   (t) => [p.primaryKey({ columns: [t.userId, t.friendId] })],
 )
 
-export const roles = p.pgTable('roles', {
-  id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
-  guildId: p
-    .integer('guild_id')
-    .references(() => guilds.id, { onDelete: 'cascade' })
-    .notNull(),
-  name: p.varchar({ length: 255 }).notNull(),
-  color: p.varchar({ length: 128 }).notNull(),
-  permissions: p.integer().notNull().default(0),
-  createdAt: p.timestamp('created_at').defaultNow().notNull(),
-})
+export const roles = p.pgTable(
+  'roles',
+  {
+    id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+    guildId: p
+      .integer('guild_id')
+      .references(() => guilds.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: p.varchar({ length: 255 }).notNull(),
+    color: p.varchar({ length: 128 }).notNull(),
+    permissions: p.integer().notNull().default(0),
+    createdAt: p.timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => [p.unique().on(t.guildId, t.name)],
+)
 
 export const usersToRoles = p.pgTable(
   'users_roles',
