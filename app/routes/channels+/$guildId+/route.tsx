@@ -317,7 +317,7 @@ export default function GuildRoute() {
                     Leave Server
                   </Menu.Item>
                 )}
-                {canManageGuild && (
+                {isOwner && (
                   <Menu.Item
                     color="red"
                     rightSection={<IconTrash size={18} />}
