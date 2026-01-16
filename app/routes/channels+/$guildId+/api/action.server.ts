@@ -456,5 +456,60 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return submission.reply()
   }
 
+  if (intent === 'remove-role') {
+    checkPermission(Permissions.MANAGE_ROLES)
+
+    const submission = parseWithZod(formData, { schema: AssignRoleSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { userId: targetUserId, roleId: targetRoleId } = submission.value
+
+    const existingMember = await db.query.guildMembers.findFirst({
+      where: {
+        userId: targetUserId,
+        guildId: guildId,
+      },
+    })
+
+    if (!existingMember) {
+      return submission.reply({
+        formErrors: ['User is not a member of this server'],
+      })
+    }
+
+    const targetRole = await db.query.roles.findFirst({
+      where: {
+        id: targetRoleId,
+        guildId: guildId,
+      },
+    })
+
+    if (!targetRole) {
+      return submission.reply({
+        formErrors: ['Role not found in this guild'],
+      })
+    }
+
+    try {
+      await db
+        .delete(usersToRoles)
+        .where(
+          and(
+            eq(usersToRoles.userId, targetUserId),
+            eq(usersToRoles.roleId, targetRoleId),
+          ),
+        )
+    } catch (error) {
+      console.error('Error removing role:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    return submission.reply()
+  }
+
   return null
 }

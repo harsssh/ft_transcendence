@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   Badge,
   Box,
   Button,
@@ -10,8 +11,9 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { modals } from '@mantine/modals'
+import { IconX } from '@tabler/icons-react'
 import { useCallback, useId } from 'react'
-import { useSubmit } from 'react-router'
+import { useFetcher, useSubmit } from 'react-router'
 import { hasPermission, Permissions } from '../_shared/permissions'
 import type { GuildOutletContext } from '../$guildId+/route'
 import { EditProfileModal } from './EditProfileModal'
@@ -39,6 +41,7 @@ export function UserAvatarPopover(props: Props) {
   const [popoverOpened, popoverHandlers] = useDisclosure(false)
   const [editProfileModalOpened, editProfileModalHandlers] =
     useDisclosure(false)
+  const fetcher = useFetcher()
   const canKick =
     guild &&
     loggedInUser &&
@@ -170,6 +173,35 @@ export function UserAvatarPopover(props: Props) {
                         variant="dot"
                         size="sm"
                         tt="none"
+                        pr={canManageRoles ? 3 : 0}
+                        rightSection={
+                          canManageRoles ? (
+                            <ActionIcon
+                              size="xs"
+                              color="default"
+                              radius="xl"
+                              variant="transparent"
+                              onClick={() => {
+                                fetcher.submit(
+                                  {
+                                    intent: 'remove-role',
+                                    userId: props.id,
+                                    roleId: role.id,
+                                  },
+                                  {
+                                    method: 'post',
+                                    action: `/channels/${guild?.id}`,
+                                  },
+                                )
+                              }}
+                            >
+                              <IconX
+                                size={11}
+                                className="text-zinc-300 hover:text-zinc-100 transion-colors"
+                              />
+                            </ActionIcon>
+                          ) : undefined
+                        }
                       >
                         {role.name}
                       </Badge>
