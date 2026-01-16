@@ -59,6 +59,7 @@ export function UserAvatarPopover(props: Props) {
     if (!guild) {
       return
     }
+    popoverHandlers.close()
     modals.openConfirmModal({
       title: (
         <Text fw={700} className="break-all">
@@ -85,7 +86,6 @@ export function UserAvatarPopover(props: Props) {
           method: 'post',
           action: `/channels/${guild.id}`,
         })
-        popoverHandlers.close()
       },
     })
   }, [guild, submit, props.id, props.displayName, props.name, popoverHandlers])
