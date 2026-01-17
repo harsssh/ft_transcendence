@@ -52,6 +52,14 @@ Kibanaへのログイン:
 - Username: `elastic`
 - Password: `.env`ファイルの`ELASTIC_PASSWORD`で設定した値
 
+## Tips
+### シードデータ
+以下のコマンドを実行するとDBにシードデータが生成される。
+
+```
+docker compose exec webapp bun db/seed/index.ts
+```
+
 ## 開発フロー
 
 1. バックログにイシューを追加
