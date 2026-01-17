@@ -56,7 +56,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       })
       .returning({ id: roles.id })
     if (!adminRole) {
-      throw new Error(`Failed to create admin role for guild ${newGuild.id}"`)
+      throw new Error(`Failed to create admin role for guild ${newGuild.id}`)
     }
 
     const userPermissions =
