@@ -36,14 +36,30 @@ export async function createGuilds(ctx: SeedContext): Promise<void> {
     (CONFIG.guildTypes.large.minMembers + CONFIG.guildTypes.large.maxMembers) /
     2
 
-  const numFriendGuilds = Math.ceil(
-    totalFriendGuildMemberships / avgFriendGuildMembers,
+  // 各ユーザータイプが必要とするギルド数の最大値を取得
+  // ラウンドロビンで割り当てるため、最低でもこの数のギルドが必要
+  const maxRequiredFriendGuilds = Math.max(
+    ...Object.values(CONFIG.userTypes).map((t) => t.friendGuilds),
   )
-  const numMediumGuilds = Math.ceil(
-    totalMediumGuildMemberships / avgMediumGuildMembers,
+  const maxRequiredMediumGuilds = Math.max(
+    ...Object.values(CONFIG.userTypes).map((t) => t.mediumGuilds),
   )
-  const numLargeGuilds = Math.ceil(
-    totalLargeGuildMemberships / avgLargeGuildMembers,
+  const maxRequiredLargeGuilds = Math.max(
+    ...Object.values(CONFIG.userTypes).map((t) => t.largeGuilds),
+  )
+
+  // 総メンバーシップから計算したギルド数と、最低必要なギルド数の大きい方を採用
+  const numFriendGuilds = Math.max(
+    Math.ceil(totalFriendGuildMemberships / avgFriendGuildMembers),
+    maxRequiredFriendGuilds,
+  )
+  const numMediumGuilds = Math.max(
+    Math.ceil(totalMediumGuildMemberships / avgMediumGuildMembers),
+    maxRequiredMediumGuilds,
+  )
+  const numLargeGuilds = Math.max(
+    Math.ceil(totalLargeGuildMemberships / avgLargeGuildMembers),
+    maxRequiredLargeGuilds,
   )
 
   showGuildCounts(numFriendGuilds, numMediumGuilds, numLargeGuilds)
