@@ -4,6 +4,7 @@ import {
   Badge,
   Button,
   Group,
+  ScrollArea,
   Stack,
   Tabs,
   Text,
@@ -306,7 +307,7 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
   const sentRequests = loaderData?.sentRequests ?? []
 
   return (
-    <Stack h="100%" gap={0}>
+    <Stack h="100%" gap={0} mih="0">
       <Group
         p="md"
         bg="var(--mantine-color-body)"
@@ -320,11 +321,11 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
 
       <Tabs
         defaultValue="all"
-        h="100%"
+        mih="0"
         display="flex"
         style={{ flexDirection: 'column' }}
       >
-        <Tabs.List px="md">
+        <Tabs.List px="md" style={{ flexShrink: 0 }}>
           <Tabs.Tab value="all">All</Tabs.Tab>
           <Tabs.Tab value="pending">
             Pending
@@ -339,131 +340,17 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
           </Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="all" flex={1} p="md">
-          <Stack>
-            {friends.length === 0 ? (
-              <Text c="dimmed" ta="center" mt="xl">
-                No friends yet.
-              </Text>
-            ) : (
-              friends.map((friend) => (
-                <Group
-                  key={friend?.id}
-                  justify="space-between"
-                  p="sm"
-                  style={{
-                    borderBottom:
-                      '1px solid var(--mantine-color-default-border)',
-                  }}
-                >
-                  <Group>
-                    <Avatar
-                      src={null}
-                      alt={friend?.name ?? ''}
-                      color="initials"
-                    >
-                      {(friend?.name ?? '').slice(0, 2)}
-                    </Avatar>
-                    <Text fw={500}>{friend?.name}</Text>
-                  </Group>
-                  <Group gap="xs">
-                    <Tooltip label="Message">
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        onClick={() => handleMessageClick(friend?.name)}
-                      >
-                        <IconMessageCircleFilled size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label="Remove Friend" color="red">
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        onClick={() =>
-                          openRemoveModal(friend?.name ?? '', friend?.id ?? 0)
-                        }
-                      >
-                        <IconX size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
-                </Group>
-              ))
-            )}
-          </Stack>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="pending" flex={1} p="md">
-          <Title order={5} mb="md">
-            Pending — {pendingRequests.length}
-          </Title>
-          <Stack>
-            {pendingRequests.map((user) => (
-              <Group
-                key={user?.id}
-                justify="space-between"
-                p="sm"
-                style={{
-                  borderBottom: '1px solid var(--mantine-color-default-border)',
-                }}
-              >
-                <Group>
-                  <Avatar src={null} alt={user?.name ?? ''} color="initials">
-                    {(user?.name ?? '').slice(0, 2)}
-                  </Avatar>
-                  <Stack gap={0}>
-                    <Text fw={500}>{user?.name}</Text>
-                    <Text size="xs" c="dimmed">
-                      Incoming Friend Request
-                    </Text>
-                  </Stack>
-                </Group>
-                <Form method="post">
-                  <input type="hidden" name="userId" value={user?.id} />
-                  <Group>
-                    <Tooltip label="Accept">
-                      <ActionIcon
-                        type="submit"
-                        name="intent"
-                        value="accept-friend-request"
-                        variant="filled"
-                        color="green"
-                        radius="xl"
-                      >
-                        <IconCheck size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label="Ignore">
-                      <ActionIcon
-                        type="submit"
-                        name="intent"
-                        value="reject-friend-request"
-                        variant="filled"
-                        color="red"
-                        radius="xl"
-                      >
-                        <IconX size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
-                </Form>
-              </Group>
-            ))}
-            {pendingRequests.length === 0 && (
-              <Text c="dimmed">There are no pending friend requests.</Text>
-            )}
-          </Stack>
-
-          {sentRequests.length > 0 && (
-            <>
-              <Title order={5} mt="xl" mb="md">
-                Sent — {sentRequests.length}
-              </Title>
-              <Stack>
-                {sentRequests.map((user) => (
+        <Tabs.Panel value="all" p="md" mih="0">
+          <ScrollArea h="100%" type="auto">
+            <Stack>
+              {friends.length === 0 ? (
+                <Text c="dimmed" ta="center" mt="xl">
+                  No friends yet.
+                </Text>
+              ) : (
+                friends.map((friend) => (
                   <Group
-                    key={user?.id}
+                    key={friend?.id}
                     justify="space-between"
                     p="sm"
                     style={{
@@ -474,34 +361,153 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
                     <Group>
                       <Avatar
                         src={null}
-                        alt={user?.name ?? ''}
+                        alt={friend?.name ?? ''}
                         color="initials"
                       >
-                        {(user?.name ?? '').slice(0, 2)}
+                        {(friend?.name ?? '').slice(0, 2)}
                       </Avatar>
-                      <Text fw={500}>{user?.name}</Text>
+                      <Text fw={500}>{friend?.name}</Text>
                     </Group>
-                    <Form method="post">
-                      <input type="hidden" name="userId" value={user?.id} />
-                      <Button
-                        type="submit"
-                        name="intent"
-                        value="cancel-friend-request"
-                        variant="outline"
-                        color="gray"
-                        size="xs"
-                      >
-                        Cancel Request
-                      </Button>
-                    </Form>
+                    <Group gap="xs">
+                      <Tooltip label="Message">
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          onClick={() => handleMessageClick(friend?.name)}
+                        >
+                          <IconMessageCircleFilled size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Remove Friend" color="red">
+                        <ActionIcon
+                          variant="subtle"
+                          color="red"
+                          onClick={() =>
+                            openRemoveModal(friend?.name ?? '', friend?.id ?? 0)
+                          }
+                        >
+                          <IconX size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
                   </Group>
-                ))}
-              </Stack>
-            </>
-          )}
+                ))
+              )}
+            </Stack>
+          </ScrollArea>
         </Tabs.Panel>
 
-        <Tabs.Panel value="add" flex={1} p="md">
+        <Tabs.Panel value="pending" p="md" mih="0">
+          <Title order={5} mb="md">
+            Pending — {pendingRequests.length}
+          </Title>
+          <ScrollArea h="100%" type="auto">
+            <Stack>
+              {pendingRequests.map((user) => (
+                <Group
+                  key={user?.id}
+                  justify="space-between"
+                  p="sm"
+                  style={{
+                    borderBottom:
+                      '1px solid var(--mantine-color-default-border)',
+                  }}
+                >
+                  <Group>
+                    <Avatar src={null} alt={user?.name ?? ''} color="initials">
+                      {(user?.name ?? '').slice(0, 2)}
+                    </Avatar>
+                    <Stack gap={0}>
+                      <Text fw={500}>{user?.name}</Text>
+                      <Text size="xs" c="dimmed">
+                        Incoming Friend Request
+                      </Text>
+                    </Stack>
+                  </Group>
+                  <Form method="post">
+                    <input type="hidden" name="userId" value={user?.id} />
+                    <Group>
+                      <Tooltip label="Accept">
+                        <ActionIcon
+                          type="submit"
+                          name="intent"
+                          value="accept-friend-request"
+                          variant="filled"
+                          color="green"
+                          radius="xl"
+                        >
+                          <IconCheck size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Ignore">
+                        <ActionIcon
+                          type="submit"
+                          name="intent"
+                          value="reject-friend-request"
+                          variant="filled"
+                          color="red"
+                          radius="xl"
+                        >
+                          <IconX size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Form>
+                </Group>
+              ))}
+              {pendingRequests.length === 0 && (
+                <Text c="dimmed">There are no pending friend requests.</Text>
+              )}
+            </Stack>
+
+            {sentRequests.length > 0 && (
+              <>
+                <Title order={5} mt="xl" mb="md">
+                  Sent — {sentRequests.length}
+                </Title>
+                <Stack>
+                  {sentRequests.map((user) => (
+                    <Group
+                      key={user?.id}
+                      justify="space-between"
+                      p="sm"
+                      style={{
+                        borderBottom:
+                          '1px solid var(--mantine-color-default-border)',
+                      }}
+                    >
+                      <Group>
+                        <Avatar
+                          src={null}
+                          alt={user?.name ?? ''}
+                          color="initials"
+                        >
+                          {(user?.name ?? '').slice(0, 2)}
+                        </Avatar>
+                        <Text fw={500}>{user?.name}</Text>
+                      </Group>
+                      <Form method="post">
+                        <input type="hidden" name="userId" value={user?.id} />
+                        <Button
+                          type="submit"
+                          name="intent"
+                          value="cancel-friend-request"
+                          variant="outline"
+                          color="gray"
+                          size="xs"
+                        >
+                          Cancel Request
+                        </Button>
+                      </Form>
+                    </Group>
+                  ))}
+                </Stack>
+              </>
+            )}
+          </ScrollArea>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="add" p="md">
           <Title order={4} mb="sm">
             Add Friend
           </Title>
