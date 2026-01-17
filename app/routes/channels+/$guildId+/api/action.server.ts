@@ -80,7 +80,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const userPermissions = roles
     .map((r) => r.role)
     .filter((r) => r !== null)
-    .reduce((acc, r) => acc | r?.permissions, 0)
+    .reduce((acc, r) => acc | r.permissions, 0)
 
   const checkPermission = (requiredPermission: number) => {
     if (!hasPermission(userPermissions, requiredPermission)) {
