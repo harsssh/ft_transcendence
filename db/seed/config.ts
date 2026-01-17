@@ -94,13 +94,13 @@ export const CONFIG = {
 
   // テーブルごとのバッチサイズ
   batchSize: {
-    users: 1000,
-    guilds: 1000,
-    guildMembers: 1000,
-    channels: 1000,
-    friendships: 1000,
-    usersToChannels: 1000,
-    messages: 5000,
+    users: 10000,
+    guilds: 10000,
+    guildMembers: 10000,
+    channels: 10000,
+    friendships: 10000,
+    usersToChannels: 10000,
+    messages: 10000,
   },
 
   // メッセージテンプレート
