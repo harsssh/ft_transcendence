@@ -76,7 +76,13 @@ export function Message({
       <Box>
         {withProfile && (
           <Group align="center" gap="xs">
-            <Text fw={700} size="sm" maw="40rem" truncate="end">
+            <Text
+              fw={700}
+              size="sm"
+              maw="40rem"
+              truncate="end"
+              c={roles?.[0]?.color ?? ''}
+            >
               {senderDisplayName ?? senderName}
             </Text>
             <Text size="xs" c="dimmed">
