@@ -21,9 +21,9 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { createWebSocket } from '../../_shared/lib/websocket'
-import { DateSeparator } from '../ui/DateSeparator'
-import { EditProfileContext } from '../ui/EditProfileModal'
-import { Message } from '../ui/Message'
+import { DateSeparator } from './ui/DateSeparator'
+import { EditProfileContext } from './ui/EditProfileModal'
+import { Message } from './ui/Message'
 import {
   MessageSchema,
   type MessageType,
