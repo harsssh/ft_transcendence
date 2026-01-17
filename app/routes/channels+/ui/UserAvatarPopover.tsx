@@ -173,7 +173,7 @@ export function UserAvatarPopover(props: Props) {
                         variant="dot"
                         size="sm"
                         tt="none"
-                        pr={canManageRoles ? 3 : 0}
+                        style={canManageRoles ? { paddingRight: 3 } : undefined}
                         rightSection={
                           canManageRoles ? (
                             <ActionIcon
