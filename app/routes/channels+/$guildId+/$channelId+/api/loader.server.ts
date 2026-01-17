@@ -70,6 +70,9 @@ export const loader = async ({
                       where: {
                         guildId: guildId,
                       },
+                      orderBy: {
+                        id: 'asc',
+                      },
                     },
                   },
                 },

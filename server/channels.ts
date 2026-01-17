@@ -334,6 +334,9 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                       where: {
                         guildId: channel?.guild?.id,
                       },
+                      orderBy: {
+                        id: 'asc',
+                      },
                     },
                   },
                 })
