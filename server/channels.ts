@@ -319,15 +319,24 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 }
 
                 // Fetch sender info
-                const [sender] = await db
-                  .select({
-                    id: users.id,
-                    name: users.name,
-                    displayName: users.displayName,
-                    avatarUrl: users.avatarUrl,
-                  })
-                  .from(users)
-                  .where(eq(users.id, userId))
+                const sender = await db.query.users.findFirst({
+                  where: {
+                    id: userId,
+                  },
+                  columns: {
+                    id: true,
+                    name: true,
+                    displayName: true,
+                    avatarUrl: true,
+                  },
+                  with: {
+                    roles: {
+                      where: {
+                        guildId: channel?.guild?.id,
+                      },
+                    },
+                  },
+                })
 
                 if (!sender) {
                   console.error('Sender not found')
@@ -339,7 +348,15 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   id: insertedMessage.id,
                   content: insertedMessage.content,
                   createdAt: insertedMessage.createdAt,
-                  sender,
+                  sender: {
+                    ...sender,
+                    avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${sender.avatarUrl}`,
+                    roles: sender.roles.map((role) => ({
+                      id: role.id,
+                      name: role.name,
+                      color: role.color,
+                    })),
+                  },
                 }
 
                 // Broadcast to ALL clients (including sender)
