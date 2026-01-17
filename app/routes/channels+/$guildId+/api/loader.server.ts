@@ -56,7 +56,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const userPermissions = roles
     .map((r) => r.role)
     .filter((r) => r !== null)
-    .reduce((acc, r) => acc | r?.permissions, 0)
+    .reduce((acc, r) => acc | r.permissions, 0)
 
   return {
     guild,
