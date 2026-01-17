@@ -65,22 +65,20 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     })
   }
 
-  const roles = await db.query.usersToRoles.findMany({
+  const userWithRoles = await db.query.users.findFirst({
     where: {
-      userId: user.id,
+      id: user.id,
     },
     with: {
-      role: {
+      roles: {
         where: {
           guildId: guildId,
         },
       },
     },
   })
-  const userPermissions = roles
-    .map((r) => r.role)
-    .filter((r) => r !== null)
-    .reduce((acc, r) => acc | r.permissions, 0)
+  const userPermissions =
+    userWithRoles?.roles.reduce((acc, r) => acc | r.permissions, 0) ?? 0
 
   const checkPermission = (requiredPermission: number) => {
     if (!hasPermission(userPermissions, requiredPermission)) {
