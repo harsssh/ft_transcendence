@@ -197,7 +197,7 @@ export function UserAvatarPopover(props: Props) {
                             >
                               <IconX
                                 size={11}
-                                className="text-zinc-300 hover:text-zinc-100 transion-colors"
+                                className="text-zinc-300 hover:text-zinc-100 transition-colors"
                               />
                             </ActionIcon>
                           ) : undefined
