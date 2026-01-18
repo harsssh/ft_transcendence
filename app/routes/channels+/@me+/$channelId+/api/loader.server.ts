@@ -49,6 +49,7 @@ export const loader = async ({
         messages: {
           with: {
             sender: true,
+            message3DAssets: true,
           },
         },
       },
@@ -84,6 +85,7 @@ export const loader = async ({
             displayName: m.sender.displayName,
             avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`,
           },
+          asset3D: m.message3DAssets[0] ?? null, // Assuming one-to-one or taking first
         })),
         partner: {
           id: partner.id,
