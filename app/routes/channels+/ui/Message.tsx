@@ -1,9 +1,9 @@
 import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
-import { useContext, useSyncExternalStore } from 'react'
-import { LoggedInUserContext } from '../../../contexts/user'
-import { UserAvatarPopover } from './UserAvatarPopover'
+import { useSyncExternalStore } from 'react'
+import type { GuildOutletContext } from '../$guildId+/route'
+import { type Role, UserAvatarPopover } from './UserAvatarPopover'
 
 type Props = {
   createdAt: Date
@@ -13,6 +13,9 @@ type Props = {
   content: string
   avatarSrc?: string | undefined | null
   withProfile?: boolean
+  roles?: Role[] | undefined
+  guild?: GuildOutletContext['guild'] | undefined
+  loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
 }
 
 export function Message({
@@ -23,6 +26,9 @@ export function Message({
   content,
   avatarSrc = null,
   withProfile = false,
+  roles,
+  guild,
+  loggedInUser,
 }: Props) {
   // サーバーとクライアントのロケールが異なる場合にhydration errorが発生するため、それを避けるハッチ
   const localeTimeCreatedAt = useSyncExternalStore(
@@ -31,7 +37,7 @@ export function Message({
     () => createdAt.toISOString(),
   )
   const { ref: hoverRef, hovered } = useHover()
-  const loggedInUser = useContext(LoggedInUserContext)
+  const roleColor = roles?.[0]?.color
 
   return (
     <Box
@@ -55,6 +61,9 @@ export function Message({
             displayName={senderDisplayName}
             src={avatarSrc}
             isEditable={loggedInUser?.name === senderName}
+            roles={roles}
+            guild={guild}
+            loggedInUser={loggedInUser}
           />
         </Box>
       )}
@@ -68,7 +77,13 @@ export function Message({
       <Box>
         {withProfile && (
           <Group align="center" gap="xs">
-            <Text fw={700} size="sm" maw="40rem" truncate="end">
+            <Text
+              fw={700}
+              size="sm"
+              maw="40rem"
+              truncate="end"
+              {...(roleColor ? { c: roleColor } : {})}
+            >
               {senderDisplayName ?? senderName}
             </Text>
             <Text size="xs" c="dimmed">

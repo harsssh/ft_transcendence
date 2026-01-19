@@ -1,6 +1,8 @@
 import { Group, Text } from '@mantine/core'
 import { IconHash } from '@tabler/icons-react'
+import { useOutletContext } from 'react-router'
 import { TextChannelView } from '../../_text/TextChannelView'
+import type { GuildOutletContext } from '../route'
 import type { Route } from './+types/route'
 
 export { action } from './api/action.server'
@@ -12,6 +14,7 @@ export default function ChannelRoute({
   actionData,
 }: Route.ComponentProps) {
   const { messages, channel, locale } = loaderData
+  const { guild, loggedInUser } = useOutletContext<GuildOutletContext>()
   const channelId = params.channelId
 
   return (
@@ -30,6 +33,8 @@ export default function ChannelRoute({
       }
       inputPlaceholder={`Message #${channel?.name ?? 'channel'}`}
       actionData={actionData ?? null}
+      guild={guild}
+      loggedInUser={loggedInUser}
     />
   )
 }

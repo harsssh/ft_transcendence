@@ -21,6 +21,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     },
     with: {
       channels: true,
+      roles: true,
     },
   })
 
@@ -40,5 +41,27 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     })
   }
 
-  return { guild, loggedInUser: { id: user.id } }
+  const userWithRoles = await db.query.users.findFirst({
+    where: {
+      id: user.id,
+    },
+    with: {
+      roles: {
+        where: {
+          guildId: guildId,
+        },
+      },
+    },
+  })
+  const userPermissions =
+    userWithRoles?.roles.reduce((acc, r) => acc | r.permissions, 0) ?? 0
+
+  return {
+    guild,
+    loggedInUser: {
+      id: user.id,
+      name: user.name,
+      permissionsMask: userPermissions,
+    },
+  }
 }

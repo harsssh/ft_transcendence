@@ -21,6 +21,7 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { createWebSocket } from '../../_shared/lib/websocket'
+import type { GuildOutletContext } from '../$guildId+/route'
 import { DateSeparator } from '../ui/DateSeparator'
 import { EditProfileContext } from '../ui/EditProfileModal'
 import { Message } from '../ui/Message'
@@ -39,6 +40,8 @@ export type TextChannelViewProps = {
   inputPlaceholder: string
   asideContent?: React.ReactNode
   actionData: SubmissionResult<string[]> | null
+  guild?: GuildOutletContext['guild'] | undefined
+  loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
 }
 
 export function TextChannelView({
@@ -50,6 +53,8 @@ export function TextChannelView({
   inputPlaceholder,
   asideContent,
   actionData,
+  guild,
+  loggedInUser,
 }: TextChannelViewProps) {
   const [messages, setMessages] = useState<MessageType[]>(initialMessages)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -385,6 +390,9 @@ export function TextChannelView({
                     content={entry.message.content}
                     createdAt={entry.message.createdAt}
                     withProfile={entry.message.withProfile}
+                    roles={entry.message.sender.roles}
+                    guild={guild}
+                    loggedInUser={loggedInUser}
                   />
                 </div>
               )
