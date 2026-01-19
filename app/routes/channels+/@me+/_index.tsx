@@ -359,7 +359,7 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
 
         <Tabs.Panel value="all" flex={1} p="md">
           <Stack justify="space-between" h="100%">
-            <ScrollArea>
+            <ScrollArea flex={1}>
               <Stack>
                 {friends.length === 0 ? (
                   <Text c="dimmed" ta="center" mt="xl">
