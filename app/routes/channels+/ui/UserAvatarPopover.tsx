@@ -42,16 +42,27 @@ export function UserAvatarPopover(props: Props) {
   const [editProfileModalOpened, editProfileModalHandlers] =
     useDisclosure(false)
   const fetcher = useFetcher()
+
+  const isOwner = loggedInUser?.id === guild?.ownerId
+  const isTargetOwner = props.id === guild?.ownerId
+  const hasKickPermission = hasPermission(
+    loggedInUser?.permissionsMask ?? 0,
+    Permissions.KICK_MEMBERS,
+  )
   const canKick =
     guild &&
     loggedInUser &&
     loggedInUser.id !== props.id &&
-    guild.ownerId !== props.id
-      ? hasPermission(loggedInUser.permissionsMask, Permissions.KICK_MEMBERS)
-      : false
+    !isTargetOwner &&
+    hasKickPermission
+
+  const hasManageRoles = hasPermission(
+    loggedInUser?.permissionsMask ?? 0,
+    Permissions.MANAGE_ROLES,
+  )
   const canManageRoles =
     guild && loggedInUser
-      ? hasPermission(loggedInUser.permissionsMask, Permissions.MANAGE_ROLES)
+      ? isOwner || (!isTargetOwner && hasManageRoles)
       : false
 
   const handleEditProfileClicked = useCallback(() => {
