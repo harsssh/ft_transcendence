@@ -55,7 +55,6 @@ export function RoleManagementPopover(props: Props) {
                   key={guildRole.id}
                   size="xs"
                   variant="subtle"
-                  color="neutral"
                   justify="start"
                   fullWidth
                   leftSection={
