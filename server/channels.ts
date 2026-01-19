@@ -319,7 +319,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 }
 
                 // Fetch sender info
-                const sender = await db.query.users.findFirst({
+                const sender = await tx.query.users.findFirst({
                   where: {
                     id: userId,
                   },
