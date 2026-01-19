@@ -4,6 +4,8 @@ import {
   Badge,
   Button,
   Group,
+  Pagination,
+  ScrollArea,
   Stack,
   Tabs,
   Text,
@@ -21,12 +23,15 @@ import {
 } from '@tabler/icons-react'
 import { and, eq, or } from 'drizzle-orm'
 import { ok, ResultAsync } from 'neverthrow'
+import { useEffect, useState } from 'react'
 import { Form, useSubmit } from 'react-router'
 import * as R from 'remeda'
 import { friendships } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { loggedInUserContext } from '../../../contexts/user.server'
 import type { Route } from './+types/_index'
+
+const PAGE_SIZE = 10
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
   const user = context.get(loggedInUserContext)
@@ -305,6 +310,19 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
   const pendingRequests = loaderData?.pendingRequests ?? []
   const sentRequests = loaderData?.sentRequests ?? []
 
+  const [page, setPage] = useState(1)
+  const paginatedFriends = friends.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  )
+  const totalPages = Math.max(1, Math.ceil(friends.length / PAGE_SIZE))
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(Math.max(1, totalPages))
+    }
+  }, [page, totalPages])
+
   return (
     <Stack h="100%" gap={0}>
       <Group
@@ -340,56 +358,74 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
         </Tabs.List>
 
         <Tabs.Panel value="all" flex={1} p="md">
-          <Stack>
-            {friends.length === 0 ? (
-              <Text c="dimmed" ta="center" mt="xl">
-                No friends yet.
-              </Text>
-            ) : (
-              friends.map((friend) => (
-                <Group
-                  key={friend?.id}
-                  justify="space-between"
-                  p="sm"
-                  style={{
-                    borderBottom:
-                      '1px solid var(--mantine-color-default-border)',
-                  }}
-                >
-                  <Group>
-                    <Avatar
-                      src={null}
-                      alt={friend?.name ?? ''}
-                      color="initials"
+          <Stack justify="space-between" h="100%">
+            <ScrollArea flex={1}>
+              <Stack>
+                {friends.length === 0 ? (
+                  <Text c="dimmed" ta="center" mt="xl">
+                    No friends yet.
+                  </Text>
+                ) : (
+                  paginatedFriends.map((friend) => (
+                    <Group
+                      key={friend?.id}
+                      justify="space-between"
+                      p="sm"
+                      style={{
+                        borderBottom:
+                          '1px solid var(--mantine-color-default-border)',
+                      }}
                     >
-                      {(friend?.name ?? '').slice(0, 2)}
-                    </Avatar>
-                    <Text fw={500}>{friend?.name}</Text>
-                  </Group>
-                  <Group gap="xs">
-                    <Tooltip label="Message">
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        onClick={() => handleMessageClick(friend?.name)}
-                      >
-                        <IconMessageCircleFilled size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label="Remove Friend" color="red">
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        onClick={() =>
-                          openRemoveModal(friend?.name ?? '', friend?.id ?? 0)
-                        }
-                      >
-                        <IconX size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
-                </Group>
-              ))
+                      <Group>
+                        <Avatar
+                          src={null}
+                          alt={friend?.name ?? ''}
+                          color="initials"
+                        >
+                          {(friend?.name ?? '').slice(0, 2)}
+                        </Avatar>
+                        <Text fw={500}>{friend?.name}</Text>
+                      </Group>
+                      <Group gap="xs">
+                        <Tooltip label="Message">
+                          <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            onClick={() => handleMessageClick(friend?.name)}
+                          >
+                            <IconMessageCircleFilled size={18} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Remove Friend" color="red">
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            onClick={() =>
+                              openRemoveModal(
+                                friend?.name ?? '',
+                                friend?.id ?? 0,
+                              )
+                            }
+                          >
+                            <IconX size={18} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    </Group>
+                  ))
+                )}
+              </Stack>
+            </ScrollArea>
+            {totalPages > 1 && (
+              <Group justify="center" mt="md">
+                <Pagination
+                  total={totalPages}
+                  value={page}
+                  onChange={setPage}
+                  withEdges
+                  aria-label="Friend list pagination"
+                />
+              </Group>
             )}
           </Stack>
         </Tabs.Panel>
