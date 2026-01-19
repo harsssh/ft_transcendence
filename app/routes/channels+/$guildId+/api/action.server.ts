@@ -435,6 +435,18 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       })
     }
 
+    if (user.id !== guild.ownerId) {
+      const missingPermissions = targetRole.permissions & ~userPermissions
+      const hasAdmin = hasPermission(userPermissions, Permissions.ADMINISTRATOR)
+      if (missingPermissions !== 0 && !hasAdmin) {
+        return submission.reply({
+          formErrors: [
+            'You cannot assign a role with permissions you do not possess',
+          ],
+        })
+      }
+    }
+
     try {
       await db
         .insert(usersToRoles)
