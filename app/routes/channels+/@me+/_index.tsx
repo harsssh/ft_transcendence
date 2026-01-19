@@ -315,7 +315,7 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE,
   )
-  const totalPages = Math.ceil(friends.length / PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(friends.length / PAGE_SIZE))
 
   useEffect(() => {
     if (page > totalPages) {
