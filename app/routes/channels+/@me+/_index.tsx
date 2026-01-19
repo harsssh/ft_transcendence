@@ -31,6 +31,8 @@ import { dbContext } from '../../../contexts/db'
 import { loggedInUserContext } from '../../../contexts/user.server'
 import type { Route } from './+types/_index'
 
+const PAGE_SIZE = 10
+
 export const action = async ({ request, context }: Route.ActionArgs) => {
   const user = context.get(loggedInUserContext)
   if (!user) {
@@ -308,7 +310,6 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
   const pendingRequests = loaderData?.pendingRequests ?? []
   const sentRequests = loaderData?.sentRequests ?? []
 
-  const PAGE_SIZE = 10
   const [page, setPage] = useState(1)
   const paginatedFriends = friends.slice(
     (page - 1) * PAGE_SIZE,
