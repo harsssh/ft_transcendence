@@ -416,6 +416,7 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
                   value={page}
                   onChange={setPage}
                   withEdges
+                  aria-label="Friend list pagination"
                 />
               </Group>
             )}
