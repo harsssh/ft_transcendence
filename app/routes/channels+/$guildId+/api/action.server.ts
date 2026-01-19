@@ -86,6 +86,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     }
   }
 
+  const isOwner = guild.ownerId === user.id
+
   if (intent === 'invite-friend') {
     checkPermission(Permissions.CREATE_INVITE)
 
@@ -256,7 +258,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'leave-server') {
-    if (guild.ownerId === user.id) {
+    if (isOwner) {
       throw new Response('The server owner cannot leave the server', {
         status: 403,
       })
@@ -305,7 +307,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'delete-server') {
-    if (guild.ownerId !== user.id) {
+    if (!isOwner) {
       throw new Response('Only the server owner can delete the server', {
         status: 403,
       })
@@ -401,8 +403,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'assign-role') {
-    checkPermission(Permissions.MANAGE_ROLES)
-
     const submission = parseWithZod(formData, { schema: AssignRoleSchema })
     if (submission.status !== 'success') {
       return submission.reply()
@@ -415,6 +415,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
         guildId: guildId,
       },
     })
+
+    if (!isOwner) {
+      checkPermission(Permissions.MANAGE_ROLES)
+    }
 
     if (!existingMember) {
       return submission.reply({
@@ -435,7 +439,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       })
     }
 
-    if (user.id !== guild.ownerId) {
+    if (!isOwner && guild.ownerId === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot manage roles of the server owner'],
+      })
+    }
+
+    if (!isOwner) {
       const missingPermissions = targetRole.permissions & ~userPermissions
       const hasAdmin = hasPermission(userPermissions, Permissions.ADMINISTRATOR)
       if (missingPermissions !== 0 && !hasAdmin) {
@@ -467,18 +477,14 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'remove-role') {
-    checkPermission(Permissions.MANAGE_ROLES)
-
     const submission = parseWithZod(formData, { schema: AssignRoleSchema })
     if (submission.status !== 'success') {
       return submission.reply()
     }
     const { userId: targetUserId, roleId: targetRoleId } = submission.value
 
-    if (guild.ownerId !== user.id && guild.ownerId === targetUserId) {
-      return submission.reply({
-        formErrors: ['Cannot manage roles of the server owner'],
-      })
+    if (!isOwner) {
+      checkPermission(Permissions.MANAGE_ROLES)
     }
 
     const existingMember = await db.query.guildMembers.findFirst({
@@ -507,7 +513,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       })
     }
 
-    if (user.id !== guild.ownerId) {
+    if (!isOwner && guild.ownerId === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot manage roles of the server owner'],
+      })
+    }
+
+    if (!isOwner) {
       const missingPermissions = targetRole.permissions & ~userPermissions
       const hasAdmin = hasPermission(userPermissions, Permissions.ADMINISTRATOR)
       if (missingPermissions !== 0 && !hasAdmin) {
