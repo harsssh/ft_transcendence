@@ -23,7 +23,7 @@ import {
 } from '@tabler/icons-react'
 import { and, eq, or } from 'drizzle-orm'
 import { ok, ResultAsync } from 'neverthrow'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Form, useSubmit } from 'react-router'
 import * as R from 'remeda'
 import { friendships } from '../../../../db/schema'
@@ -316,6 +316,12 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
     page * PAGE_SIZE,
   )
   const totalPages = Math.ceil(friends.length / PAGE_SIZE)
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(Math.max(1, totalPages))
+    }
+  }, [page, totalPages])
 
   return (
     <Stack h="100%" gap={0}>
