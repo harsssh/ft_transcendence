@@ -37,6 +37,7 @@ export function Message({
     () => createdAt.toISOString(),
   )
   const { ref: hoverRef, hovered } = useHover()
+  const roleColor = roles?.[0]?.color
 
   return (
     <Box
@@ -81,7 +82,7 @@ export function Message({
               size="sm"
               maw="40rem"
               truncate="end"
-              c={roles?.[0]?.color ?? ''}
+              {...(roleColor ? { c: roleColor } : {})}
             >
               {senderDisplayName ?? senderName}
             </Text>
