@@ -409,16 +409,22 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     }
     const { userId: targetUserId, roleId: targetRoleId } = submission.value
 
+    if (!isOwner) {
+      checkPermission(Permissions.MANAGE_ROLES)
+    }
+
+    if (!isOwner && guild.ownerId === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot manage roles of the server owner'],
+      })
+    }
+
     const existingMember = await db.query.guildMembers.findFirst({
       where: {
         userId: targetUserId,
         guildId: guildId,
       },
     })
-
-    if (!isOwner) {
-      checkPermission(Permissions.MANAGE_ROLES)
-    }
 
     if (!existingMember) {
       return submission.reply({
@@ -436,12 +442,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     if (!targetRole) {
       return submission.reply({
         formErrors: ['Role not found in this guild'],
-      })
-    }
-
-    if (!isOwner && guild.ownerId === targetUserId) {
-      return submission.reply({
-        formErrors: ['Cannot manage roles of the server owner'],
       })
     }
 
@@ -487,6 +487,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       checkPermission(Permissions.MANAGE_ROLES)
     }
 
+    if (!isOwner && guild.ownerId === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot manage roles of the server owner'],
+      })
+    }
+
     const existingMember = await db.query.guildMembers.findFirst({
       where: {
         userId: targetUserId,
@@ -510,12 +516,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     if (!targetRole) {
       return submission.reply({
         formErrors: ['Role not found in this guild'],
-      })
-    }
-
-    if (!isOwner && guild.ownerId === targetUserId) {
-      return submission.reply({
-        formErrors: ['Cannot manage roles of the server owner'],
       })
     }
 
