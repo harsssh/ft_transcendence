@@ -463,6 +463,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     }
     const { userId: targetUserId, roleId: targetRoleId } = submission.value
 
+    if (guild.ownerId !== user.id && guild.ownerId === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot manage roles of the server owner'],
+      })
+    }
+
     const existingMember = await db.query.guildMembers.findFirst({
       where: {
         userId: targetUserId,
