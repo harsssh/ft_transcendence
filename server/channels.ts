@@ -318,6 +318,11 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   return tx.rollback()
                 }
 
+                if (!channel?.guild?.id) {
+                  console.error('Unexpected error: Guild ID missing')
+                  return tx.rollback()
+                }
+
                 // Fetch sender info
                 const sender = await tx.query.users.findFirst({
                   where: {
