@@ -192,6 +192,7 @@ export function UserAvatarPopover(props: Props) {
                               color="default"
                               radius="xl"
                               variant="transparent"
+                              aria-label={`Remove ${role.name} role`}
                               onClick={() => {
                                 fetcher.submit(
                                   {
