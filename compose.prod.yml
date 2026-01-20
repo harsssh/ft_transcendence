@@ -290,7 +290,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'",
+          "curl -s -I http://localhost:${KIBANA_PORT:?} | grep -q 'HTTP/1.1 302 Found'",
         ]
       interval: 10s
       timeout: 10s
@@ -360,6 +360,25 @@ services:
     volumes:
       - ./elk/kibana/setup-data-views.sh:/scripts/setup-data-views.sh:ro
     command: ["sh", "/scripts/setup-data-views.sh"]
+    networks:
+      - internal
+
+  import-kibana-dashboards:
+    container_name: import-kibana-dashboards-prod
+    image: curlimages/curl:8.5.0
+    depends_on:
+      kibana:
+        condition: service_healthy
+      setup-kibana-data-views:
+        condition: service_completed_successfully
+    environment:
+      - KIBANA_PROTOCOL=http
+      - KIBANA_HOST=kibana:${KIBANA_PORT:?}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:?}
+    volumes:
+      - ./elk/kibana/import-dashboards.sh:/scripts/import-dashboards.sh:ro
+      - ./elk/kibana/dashboards:/scripts/dashboards:ro
+    command: ["sh", "/scripts/import-dashboards.sh", "/scripts/dashboards/dashboards.ndjson"]
     networks:
       - internal
 

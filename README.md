@@ -60,6 +60,22 @@ Kibanaへのログイン:
 docker compose exec webapp bun db/seed/index.ts
 ```
 
+### Kibanaダッシュボードのエクスポート/インポート
+
+`elk/kibana/dashboards/dashboards.ndjson` に保存されたdashboardは`kibana`の起動後に`import-kibana-dashboards`を介してimportされる
+
+ダッシュボードをファイルに保存（`.env`が設定されていること）:
+```bash
+./elk/kibana/export-dashboards.sh
+```
+
+ダッシュボードをkibanaに反映:
+```bash
+./elk/kibana/import-dashboards.sh
+```
+
+（インポート時、既存のダッシュボードがある場合は一時ディレクトリにバックアップしてから上書きされる。）
+
 ## 開発フロー
 
 1. バックログにイシューを追加
