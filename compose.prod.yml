@@ -1,6 +1,7 @@
 services:
   webapp:
     container_name: webapp-prod
+    restart: unless-stopped
     image: ft_transcendence:prod
     build:
       context: .
@@ -47,7 +48,7 @@ services:
 
   proxy:
     container_name: proxy-prod
-    image: nginx:latest
+    restart: unless-stopped
     depends_on:
       webapp:
         condition: service_healthy
@@ -55,6 +56,7 @@ services:
         condition: service_healthy
       kibana:
         condition: service_healthy
+    image: nginx:latest
     environment:
       WEBAPP_HOST: ${WEBAPP_HOST:?}
       STORAGE_HOST: ${STORAGE_HOST:?}
@@ -103,6 +105,7 @@ services:
 
   db:
     container_name: db-prod
+    restart: unless-stopped
     image: postgres:18
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?}
@@ -120,6 +123,7 @@ services:
 
   storage:
     container_name: storage-prod
+    restart: unless-stopped
     image: ft_transcendence:minio
     build:
       context: ./submodules/minio
@@ -141,6 +145,7 @@ services:
 
   presence-db:
     container_name: redis-prod
+    restart: unless-stopped
     image: redis:8.4
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "ping"]
@@ -224,6 +229,7 @@ services:
   
   es01:
     container_name: elasticsearch-prod
+    restart: unless-stopped
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs-elastic:/usr/share/elasticsearch/config/certs
@@ -268,6 +274,7 @@ services:
     depends_on:
       es01:
         condition: service_healthy
+    restart: unless-stopped
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
     volumes:
       - certs-elastic:/usr/share/kibana/config/certs
@@ -326,6 +333,7 @@ services:
         condition: service_completed_successfully
       setup-logstash-jdbc:
         condition: service_completed_successfully
+    restart: unless-stopped
     image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     user: root
     environment:
