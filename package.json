@@ -37,6 +37,7 @@
     "react-router-hono-server": "^2.22.0",
     "redis": "^5.10.0",
     "remeda": "^2.32.0",
+    "tailwindcss": "^4.1.13",
     "zod": "^4.1.13"
   },
   "devDependencies": {
@@ -60,7 +61,6 @@
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
     "remix-flat-routes": "^0.8.5",
-    "tailwindcss": "^4.1.13",
     "tsx": "^4.21.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.7",

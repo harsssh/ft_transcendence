@@ -1,32 +1,110 @@
 import {
+  ActionIcon,
+  Badge,
   Box,
   Button,
+  Group,
   Popover,
   Stack,
   Text,
   UnstyledButton,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { modals } from '@mantine/modals'
+import { IconX } from '@tabler/icons-react'
 import { useCallback, useId } from 'react'
+import { useFetcher, useSubmit } from 'react-router'
+import { hasPermission, Permissions } from '../../_shared/permissions'
+import type { GuildOutletContext } from '../../$guildId+/route'
 import { EditProfileModal } from './EditProfileModal'
+import { RoleManagementPopover } from './RoleManagementPopover'
 import { UserAvatar, type UserAvatarProps } from './UserAvatar'
+
+export type Role = {
+  id: number
+  name: string
+  color: string
+}
 
 type Props = Omit<UserAvatarProps, 'id' | 'withOnlineStatus'> & {
   id: number
   displayName: string | null
   isEditable: boolean
+  roles?: Role[] | undefined
+  guild?: GuildOutletContext['guild'] | undefined
+  loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
 }
 
 export function UserAvatarPopover(props: Props) {
+  const { guild, loggedInUser } = props
   const maskId = useId()
   const [popoverOpened, popoverHandlers] = useDisclosure(false)
   const [editProfileModalOpened, editProfileModalHandlers] =
     useDisclosure(false)
+  const fetcher = useFetcher()
+
+  const isOwner = loggedInUser?.id === guild?.ownerId
+  const isTargetOwner = props.id === guild?.ownerId
+  const hasKickPermission = hasPermission(
+    loggedInUser?.permissionsMask ?? 0,
+    Permissions.KICK_MEMBERS,
+  )
+  const canKick =
+    guild &&
+    loggedInUser &&
+    loggedInUser.id !== props.id &&
+    !isTargetOwner &&
+    hasKickPermission
+
+  const hasManageRoles = hasPermission(
+    loggedInUser?.permissionsMask ?? 0,
+    Permissions.MANAGE_ROLES,
+  )
+  const canManageRoles =
+    guild && loggedInUser
+      ? isOwner || (!isTargetOwner && hasManageRoles)
+      : false
 
   const handleEditProfileClicked = useCallback(() => {
     popoverHandlers.close()
     editProfileModalHandlers.open()
   }, [editProfileModalHandlers, popoverHandlers])
+
+  const submit = useSubmit()
+  const handleKickMember = useCallback(() => {
+    if (!guild) {
+      return
+    }
+    popoverHandlers.close()
+    modals.openConfirmModal({
+      title: (
+        <Text fw={700} className="break-all">
+          Kick '{props.displayName ?? props.name}' from Server
+        </Text>
+      ),
+      children: (
+        <Text size="sm">
+          Are you sure you want to kick{' '}
+          <Text span fw={700} c="blue" className="break-all" inherit>
+            {props.displayName ?? props.name}
+          </Text>{' '}
+          from the server? They will be able to rejoin again with a new invite.
+        </Text>
+      ),
+      centered: true,
+      labels: { confirm: 'Kick', cancel: 'Cancel' },
+      confirmProps: { color: 'red' },
+      onConfirm: () => {
+        const formData = new FormData()
+        formData.append('intent', 'kick-member')
+        formData.append('userId', String(props.id))
+        submit(formData, {
+          method: 'post',
+          action: `/channels/${guild.id}`,
+        })
+      },
+    })
+  }, [guild, submit, props.id, props.displayName, props.name, popoverHandlers])
 
   return (
     <>
@@ -96,8 +174,67 @@ export function UserAvatarPopover(props: Props) {
                   {props.name}
                 </Text>
               </Box>
+              {(props.roles && props.roles.length > 0) || canManageRoles ? (
+                <Box>
+                  <Group gap={4}>
+                    {props.roles?.map((role) => (
+                      <Badge
+                        key={role.id}
+                        color={role.color}
+                        variant="dot"
+                        size="sm"
+                        tt="none"
+                        style={canManageRoles ? { paddingRight: 3 } : undefined}
+                        rightSection={
+                          canManageRoles ? (
+                            <ActionIcon
+                              size="xs"
+                              color="default"
+                              radius="xl"
+                              variant="transparent"
+                              aria-label={`Remove ${role.name} role`}
+                              onClick={() => {
+                                fetcher.submit(
+                                  {
+                                    intent: 'remove-role',
+                                    userId: props.id,
+                                    roleId: role.id,
+                                  },
+                                  {
+                                    method: 'post',
+                                    action: `/channels/${guild?.id}`,
+                                  },
+                                )
+                              }}
+                            >
+                              <IconX
+                                size={11}
+                                className="text-zinc-300 hover:text-zinc-100 transition-colors"
+                              />
+                            </ActionIcon>
+                          ) : undefined
+                        }
+                      >
+                        {role.name}
+                      </Badge>
+                    ))}
+                    {canManageRoles && (
+                      <RoleManagementPopover
+                        id={props.id}
+                        guild={guild}
+                        roles={props.roles}
+                      />
+                    )}
+                  </Group>
+                </Box>
+              ) : null}
               {props.isEditable && (
                 <Button onClick={handleEditProfileClicked}>Edit Profile</Button>
+              )}
+              {canKick && (
+                <Button color="red" onClick={handleKickMember}>
+                  Kick
+                </Button>
               )}
             </Stack>
           </Stack>
