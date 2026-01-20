@@ -20,6 +20,8 @@ services:
       - PRESENCE_DB_URL=redis://presence-db:6379
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+    secrets:
+      - meshy_api_key
     volumes:
       - .:/app
       - /app/node_modules
@@ -78,3 +80,7 @@ services:
 volumes:
   db_data:
   storage_data:
+
+secrets:
+  meshy_api_key:
+    file: ./secrets/meshy_api_key.txt

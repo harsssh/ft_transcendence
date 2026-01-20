@@ -85,6 +85,7 @@ export const message3DAssets = p.pgTable('message_3d_assets', {
     .integer('message_id')
     .references(() => messages.id, { onDelete: 'cascade' })
     .notNull(),
+  externalId: p.text('external_id'),
   status: p.text().notNull(), // 'queued' | 'generating' | 'ready' | 'failed'
   modelUrl: p.text('model_url'),
   prompt: p.text().notNull(),
@@ -124,6 +125,7 @@ export const relations = defineRelations(
     usersToChannels,
     messages,
     friendships,
+    message3DAssets,
   },
   (r) => ({
     users: {
@@ -191,6 +193,7 @@ export const relations = defineRelations(
         to: r.channels.id,
         optional: false,
       }),
+      message3DAssets: r.many.message3DAssets(),
     },
     friendships: {
       user: r.one.users({

@@ -3,7 +3,7 @@ COPY ./package.json bun.lock /app/
 
 FROM base AS development-dependencies-env
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.bun/install/cache bun i --frozen-lockfile
+RUN --mount=type=cache,target=/root/.bun/install/cache bun i
 COPY . /app/
 
 FROM base AS production-dependencies-env

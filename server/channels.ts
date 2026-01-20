@@ -2,13 +2,14 @@ import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import type { UpgradeWebSocket, WSContext } from 'hono/ws'
 import { db } from '../app/contexts/db'
+import { resume3DGeneration } from '../3D/jobs/processor'
 import { STORAGE_PUBLIC_ENDPOINT } from '../app/contexts/storage'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import {
   type MessageType,
   SendMessageSchema,
 } from '../app/routes/channels+/_text/model/message'
-import { messages, users } from '../db/schema'
+import { messages, users, message3DAssets } from '../db/schema'
 
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
@@ -89,6 +90,8 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 return
               }
 
+              let trigger3D: { prompt: string, messageId: number, assetId: number, channelId: number } | null = null
+
               await db.transaction(async (tx) => {
                 const channel = await db.query.channels.findFirst({
                   where: {
@@ -166,7 +169,50 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   }
                   console.log(`Broadcast to ${connections.size} clients`)
                 }
+
+                // 3D Generation Trigger Logic captured here but executed AFTER transaction
+                if (msgContent.content.startsWith('/3D ')) {
+                  const prompt = msgContent.content.slice(4).trim()
+                  if (prompt) {
+                    const [asset] = await tx.insert(message3DAssets).values({
+                      messageId: insertedMessage.id,
+                      prompt,
+                      status: 'queued',
+                    }).returning()
+
+                    trigger3D = {
+                      prompt,
+                      messageId: insertedMessage.id,
+                      assetId: asset.id,
+                      channelId: Number(channelId)
+                    }
+                  }
+                }
               })
+
+              // Execute 3D Generation AFTER transaction commit
+              if (trigger3D && trigger3D.assetId) {
+                const { prompt, messageId, assetId, channelId } = trigger3D
+
+                // Helper for broadcasting updates from processor
+                const broadcastUpdate = (cId: number, mId: number, asset: { status: string, modelUrl: string | null }) => {
+                  const cons = channelConnections.get(String(cId))
+                  if (cons) {
+                    const updateMsg = JSON.stringify({
+                      type: 'message_update',
+                      data: {
+                        id: mId,
+                        ...asset
+                      }
+                    })
+                    for (const client of cons) {
+                      client.send(updateMsg)
+                    }
+                  }
+                }
+
+                resume3DGeneration(db, channelId, messageId, assetId, prompt, broadcastUpdate).catch(e => console.error(e))
+              }
             } catch (error) {
               console.error('Error handling message:', error)
               ws.send(
@@ -272,6 +318,8 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 return
               }
 
+              let trigger3D: { prompt: string, messageId: number, assetId: number, channelId: number } | null = null
+
               await db.transaction(async (tx) => {
                 const channel = await db.query.channels.findFirst({
                   where: {
@@ -351,7 +399,50 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   }
                   console.log(`Broadcast to ${connections.size} clients`)
                 }
+
+                // 3D Generation Trigger Logic captured here but executed AFTER transaction
+                if (msgContent.content.startsWith('/3D ')) {
+                  const prompt = msgContent.content.slice(4).trim()
+                  if (prompt) {
+                    const [asset] = await tx.insert(message3DAssets).values({
+                      messageId: insertedMessage.id,
+                      prompt,
+                      status: 'queued',
+                    }).returning()
+
+                    trigger3D = {
+                      prompt,
+                      messageId: insertedMessage.id,
+                      assetId: asset.id,
+                      channelId: Number(channelId)
+                    }
+                  }
+                }
               })
+
+              // Execute 3D Generation AFTER transaction commit
+              if (trigger3D && trigger3D.assetId) {
+                const { prompt, messageId, assetId, channelId } = trigger3D
+
+                // Helper for broadcasting updates from processor
+                const broadcastUpdate = (cId: number, mId: number, asset: { status: string, modelUrl: string | null }) => {
+                  const cons = channelConnections.get(String(cId))
+                  if (cons) {
+                    const updateMsg = JSON.stringify({
+                      type: 'message_update',
+                      data: {
+                        id: mId,
+                        ...asset
+                      }
+                    })
+                    for (const client of cons) {
+                      client.send(updateMsg)
+                    }
+                  }
+                }
+
+                resume3DGeneration(db, channelId, messageId, assetId, prompt, broadcastUpdate).catch(e => console.error(e))
+              }
             } catch (error) {
               console.error('Error handling message:', error)
               ws.send(

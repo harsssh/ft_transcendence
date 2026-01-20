@@ -65,7 +65,7 @@ export function TextChannelView({
   const MAX_RECONNECT_ATTEMPTS = 5
 
   const timeZone = useSyncExternalStore(
-    () => () => {},
+    () => () => { },
     () => Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
     () => 'UTC',
   )
@@ -131,11 +131,31 @@ export function TextChannelView({
           ws.onmessage = (event) => {
             if (!mounted) return
             try {
+              const parsedData = JSON.parse(event.data)
+
+              // Handle 3D Asset Updates
+              if (parsedData.type === 'message_update' && parsedData.data) {
+                const update = parsedData.data
+                setMessages((prev) => prev.map((m) => {
+                  if (m.id === update.id) {
+                    return {
+                      ...m,
+                      asset3D: {
+                        status: update.status,
+                        modelUrl: update.modelUrl
+                      }
+                    }
+                  }
+                  return m
+                }))
+                return
+              }
+
               const {
                 success,
                 data: newMessage,
                 error,
-              } = MessageSchema.safeParse(JSON.parse(event.data))
+              } = MessageSchema.safeParse(parsedData)
 
               if (!success) {
                 console.log('Invalid message format:', error)
@@ -385,6 +405,7 @@ export function TextChannelView({
                     content={entry.message.content}
                     createdAt={entry.message.createdAt}
                     withProfile={entry.message.withProfile}
+                    asset3D={entry.message.asset3D}
                   />
                 </div>
               )

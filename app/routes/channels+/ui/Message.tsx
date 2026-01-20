@@ -5,6 +5,8 @@ import { useContext, useSyncExternalStore } from 'react'
 import { LoggedInUserContext } from '../../../contexts/user'
 import { UserAvatarPopover } from './UserAvatarPopover'
 
+import { ThreeViewer } from './ThreeViewer'
+
 type Props = {
   createdAt: Date
   senderId: number
@@ -13,6 +15,10 @@ type Props = {
   content: string
   avatarSrc?: string | undefined | null
   withProfile?: boolean
+  asset3D?: {
+    status: string
+    modelUrl: string | null
+  } | undefined | null
 }
 
 export function Message({
@@ -23,10 +29,11 @@ export function Message({
   content,
   avatarSrc = null,
   withProfile = false,
+  asset3D,
 }: Props) {
   // サーバーとクライアントのロケールが異なる場合にhydration errorが発生するため、それを避けるハッチ
   const localeTimeCreatedAt = useSyncExternalStore(
-    () => () => {},
+    () => () => { },
     () => createdAt.toLocaleTimeString(),
     () => createdAt.toISOString(),
   )
@@ -42,8 +49,8 @@ export function Message({
       style={
         withProfile
           ? {
-              marginTop: 'var(--mantine-spacing-md)',
-            }
+            marginTop: 'var(--mantine-spacing-md)',
+          }
           : {}
       }
     >
@@ -79,6 +86,11 @@ export function Message({
         <Group>
           <Text style={{ wordBreak: 'break-word' }}>{content}</Text>
         </Group>
+        {asset3D && (
+          <Box mt="sm" style={{ width: 300, height: 300, border: '1px solid #333', borderRadius: 8, overflow: 'hidden' }}>
+            <ThreeViewer modelUrl={asset3D.modelUrl} status={asset3D.status as any} />
+          </Box>
+        )}
       </Box>
     </Box>
   )

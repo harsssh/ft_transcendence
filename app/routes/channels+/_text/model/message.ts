@@ -10,6 +10,10 @@ export const MessageSchema = z.object({
     displayName: z.string().nullable(),
     avatarUrl: z.string().nullable(),
   }),
+  asset3D: z.object({
+    status: z.string(),
+    modelUrl: z.string().nullable(),
+  }).nullable().optional(),
 })
 
 export type MessageType = z.infer<typeof MessageSchema>
