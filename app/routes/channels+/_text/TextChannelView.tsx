@@ -21,15 +21,15 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { createWebSocket } from '../../_shared/lib/websocket'
-import { DateSeparator } from './ui/DateSeparator'
-import { EditProfileContext } from './ui/EditProfileModal'
-import { Message } from './ui/Message'
 import type { GuildOutletContext } from '../$guildId+/route'
 import {
   MessageSchema,
   type MessageType,
   SendMessageSchema,
 } from './model/message'
+import { DateSeparator } from './ui/DateSeparator'
+import { EditProfileContext } from './ui/EditProfileModal'
+import { Message } from './ui/Message'
 
 export type TextChannelViewProps = {
   channelId: string
