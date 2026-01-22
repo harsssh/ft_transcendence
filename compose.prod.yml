@@ -64,7 +64,9 @@ services:
     volumes:
       - ./nginx/entrypoints/:/docker-entrypoint.d/99-user-scripts/:ro
       - ./nginx/templates/:/etc/nginx/templates/:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - .secrets/ssl_certs:/etc/nginx/ssl/
+      - proxy-logs:/var/log/proxy
     ports:
       - "80:80"
       - "443:443"
@@ -228,7 +230,7 @@ services:
       - internal
   
   es01:
-    container_name: elasticsearch-prod
+    container_name: es01-prod
     restart: unless-stopped
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
@@ -346,6 +348,7 @@ services:
       - ./elk/logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
       - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
       - logstash-jdbc:/usr/share/logstash/vendor/jar/jdbc:ro
+      - proxy-logs:/var/log/proxy:ro
     networks:
       - internal
 
@@ -393,3 +396,4 @@ volumes:
   kibana-data-prod:
   certs-elastic:
   logstash-jdbc:
+  proxy-logs:

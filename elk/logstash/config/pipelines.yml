@@ -1,2 +1,5 @@
 - pipeline.id: db
   path.config: "/usr/share/logstash/pipeline/db.conf"
+
+- pipeline.id: proxy
+  path.config: "/usr/share/logstash/pipeline/proxy.conf"

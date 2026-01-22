@@ -58,5 +58,6 @@ create_data_view "db-messages" "created_at"
 create_data_view "db-friendships" "created_at"
 create_data_view "db-guilds" "created_at"
 create_data_view "db-guild_members" "joined_at"
+create_data_view "proxy-access-logs" "time"
 
 echo "Done."
