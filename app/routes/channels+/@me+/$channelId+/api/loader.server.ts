@@ -82,7 +82,9 @@ export const loader = async ({
             id: m.sender.id,
             name: m.sender.name,
             displayName: m.sender.displayName,
-            avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`,
+            avatarUrl: m.sender.avatarUrl
+              ? `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`
+              : null,
           },
         })),
         partner: {
@@ -106,5 +108,9 @@ export const loader = async ({
 
   const locale = resolveLocale(request.headers.get('accept-language'))
 
-  return { ...result, locale, loggedInUser: user }
+  return {
+    ...result,
+    locale,
+    loggedInUser: { ...user, permissionsMask: 0 },
+  }
 }

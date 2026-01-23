@@ -324,7 +324,7 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
   }, [page, totalPages])
 
   return (
-    <Stack h="100%" gap={0}>
+    <Stack h="100%" gap={0} mih="0">
       <Group
         p="md"
         bg="var(--mantine-color-body)"
@@ -338,11 +338,11 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
 
       <Tabs
         defaultValue="all"
-        h="100%"
+        mih="0"
         display="flex"
         style={{ flexDirection: 'column' }}
       >
-        <Tabs.List px="md">
+        <Tabs.List px="md" style={{ flexShrink: 0 }}>
           <Tabs.Tab value="all">All</Tabs.Tab>
           <Tabs.Tab value="pending">
             Pending
@@ -357,9 +357,9 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
           </Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="all" flex={1} p="md">
+        <Tabs.Panel value="all" p="md" mih="0">
           <Stack justify="space-between" h="100%">
-            <ScrollArea flex={1}>
+            <ScrollArea h="100%" type="auto" style={{ flex: 1 }}>
               <Stack>
                 {friends.length === 0 ? (
                   <Text c="dimmed" ta="center" mt="xl">
@@ -430,114 +430,117 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
           </Stack>
         </Tabs.Panel>
 
-        <Tabs.Panel value="pending" flex={1} p="md">
+        <Tabs.Panel value="pending" p="md" mih="0">
           <Title order={5} mb="md">
             Pending — {pendingRequests.length}
           </Title>
-          <Stack>
-            {pendingRequests.map((user) => (
-              <Group
-                key={user?.id}
-                justify="space-between"
-                p="sm"
-                style={{
-                  borderBottom: '1px solid var(--mantine-color-default-border)',
-                }}
-              >
-                <Group>
-                  <Avatar src={null} alt={user?.name ?? ''} color="initials">
-                    {(user?.name ?? '').slice(0, 2)}
-                  </Avatar>
-                  <Stack gap={0}>
-                    <Text fw={500}>{user?.name}</Text>
-                    <Text size="xs" c="dimmed">
-                      Incoming Friend Request
-                    </Text>
-                  </Stack>
-                </Group>
-                <Form method="post">
-                  <input type="hidden" name="userId" value={user?.id} />
+          <ScrollArea h="100%" type="auto">
+            <Stack>
+              {pendingRequests.map((user) => (
+                <Group
+                  key={user?.id}
+                  justify="space-between"
+                  p="sm"
+                  style={{
+                    borderBottom:
+                      '1px solid var(--mantine-color-default-border)',
+                  }}
+                >
                   <Group>
-                    <Tooltip label="Accept">
-                      <ActionIcon
-                        type="submit"
-                        name="intent"
-                        value="accept-friend-request"
-                        variant="filled"
-                        color="green"
-                        radius="xl"
-                      >
-                        <IconCheck size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label="Ignore">
-                      <ActionIcon
-                        type="submit"
-                        name="intent"
-                        value="reject-friend-request"
-                        variant="filled"
-                        color="red"
-                        radius="xl"
-                      >
-                        <IconX size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
-                </Form>
-              </Group>
-            ))}
-            {pendingRequests.length === 0 && (
-              <Text c="dimmed">There are no pending friend requests.</Text>
-            )}
-          </Stack>
-
-          {sentRequests.length > 0 && (
-            <>
-              <Title order={5} mt="xl" mb="md">
-                Sent — {sentRequests.length}
-              </Title>
-              <Stack>
-                {sentRequests.map((user) => (
-                  <Group
-                    key={user?.id}
-                    justify="space-between"
-                    p="sm"
-                    style={{
-                      borderBottom:
-                        '1px solid var(--mantine-color-default-border)',
-                    }}
-                  >
-                    <Group>
-                      <Avatar
-                        src={null}
-                        alt={user?.name ?? ''}
-                        color="initials"
-                      >
-                        {(user?.name ?? '').slice(0, 2)}
-                      </Avatar>
+                    <Avatar src={null} alt={user?.name ?? ''} color="initials">
+                      {(user?.name ?? '').slice(0, 2)}
+                    </Avatar>
+                    <Stack gap={0}>
                       <Text fw={500}>{user?.name}</Text>
-                    </Group>
-                    <Form method="post">
-                      <input type="hidden" name="userId" value={user?.id} />
-                      <Button
-                        type="submit"
-                        name="intent"
-                        value="cancel-friend-request"
-                        variant="outline"
-                        color="gray"
-                        size="xs"
-                      >
-                        Cancel Request
-                      </Button>
-                    </Form>
+                      <Text size="xs" c="dimmed">
+                        Incoming Friend Request
+                      </Text>
+                    </Stack>
                   </Group>
-                ))}
-              </Stack>
-            </>
-          )}
+                  <Form method="post">
+                    <input type="hidden" name="userId" value={user?.id} />
+                    <Group>
+                      <Tooltip label="Accept">
+                        <ActionIcon
+                          type="submit"
+                          name="intent"
+                          value="accept-friend-request"
+                          variant="filled"
+                          color="green"
+                          radius="xl"
+                        >
+                          <IconCheck size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Ignore">
+                        <ActionIcon
+                          type="submit"
+                          name="intent"
+                          value="reject-friend-request"
+                          variant="filled"
+                          color="red"
+                          radius="xl"
+                        >
+                          <IconX size={18} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Form>
+                </Group>
+              ))}
+              {pendingRequests.length === 0 && (
+                <Text c="dimmed">There are no pending friend requests.</Text>
+              )}
+            </Stack>
+
+            {sentRequests.length > 0 && (
+              <>
+                <Title order={5} mt="xl" mb="md">
+                  Sent — {sentRequests.length}
+                </Title>
+                <Stack>
+                  {sentRequests.map((user) => (
+                    <Group
+                      key={user?.id}
+                      justify="space-between"
+                      p="sm"
+                      style={{
+                        borderBottom:
+                          '1px solid var(--mantine-color-default-border)',
+                      }}
+                    >
+                      <Group>
+                        <Avatar
+                          src={null}
+                          alt={user?.name ?? ''}
+                          color="initials"
+                        >
+                          {(user?.name ?? '').slice(0, 2)}
+                        </Avatar>
+                        <Text fw={500}>{user?.name}</Text>
+                      </Group>
+                      <Form method="post">
+                        <input type="hidden" name="userId" value={user?.id} />
+                        <Button
+                          type="submit"
+                          name="intent"
+                          value="cancel-friend-request"
+                          variant="outline"
+                          color="gray"
+                          size="xs"
+                        >
+                          Cancel Request
+                        </Button>
+                      </Form>
+                    </Group>
+                  ))}
+                </Stack>
+              </>
+            )}
+          </ScrollArea>
         </Tabs.Panel>
 
-        <Tabs.Panel value="add" flex={1} p="md">
+        <Tabs.Panel value="add" p="md">
           <Title order={4} mb="sm">
             Add Friend
           </Title>

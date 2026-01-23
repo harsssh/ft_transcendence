@@ -22,14 +22,14 @@ import {
 } from 'react'
 import { createWebSocket } from '../../_shared/lib/websocket'
 import type { GuildOutletContext } from '../$guildId+/route'
-import { DateSeparator } from '../ui/DateSeparator'
-import { EditProfileContext } from '../ui/EditProfileModal'
-import { Message } from '../ui/Message'
 import {
   MessageSchema,
   type MessageType,
   SendMessageSchema,
 } from './model/message'
+import { DateSeparator } from './ui/DateSeparator'
+import { EditProfileContext } from './ui/EditProfileModal'
+import { Message } from './ui/Message'
 
 export type TextChannelViewProps = {
   channelId: string
@@ -372,7 +372,6 @@ export function TextChannelView({
               }
 
               const isLatest = index === messagesWithSeparators.length - 1
-              console.log(entry.message)
 
               return (
                 <div

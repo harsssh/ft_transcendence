@@ -1,6 +1,7 @@
 services:
   webapp:
     container_name: webapp-prod
+    restart: unless-stopped
     image: ft_transcendence:prod
     build:
       context: .
@@ -47,19 +48,25 @@ services:
 
   proxy:
     container_name: proxy-prod
-    image: nginx:latest
+    restart: unless-stopped
     depends_on:
       webapp:
         condition: service_healthy
       storage:
         condition: service_healthy
+      kibana:
+        condition: service_healthy
+    image: nginx:latest
     environment:
       WEBAPP_HOST: ${WEBAPP_HOST:?}
       STORAGE_HOST: ${STORAGE_HOST:?}
+      KIBANA_HOST: ${KIBANA_HOST:?}
     volumes:
       - ./nginx/entrypoints/:/docker-entrypoint.d/99-user-scripts/:ro
       - ./nginx/templates/:/etc/nginx/templates/:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - .secrets/ssl_certs:/etc/nginx/ssl/
+      - proxy-logs:/var/log/proxy
     ports:
       - "80:80"
       - "443:443"
@@ -83,6 +90,13 @@ services:
             exit 1
           fi
 
+          response=`curl -s -w "%{http_code}" https://$$KIBANA_HOST`
+          status_code=$${response: -3}
+          if [ "$$status_code" -ne 302 ] && [ "$$status_code" -ne 200 ]; then
+            echo healthcheck failed: kibana returned $$status_code: $$response
+            exit 1
+          fi
+
           echo "all services healthy"
           exit 0
       interval: 1s
@@ -93,6 +107,7 @@ services:
 
   db:
     container_name: db-prod
+    restart: unless-stopped
     image: postgres:18
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?}
@@ -110,6 +125,7 @@ services:
 
   storage:
     container_name: storage-prod
+    restart: unless-stopped
     image: ft_transcendence:minio
     build:
       context: ./submodules/minio
@@ -131,6 +147,7 @@ services:
 
   presence-db:
     container_name: redis-prod
+    restart: unless-stopped
     image: redis:8.4
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "ping"]
@@ -155,6 +172,175 @@ services:
       - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/app
     networks:
       - internal
+  
+  setup-elastic:
+    container_name: setup-elastic-prod
+    depends_on:
+      es01:
+        condition: service_started
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - certs-elastic:/usr/share/elasticsearch/config/certs
+      - ./elk/elasticsearch/scripts/setup.sh:/setup.sh:ro
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:?}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD:?}
+    user: "0"
+    command: ["sh", "/setup.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
+      interval: 1s
+      timeout: 5s
+      retries: 120
+    networks:
+      - internal
+  
+  es01:
+    container_name: es01-prod
+    restart: unless-stopped
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - certs-elastic:/usr/share/elasticsearch/config/certs
+      - es01-data-prod:/usr/share/elasticsearch/data
+    environment:
+      - node.name=es01
+      - cluster.name=${CLUSTER_NAME}
+      - cluster.initial_master_nodes=es01
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=certs/es01/es01.key
+      - xpack.security.http.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/es01/es01.key
+      - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - internal
+
+  kibana:
+    container_name: kibana-prod
+    depends_on:
+      es01:
+        condition: service_healthy
+    restart: unless-stopped
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    volumes:
+      - certs-elastic:/usr/share/kibana/config/certs
+      - kibana-data-prod:/usr/share/kibana/data
+    environment:
+      - SERVERNAME=kibana
+      - ELASTICSEARCH_HOSTS=https://es01:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
+    mem_limit: ${MEM_LIMIT}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -I http://localhost:${KIBANA_PORT:?} | grep -q 'HTTP/1.1 302 Found'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - proxy
+      - internal
+
+  setup-logstash-jdbc:
+    container_name: setup-logstash-jdbc-prod
+    image: curlimages/curl:8.5.0
+    user: "0"
+    command:
+      - sh
+      - -c
+      - |
+        set -eu
+        JAR=/jdbc/postgresql.jar
+        if [ -f "$${JAR}" ]; then
+          echo "PostgreSQL JDBC already present"
+          exit 0
+        fi
+        echo "Downloading PostgreSQL JDBC driver..."
+        curl -fsSL -o "$${JAR}" https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar
+        chmod 644 "$${JAR}"
+        echo "Done"
+    volumes:
+      - logstash-jdbc:/jdbc
+    networks:
+      - internal
+
+  logstash:
+    container_name: logstash-prod
+    depends_on:
+      es01:
+        condition: service_healthy
+      setup-elastic:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      setup-logstash-jdbc:
+        condition: service_completed_successfully
+      kibana:
+        condition: service_healthy
+      setup-kibana:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+    user: root
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER:?}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
+    volumes:
+      - certs-elastic:/usr/share/logstash/config/certs:ro
+      - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./elk/logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - logstash-jdbc:/usr/share/logstash/vendor/jar/jdbc:ro
+      - proxy-logs:/var/log/proxy:ro
+    networks:
+      - internal
+  
+  setup-kibana:
+    container_name: setup-kibana-prod
+    image: curlimages/curl:8.5.0
+    depends_on:
+      kibana:
+        condition: service_healthy
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_PROTOCOL=http
+      - KIBANA_HOST=kibana:${KIBANA_PORT:?}
+    volumes:
+      - ./elk/kibana/scripts/setup.sh:/setup.sh:ro
+      - ./elk/kibana/scripts/:/scripts:ro
+      - ./elk/kibana/dashboards/:/dashboards:ro
+    command: ["sh", "/setup.sh"]
+    networks:
+      - internal
 
 networks:
   proxy:
@@ -163,3 +349,8 @@ networks:
 volumes:
   db_data:
   storage_data:
+  es01-data-prod:
+  kibana-data-prod:
+  certs-elastic:
+  logstash-jdbc:
+  proxy-logs:

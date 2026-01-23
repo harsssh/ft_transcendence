@@ -2,7 +2,7 @@ import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
 import { useSyncExternalStore } from 'react'
-import type { GuildOutletContext } from '../$guildId+/route'
+import type { GuildOutletContext } from '../../$guildId+/route'
 import { type Role, UserAvatarPopover } from './UserAvatarPopover'
 
 type Props = {

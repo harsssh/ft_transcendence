@@ -12,6 +12,7 @@ import {
   Button,
   Flex,
   Modal,
+  ScrollArea,
   Stack,
   TextInput,
   Tooltip,
@@ -165,82 +166,84 @@ function Navbar({ children, guilds, lastResult }: NavbarProps) {
       wrap="nowrap"
       h="100%"
     >
-      <Stack p="sm" align="center" justify="flex-start" h="100%">
-        <Tooltip label="Direct Messages" position="right" withArrow>
-          <NavLink to="/channels/@me">
-            {({ isActive }) => (
-              <Avatar
-                radius="md"
-                variant="filled"
-                size={48}
-                color={isActive ? 'indigo' : 'gray'}
-                className="transition-all hover:rounded-xl cursor-pointer"
-              >
-                <IconMessageCircleFilled />
-              </Avatar>
-            )}
-          </NavLink>
-        </Tooltip>
-
-        <div className="w-8 h-0.5 bg-gray-700/50 rounded-full" />
-
-        {guilds.map((guild) => (
-          <Tooltip key={guild.id} label={guild.name} position="right" withArrow>
-            <NavLink to={`/channels/${guild.id}`}>
+      <ScrollArea type="never" h="100%">
+        <Stack p="sm" align="center" justify="flex-start" h="100%">
+          <Tooltip label="Direct Messages" position="right" withArrow>
+            <NavLink to="/channels/@me">
               {({ isActive }) => (
                 <Avatar
-                  src={guild.icon}
-                  radius="lg"
+                  radius="md"
                   variant="filled"
                   size={48}
                   color={isActive ? 'indigo' : 'gray'}
                   className="transition-all hover:rounded-xl cursor-pointer"
                 >
-                  {guild.name.substring(0, 2).toUpperCase()}
+                  <IconMessageCircleFilled />
                 </Avatar>
               )}
             </NavLink>
           </Tooltip>
-        ))}
 
-        <Tooltip label="Add a Server" position="right" withArrow>
-          <ActionIcon
-            variant="subtle"
-            color="neutral"
-            size={48}
-            radius="md"
-            className="transition-all hover:rounded-xl"
-            onClick={open}
-          >
-            <IconCirclePlusFilled size={28} />
-          </ActionIcon>
-        </Tooltip>
+          <div className="w-8 h-0.5 bg-gray-700/50 rounded-full" />
 
-        <Modal
-          opened={opened}
-          onClose={close}
-          title="Create New Server"
-          centered
-        >
-          <Form method="post" action="/channels" {...getFormProps(form)}>
-            <Stack gap="sm">
-              {form.errors && (
-                <Alert variant="light" color="red">
-                  {form.errors}
-                </Alert>
-              )}
-              <TextInput
-                {...getInputProps(fields.name, { type: 'text' })}
-                label="Server Name"
-                error={fields.name.errors}
-              />
-              <Button type="submit" loading={isSubmitting} fullWidth>
-                Create
-              </Button>
-            </Stack>
-          </Form>
-        </Modal>
-      </Stack>
+          {guilds.map((guild) => (
+            <Tooltip
+              key={guild.id}
+              label={guild.name}
+              position="right"
+              withArrow
+            >
+              <NavLink to={`/channels/${guild.id}`}>
+                {({ isActive }) => (
+                  <Avatar
+                    src={guild.icon}
+                    radius="lg"
+                    variant="filled"
+                    size={48}
+                    color={isActive ? 'indigo' : 'gray'}
+                    className="transition-all hover:rounded-xl cursor-pointer"
+                  >
+                    {guild.name.substring(0, 2).toUpperCase()}
+                  </Avatar>
+                )}
+              </NavLink>
+            </Tooltip>
+          ))}
+
+          <Tooltip label="Add a Server" position="right" withArrow>
+            <ActionIcon
+              variant="subtle"
+              color="neutral"
+              size={48}
+              radius="md"
+              className="transition-all hover:rounded-xl"
+              onClick={open}
+            >
+              <IconCirclePlusFilled size={28} />
+            </ActionIcon>
+          </Tooltip>
+        </Stack>
+      </ScrollArea>
+
+      <Modal opened={opened} onClose={close} title="Create New Server" centered>
+        <Form method="post" action="/channels" {...getFormProps(form)}>
+          <Stack gap="sm">
+            {form.errors && (
+              <Alert variant="light" color="red">
+                {form.errors}
+              </Alert>
+            )}
+            <TextInput
+              {...getInputProps(fields.name, { type: 'text' })}
+              label="Server Name"
+              error={fields.name.errors}
+            />
+            <Button type="submit" loading={isSubmitting} fullWidth>
+              Create
+            </Button>
+          </Stack>
+        </Form>
+      </Modal>
       {children}
     </Flex>
   )

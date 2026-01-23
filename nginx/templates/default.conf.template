@@ -6,9 +6,13 @@ upstream minio_api {
     server storage-prod:9000;
 }
 
+upstream kibana_upstream {
+    server kibana-prod:5601;
+}
+
 server {
     listen 80;
-    server_name ${WEBAPP_HOST} ${STORAGE_HOST};
+    server_name ${WEBAPP_HOST} ${STORAGE_HOST} ${KIBANA_HOST};
 
     return 301 https://$host$request_uri;
 }
@@ -63,5 +67,32 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name ${KIBANA_HOST};
+
+    ssl_certificate /etc/nginx/ssl/server.crt;
+    ssl_certificate_key /etc/nginx/ssl/server.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    client_max_body_size 100m;
+
+    location / {
+        proxy_pass http://kibana_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        proxy_redirect off;
+        proxy_buffering off;
     }
 }
