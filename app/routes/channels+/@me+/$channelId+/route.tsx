@@ -57,6 +57,7 @@ export default function DMChannel({
         profileSidebarOpened ? <UserProfileSidebar profile={partner} /> : null
       }
       actionData={actionData ?? null}
+      loggedInUser={loaderData.loggedInUser}
     />
   )
 }

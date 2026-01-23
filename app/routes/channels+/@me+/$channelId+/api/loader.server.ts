@@ -108,5 +108,9 @@ export const loader = async ({
 
   const locale = resolveLocale(request.headers.get('accept-language'))
 
-  return { ...result, locale, loggedInUser: user }
+  return {
+    ...result,
+    locale,
+    loggedInUser: { ...user, permissionsMask: 0 },
+  }
 }
