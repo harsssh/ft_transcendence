@@ -66,12 +66,12 @@ docker compose exec webapp bun db/seed/index.ts
 
 ダッシュボードをファイルに保存（`.env`が設定されていること）:
 ```bash
-./elk/kibana/export-dashboards.sh
+./elk/kibana/scripts/export-dashboards.sh
 ```
 
 ダッシュボードをkibanaに反映:
 ```bash
-./elk/kibana/import-dashboards.sh
+./elk/kibana/scripts/import-dashboards.sh
 ```
 
 （インポート時、既存のダッシュボードがある場合は一時ディレクトリにバックアップしてから上書きされる。）

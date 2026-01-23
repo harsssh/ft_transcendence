@@ -335,12 +335,31 @@ services:
       - KIBANA_PROTOCOL=http
       - KIBANA_HOST=kibana:${KIBANA_PORT:?}
     volumes:
-      - ./elk/kibana/scripts/setup.sh:/setup.sh:ro
-      - ./elk/kibana/scripts/:/scripts:ro
-      - ./elk/kibana/dashboards/:/dashboards:ro
-    command: ["sh", "/setup.sh"]
+      - ./elk/kibana/:/kibana/:ro
+    command: ["sh", "/kibana/setup.sh"]
     networks:
       - internal
+  
+  seed:
+    container_name: seed-prod
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    image: ft_transcendence:seed
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development-dependencies-env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/app
+    command: ["bun", "db/seed/index.ts"]
+    networks:
+      - internal
+    profiles:
+      - seed
 
 networks:
   proxy:

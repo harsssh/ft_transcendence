@@ -27,7 +27,7 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 KIBANA_URL="${KIBANA_PROTOCOL:-https}://${KIBANA_HOST:?KIBANA_HOST is required}"
 AUTH="elastic:${ELASTIC_PASSWORD:?ELASTIC_PASSWORD is required}"
-INPUT_FILE="${1:-${SCRIPT_DIR}/../dashboards/dashboards.ndjson}"
+INPUT_FILE="${1:-${SCRIPT_DIR}/dashboards/dashboards.ndjson}"
 
 echo "=== Kibana Dashboard Import ==="
 echo "Kibana URL: ${KIBANA_URL}"
