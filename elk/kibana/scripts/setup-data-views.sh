@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-KIBANA_URL="http://kibana:5601"
+KIBANA_URL="${KIBANA_PROTOCOL:-https}://${KIBANA_HOST:?KIBANA_HOST is required}"
 AUTH="elastic:${ELASTIC_PASSWORD}"
 
 echo "Waiting for Kibana..."
