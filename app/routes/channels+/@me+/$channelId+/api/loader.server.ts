@@ -82,7 +82,9 @@ export const loader = async ({
             id: m.sender.id,
             name: m.sender.name,
             displayName: m.sender.displayName,
-            avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`,
+            avatarUrl: m.sender.avatarUrl
+              ? `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`
+              : null,
           },
         })),
         partner: {

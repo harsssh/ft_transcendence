@@ -23,7 +23,7 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 KIBANA_URL="https://${KIBANA_HOST:?KIBANA_HOST is required}"
 AUTH="elastic:${ELASTIC_PASSWORD:?ELASTIC_PASSWORD is required}"
-OUTPUT_DIR="${1:-${SCRIPT_DIR}/dashboards}"
+OUTPUT_DIR="${1:-${SCRIPT_DIR}/../dashboards}"
 
 echo "=== Kibana Dashboard Export ==="
 echo "Kibana URL: ${KIBANA_URL}"

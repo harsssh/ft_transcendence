@@ -372,7 +372,6 @@ export function TextChannelView({
               }
 
               const isLatest = index === messagesWithSeparators.length - 1
-              console.log(entry.message)
 
               return (
                 <div
