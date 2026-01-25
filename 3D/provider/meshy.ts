@@ -21,7 +21,7 @@ export class MeshyProvider implements TextTo3DProvider {
 				mode: 'preview', // v2 preview is fast
 				prompt: prompt,
 				art_style: 'realistic', // default
-				should_remesh: true // nicer topo
+				should_remesh: true // Enable remesh to get proper textures (slower but better quality)
 			})
 		})
 
@@ -62,6 +62,7 @@ export class MeshyProvider implements TextTo3DProvider {
 		else if (data.status === 'PENDING') status = 'PENDING'
 
 		// Map Meshy status to our common status
+		console.log('[Meshy] GetTaskStatus Response:', JSON.stringify(data, null, 2))
 		return {
 			status,
 			modelUrl: data.model_urls?.glb,

@@ -1,12 +1,7 @@
-import { Box, Button, Loader, Text, Center } from '@mantine/core'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, useGLTF, Center as ThreeCenter } from '@react-three/drei'
-import { Suspense, useState } from 'react'
+import { Box, Button, Loader, Text } from '@mantine/core'
+import { Suspense, useState, lazy, useEffect } from 'react'
 
-function Model({ url }: { url: string }) {
-	const { scene } = useGLTF(url)
-	return <primitive object={scene} />
-}
+const ThreeViewerCanvas = lazy(() => import('./ThreeViewerCanvas'))
 
 type Props = {
 	status: 'queued' | 'generating' | 'ready' | 'failed'
@@ -15,6 +10,11 @@ type Props = {
 
 export function ThreeViewer({ status, modelUrl }: Props) {
 	const [key, setKey] = useState(0)
+	const [isMounted, setIsMounted] = useState(false)
+
+	useEffect(() => {
+		setIsMounted(true)
+	}, [])
 
 	if (status === 'queued') {
 		return (
@@ -61,17 +61,11 @@ export function ThreeViewer({ status, modelUrl }: Props) {
 				>
 					⚠️ Preview expires in 3 days
 				</Text>
-				<Canvas key={key} camera={{ position: [0, 0, 3], fov: 50 }}>
-					<ambientLight intensity={0.7} />
-					<spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
-					<pointLight position={[-10, -10, -10]} intensity={0.5} />
-					<Suspense fallback={null}>
-						<ThreeCenter>
-							<Model url={modelUrl} />
-						</ThreeCenter>
+				{isMounted && (
+					<Suspense fallback={<Box w="100%" h="100%" bg="#000" />}>
+						<ThreeViewerCanvas key={key} modelUrl={modelUrl} />
 					</Suspense>
-					<OrbitControls makeDefault />
-				</Canvas>
+				)}
 			</Box>
 		)
 	}

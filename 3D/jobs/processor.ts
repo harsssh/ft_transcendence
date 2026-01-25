@@ -39,7 +39,8 @@ export async function resume3DGeneration(
 	messageId: number,
 	assetId: number,
 	prompt: string,
-	broadcastUpdate: BroadcastUpdateFn
+	broadcastUpdate: BroadcastUpdateFn,
+	onComplete?: () => void
 ) {
 	const providerName = process.env.TEXT3D_PROVIDER || 'mock'
 	let apiKey = process.env.MESHY_API_KEY
@@ -76,8 +77,22 @@ export async function resume3DGeneration(
 
 			broadcastUpdate(channelId, messageId, { status: 'generating', modelUrl: null })
 
-			// 3. Polling Loop
+			// 3D Polling Loop
+			let attempts = 0
+			const maxAttempts = 60 // 5s * 60 = 5 minutes
 			const pollInterval = setInterval(async () => {
+				attempts++
+				if (attempts > maxAttempts) {
+					clearInterval(pollInterval)
+					console.error(`[3D-Job] Timeout polling ${taskId}`)
+					await db.update(message3DAssets)
+						.set({ status: 'failed' })
+						.where(eq(message3DAssets.id, assetId))
+					broadcastUpdate(channelId, messageId, { status: 'failed', modelUrl: null })
+					onComplete?.()
+					return
+				}
+
 				try {
 					const statusRes = await provider.getTaskStatus(taskId)
 					console.log(`[3D-Job] Polling ${taskId}: ${statusRes.status} ${statusRes.progress}%`)
@@ -88,12 +103,15 @@ export async function resume3DGeneration(
 							.set({ status: 'ready', modelUrl: statusRes.modelUrl })
 							.where(eq(message3DAssets.id, assetId))
 						broadcastUpdate(channelId, messageId, { status: 'ready', modelUrl: statusRes.modelUrl! })
+						onComplete?.()
 					} else if (statusRes.status === 'FAILED' || statusRes.status === 'EXPIRED') {
 						clearInterval(pollInterval)
 						await db.update(message3DAssets)
 							.set({ status: 'failed' })
 							.where(eq(message3DAssets.id, assetId))
 						broadcastUpdate(channelId, messageId, { status: 'failed', modelUrl: null })
+						onComplete?.()
+						return
 					}
 					// If PENDING or IN_PROGRESS, continue polling
 				} catch (e) {
@@ -107,9 +125,14 @@ export async function resume3DGeneration(
 				.set({ status: 'failed' })
 				.where(eq(message3DAssets.id, assetId))
 			broadcastUpdate(channelId, messageId, { status: 'failed', modelUrl: null })
+			onComplete?.()
 		}
 	} else {
 		// Fallback to Mock
 		runMock(db, channelId, messageId, assetId, broadcastUpdate)
+		// Mock finishes async but we can just release lock immediately or timeout?
+		// Let's assume Mock is fast enough or doesn't need strict lock.
+		// Actually runMock has setTimeout.
+		setTimeout(() => onComplete?.(), 7000)
 	}
 }
