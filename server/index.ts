@@ -6,6 +6,8 @@ import { db, dbContext } from '../app/contexts/db'
 import { initializeStorage } from '../app/contexts/storage'
 import { channels } from './channels'
 import { presence } from './users'
+import { proxy } from './proxy'
+
 
 // Run storage initialization
 await initializeStorage()
@@ -15,6 +17,8 @@ const createApp = (upgradeWebSocket: UpgradeWebSocket) =>
     .get('/api/health', (c) => c.text('OK'))
     .route('/api/channels', channels(upgradeWebSocket))
     .route('/api/presence', presence(upgradeWebSocket))
+    .route('/api/proxy', proxy)
+
 
 const server = await createHonoServer({
   defaultLogger: false,

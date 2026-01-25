@@ -10,6 +10,7 @@ import {
   SendMessageSchema,
 } from '../app/routes/channels+/_text/model/message'
 import { messages, users, message3DAssets } from '../db/schema'
+import { checkRateLimit, acquireJobLock, releaseJobLock } from '../3D/ratelimit'
 
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
@@ -21,15 +22,22 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
       upgradeWebSocket((c) => {
         const channelId = c.req.param('channelId')
         let connectedUserId: number | undefined
+        // Fix: Use a promise to track authentication state
+        let authPromise: Promise<number | undefined>
 
         return {
           async onOpen(_event, ws) {
             // Authenticate user
-            const session = await getSession(
-              new Request(c.req.url, { headers: c.req.raw.headers }),
-            )
+            authPromise = (async () => {
+              const session = await getSession(
+                new Request(c.req.url, { headers: c.req.raw.headers }),
+              )
+              const userId = session.get('userId')
+              connectedUserId = userId
+              return userId
+            })()
 
-            connectedUserId = session.get('userId')
+            const userId = await authPromise
 
             if (!connectedUserId) {
               console.log('WebSocket rejected: not authenticated')
@@ -67,6 +75,12 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
           async onMessage(event, ws) {
             console.log(`Message received: ${event.data}`)
+
+            // Wait for authentication to complete
+            if (authPromise) {
+              await authPromise
+            }
+
             const userId = connectedUserId
 
             try {
@@ -172,6 +186,14 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
                 // 3D Generation Trigger Logic captured here but executed AFTER transaction
                 if (msgContent.content.startsWith('/3D ')) {
+                  const limitResult = await checkRateLimit(userId)
+                  if (!limitResult.allowed) {
+                    ws.send(JSON.stringify({
+                      type: 'error',
+                      error: `Rate limit exceeded. Please wait ${limitResult.remaining} seconds.`
+                    }))
+                    return
+                  }
                   const prompt = msgContent.content.slice(4).trim()
                   if (prompt) {
                     const [asset] = await tx.insert(message3DAssets).values({
@@ -246,15 +268,22 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
       upgradeWebSocket((c) => {
         const channelId = c.req.param('channelId')
         let connectedUserId: number | undefined
+        // Fix: Use a promise to track authentication state
+        let authPromise: Promise<number | undefined>
 
         return {
           async onOpen(_event, ws) {
             // Authenticate user
-            const session = await getSession(
-              new Request(c.req.url, { headers: c.req.raw.headers }),
-            )
+            authPromise = (async () => {
+              const session = await getSession(
+                new Request(c.req.url, { headers: c.req.raw.headers }),
+              )
+              const userId = session.get('userId')
+              connectedUserId = userId
+              return userId
+            })()
 
-            connectedUserId = session.get('userId')
+            const userId = await authPromise
 
             if (!connectedUserId) {
               console.log('WebSocket rejected: not authenticated')
@@ -295,6 +324,12 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
           async onMessage(event, ws) {
             console.log(`Message received: ${event.data}`)
+
+            // Wait for authentication to complete
+            if (authPromise) {
+              await authPromise
+            }
+
             const userId = connectedUserId
 
             try {
@@ -402,6 +437,14 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
                 // 3D Generation Trigger Logic captured here but executed AFTER transaction
                 if (msgContent.content.startsWith('/3D ')) {
+                  const limitResult = await checkRateLimit(userId)
+                  if (!limitResult.allowed) {
+                    ws.send(JSON.stringify({
+                      type: 'error',
+                      error: `Rate limit exceeded. Please wait ${limitResult.remaining} seconds.`
+                    }))
+                    return
+                  }
                   const prompt = msgContent.content.slice(4).trim()
                   if (prompt) {
                     const [asset] = await tx.insert(message3DAssets).values({
@@ -441,7 +484,11 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   }
                 }
 
-                resume3DGeneration(db, channelId, messageId, assetId, prompt, broadcastUpdate).catch(e => console.error(e))
+                resume3DGeneration(db, channelId, messageId, assetId, prompt, broadcastUpdate, () => releaseJobLock(userId))
+                  .catch(e => {
+                    console.error(e)
+                    releaseJobLock(userId)
+                  })
               }
             } catch (error) {
               console.error('Error handling message:', error)

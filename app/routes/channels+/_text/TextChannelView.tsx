@@ -151,6 +151,12 @@ export function TextChannelView({
                 return
               }
 
+              if (parsedData.type === 'error') {
+                console.error('Server error:', parsedData.error)
+                alert(parsedData.error) // Simple alert for now, matching "Make it appear" requirement
+                return
+              }
+
               const {
                 success,
                 data: newMessage,

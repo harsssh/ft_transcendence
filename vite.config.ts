@@ -16,11 +16,12 @@ export default defineConfig((config) => ({
   ],
   ...(config.command === 'build'
     ? {
-        resolve: {
-          alias: {
-            'react-dom/server': 'react-dom/server.node',
-          },
+      resolve: {
+        alias: {
+          'react-dom/server': 'react-dom/server.node',
+          'three': './3D/lib/three-shim.ts',
         },
-      }
+      },
+    }
     : {}),
 }))
