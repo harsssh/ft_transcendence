@@ -6,5 +6,7 @@ declare module 'bun' {
     MINIO_SECRET_KEY: string
     STORAGE_PUBLIC_ENDPOINT?: string
     PRESENCE_DB_URL?: string
+    CI?: unknown
+    E2E_BASE_URL?: string
   }
 }
