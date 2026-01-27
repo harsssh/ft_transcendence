@@ -32,6 +32,7 @@ import {
   useFetcher,
   useLoaderData,
   useOutletContext,
+  useSubmit,
 } from 'react-router'
 import { authMiddleware } from '../../../middlewares/auth'
 import { SignupFormSchema } from '../../_auth+/signup+/model/signupForm'
@@ -62,9 +63,6 @@ export default function GuildRoute() {
   const inviteFetcher = useFetcher<typeof action>()
   const createChannelFetcher = useFetcher<typeof action>()
   const renameChannelFetcher = useFetcher<typeof action>()
-  const deleteServerFetcher = useFetcher<typeof action>()
-  const leaveServerFetcher = useFetcher<typeof action>()
-  const deleteChannelFetcher = useFetcher<typeof action>()
 
   const isOwner = guild.ownerId === loggedInUser.id
   const canManageGuild = hasPermission(
@@ -82,6 +80,7 @@ export default function GuildRoute() {
 
   const { setSecondaryNavbar } = useOutletContext<ChannelsOutletContext>()
 
+  const submit = useSubmit()
   const [
     renameServerOpened,
     { open: openRenameServer, close: closeRenameServer },
@@ -171,10 +170,10 @@ export default function GuildRoute() {
       onConfirm: () => {
         const formData = new FormData()
         formData.append('intent', 'delete-server')
-        deleteServerFetcher.submit(formData, { method: 'post' })
+        submit(formData, { method: 'post' })
       },
     })
-  }, [guild.name, deleteServerFetcher])
+  }, [guild.name, submit])
 
   const handleLeaveServer = useCallback(() => {
     modals.openConfirmModal({
@@ -198,10 +197,10 @@ export default function GuildRoute() {
       onConfirm: () => {
         const formData = new FormData()
         formData.append('intent', 'leave-server')
-        leaveServerFetcher.submit(formData, { method: 'post' })
+        submit(formData, { method: 'post' })
       },
     })
-  }, [guild.name, leaveServerFetcher])
+  }, [guild.name, submit])
 
   const handleDeleteChannel = useCallback(
     (targetChannel: (typeof guild.channels)[number]) => {
@@ -227,11 +226,11 @@ export default function GuildRoute() {
           const formData = new FormData()
           formData.append('intent', 'delete-channel')
           formData.append('channelId', String(targetChannel.id))
-          deleteChannelFetcher.submit(formData, { method: 'post' })
+          submit(formData, { method: 'post' })
         },
       })
     },
-    [deleteChannelFetcher],
+    [submit],
   )
 
   useEffect(() => {
