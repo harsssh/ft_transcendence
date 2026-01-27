@@ -1,4 +1,5 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   ActionIcon,
   Alert,
@@ -26,28 +27,24 @@ import {
 } from '@tabler/icons-react'
 import { useCallback, useEffect, useState } from 'react'
 import {
-  Form,
   NavLink,
   Outlet,
-  useActionData,
+  useFetcher,
   useLoaderData,
   useOutletContext,
-  useSubmit,
 } from 'react-router'
 import { authMiddleware } from '../../../middlewares/auth'
-import type { ChannelsOutletContext } from '../route'
-import type { Route } from './+types/route'
-import { action } from './api/action.server'
-import { loader } from './api/loader.server'
-
-export { loader, action }
-
-import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import { SignupFormSchema } from '../../_auth+/signup+/model/signupForm'
 import { SecondaryNavbar } from '../../_shared/ui/SecondaryNavbar'
 import { hasPermission, Permissions } from '../_shared/permissions'
 import { NewGuildFormSchema } from '../model/newGuildForm'
+import type { ChannelsOutletContext } from '../route'
+import type { Route } from './+types/route'
+import { action } from './api/action.server'
+import { loader } from './api/loader.server'
 import { NewChannelFormSchema } from './model/newChannelForm'
+
+export { loader, action }
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
@@ -60,7 +57,14 @@ export type GuildOutletContext = {
 
 export default function GuildRoute() {
   const { guild, loggedInUser } = useLoaderData<typeof loader>()
-  const actionData = useActionData<typeof action>()
+
+  const renameServerFetcher = useFetcher<typeof action>()
+  const inviteFetcher = useFetcher<typeof action>()
+  const createChannelFetcher = useFetcher<typeof action>()
+  const renameChannelFetcher = useFetcher<typeof action>()
+  const deleteServerFetcher = useFetcher<typeof action>()
+  const leaveServerFetcher = useFetcher<typeof action>()
+  const deleteChannelFetcher = useFetcher<typeof action>()
 
   const isOwner = guild.ownerId === loggedInUser.id
   const canManageGuild = hasPermission(
@@ -77,7 +81,7 @@ export default function GuildRoute() {
   )
 
   const { setSecondaryNavbar } = useOutletContext<ChannelsOutletContext>()
-  const submit = useSubmit()
+
   const [
     renameServerOpened,
     { open: openRenameServer, close: closeRenameServer },
@@ -100,10 +104,7 @@ export default function GuildRoute() {
   const [renameServerForm, renameServerFields] = useForm({
     id: 'rename-server',
     defaultValue: { name: guild.name },
-    lastResult:
-      actionData?.initialValue?.['intent'] === 'rename-server'
-        ? actionData
-        : undefined,
+    lastResult: renameServerFetcher.data,
     constraint: getZodConstraint(NewGuildFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -115,10 +116,7 @@ export default function GuildRoute() {
   const [inviteForm, inviteFields] = useForm({
     id: 'invite-friend',
     defaultValue: { name: '' },
-    lastResult:
-      actionData?.initialValue?.['intent'] === 'invite-friend'
-        ? actionData
-        : undefined,
+    lastResult: inviteFetcher.data,
     constraint: getZodConstraint(InviteFriendSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -130,10 +128,7 @@ export default function GuildRoute() {
   const [createChannelForm, createChannelFields] = useForm({
     id: 'create-channel',
     defaultValue: { name: '' },
-    lastResult:
-      actionData?.initialValue?.['intent'] === 'create-channel'
-        ? actionData
-        : undefined,
+    lastResult: createChannelFetcher.data,
     constraint: getZodConstraint(NewChannelFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -145,10 +140,7 @@ export default function GuildRoute() {
   const [renameChannelForm, renameChannelFields] = useForm({
     id: 'rename-channel',
     defaultValue: { name: '' },
-    lastResult:
-      actionData?.initialValue?.['intent'] === 'rename-channel'
-        ? actionData
-        : undefined,
+    lastResult: renameChannelFetcher.data,
     constraint: getZodConstraint(NewChannelFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -179,10 +171,10 @@ export default function GuildRoute() {
       onConfirm: () => {
         const formData = new FormData()
         formData.append('intent', 'delete-server')
-        submit(formData, { method: 'post' })
+        deleteServerFetcher.submit(formData, { method: 'post' })
       },
     })
-  }, [guild.name, submit])
+  }, [guild.name, deleteServerFetcher])
 
   const handleLeaveServer = useCallback(() => {
     modals.openConfirmModal({
@@ -206,10 +198,10 @@ export default function GuildRoute() {
       onConfirm: () => {
         const formData = new FormData()
         formData.append('intent', 'leave-server')
-        submit(formData, { method: 'post' })
+        leaveServerFetcher.submit(formData, { method: 'post' })
       },
     })
-  }, [guild.name, submit])
+  }, [guild.name, leaveServerFetcher])
 
   const handleDeleteChannel = useCallback(
     (targetChannel: (typeof guild.channels)[number]) => {
@@ -235,26 +227,55 @@ export default function GuildRoute() {
           const formData = new FormData()
           formData.append('intent', 'delete-channel')
           formData.append('channelId', String(targetChannel.id))
-          submit(formData, { method: 'post' })
+          deleteChannelFetcher.submit(formData, { method: 'post' })
         },
       })
     },
-    [submit],
+    [deleteChannelFetcher],
   )
 
   useEffect(() => {
-    if (actionData?.status === 'success') {
+    if (
+      renameServerFetcher.state === 'idle' &&
+      renameServerFetcher.data?.status === 'success'
+    ) {
       closeRenameServer()
+    }
+  }, [renameServerFetcher.state, renameServerFetcher.data, closeRenameServer])
+
+  useEffect(() => {
+    if (
+      inviteFetcher.state === 'idle' &&
+      inviteFetcher.data?.status === 'success'
+    ) {
       closeInvite()
+    }
+  }, [inviteFetcher.state, inviteFetcher.data, closeInvite])
+
+  useEffect(() => {
+    if (
+      createChannelFetcher.state === 'idle' &&
+      createChannelFetcher.data?.status === 'success'
+    ) {
       closeCreateChannel()
+    }
+  }, [
+    createChannelFetcher.state,
+    createChannelFetcher.data,
+    closeCreateChannel,
+  ])
+
+  useEffect(() => {
+    if (
+      renameChannelFetcher.state === 'idle' &&
+      renameChannelFetcher.data?.status === 'success'
+    ) {
       closeRenameChannel()
       setTargetChannel(null)
     }
   }, [
-    actionData,
-    closeRenameServer,
-    closeInvite,
-    closeCreateChannel,
+    renameChannelFetcher.state,
+    renameChannelFetcher.data,
     closeRenameChannel,
   ])
 
@@ -426,7 +447,11 @@ export default function GuildRoute() {
         title="Rename Server"
         centered
       >
-        <Form method="post" {...getFormProps(renameServerForm)}>
+        <renameServerFetcher.Form
+          method="post"
+          {...getFormProps(renameServerForm)}
+          key={guild?.name}
+        >
           <Stack gap="sm">
             {renameServerForm.errors && (
               <Alert variant="light" color="red">
@@ -438,6 +463,7 @@ export default function GuildRoute() {
             </Text>
             <TextInput
               {...getInputProps(renameServerFields.name, { type: 'text' })}
+              defaultValue={guild?.name ?? ''}
               label="Server Name"
               placeholder="Enter server name"
               name="name"
@@ -451,9 +477,14 @@ export default function GuildRoute() {
             <Button variant="default" onClick={closeRenameServer}>
               Cancel
             </Button>
-            <Button type="submit">Save</Button>
+            <Button
+              type="submit"
+              loading={renameServerFetcher.state !== 'idle'}
+            >
+              Save
+            </Button>
           </Group>
-        </Form>
+        </renameServerFetcher.Form>
       </Modal>
 
       <Modal
@@ -462,7 +493,7 @@ export default function GuildRoute() {
         title="Invite Friend"
         centered
       >
-        <Form method="post" {...getFormProps(inviteForm)}>
+        <inviteFetcher.Form method="post" {...getFormProps(inviteForm)}>
           <Stack gap="sm">
             {inviteForm.errors && (
               <Alert variant="light" color="red">
@@ -487,9 +518,11 @@ export default function GuildRoute() {
             <Button variant="default" onClick={closeInvite}>
               Cancel
             </Button>
-            <Button type="submit">Invite</Button>
+            <Button type="submit" loading={inviteFetcher.state !== 'idle'}>
+              Invite
+            </Button>
           </Group>
-        </Form>
+        </inviteFetcher.Form>
       </Modal>
 
       <Modal
@@ -498,7 +531,10 @@ export default function GuildRoute() {
         title="Create Channel"
         centered
       >
-        <Form method="post" {...getFormProps(createChannelForm)}>
+        <createChannelFetcher.Form
+          method="post"
+          {...getFormProps(createChannelForm)}
+        >
           <Stack gap="sm">
             {createChannelForm.errors && (
               <Alert variant="light" color="red">
@@ -520,9 +556,14 @@ export default function GuildRoute() {
             <Button variant="default" onClick={closeCreateChannel}>
               Cancel
             </Button>
-            <Button type="submit">createChannel</Button>
+            <Button
+              type="submit"
+              loading={createChannelFetcher.state !== 'idle'}
+            >
+              createChannel
+            </Button>
           </Group>
-        </Form>
+        </createChannelFetcher.Form>
       </Modal>
 
       <Modal
@@ -531,7 +572,7 @@ export default function GuildRoute() {
         title="Rename Channel"
         centered
       >
-        <Form
+        <renameChannelFetcher.Form
           method="post"
           {...getFormProps(renameChannelForm)}
           key={targetChannel?.id}
@@ -564,9 +605,14 @@ export default function GuildRoute() {
             <Button variant="default" onClick={closeRenameChannel}>
               Cancel
             </Button>
-            <Button type="submit">Save</Button>
+            <Button
+              type="submit"
+              loading={renameChannelFetcher.state !== 'idle'}
+            >
+              Save
+            </Button>
           </Group>
-        </Form>
+        </renameChannelFetcher.Form>
       </Modal>
     </>
   )
