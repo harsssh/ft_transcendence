@@ -559,7 +559,7 @@ export default function GuildRoute() {
               type="submit"
               loading={createChannelFetcher.state !== 'idle'}
             >
-              createChannel
+              Create
             </Button>
           </Group>
         </createChannelFetcher.Form>
