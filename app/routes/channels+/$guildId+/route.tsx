@@ -105,7 +105,14 @@ export default function GuildRoute() {
   const [renameServerForm, renameServerFields] = useForm({
     id: 'rename-server',
     defaultValue: { name: guild.name },
+<<<<<<< HEAD
     lastResult: renameServerFetcher.data,
+=======
+    lastResult:
+      actionData?.initialValue?.intent === 'rename-server'
+        ? actionData
+        : undefined,
+>>>>>>> a2bc152 (lintinggggggggg)
     constraint: getZodConstraint(NewGuildFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -117,7 +124,14 @@ export default function GuildRoute() {
   const [inviteForm, inviteFields] = useForm({
     id: 'invite-friend',
     defaultValue: { name: '' },
+<<<<<<< HEAD
     lastResult: inviteFetcher.data,
+=======
+    lastResult:
+      actionData?.initialValue?.intent === 'invite-friend'
+        ? actionData
+        : undefined,
+>>>>>>> a2bc152 (lintinggggggggg)
     constraint: getZodConstraint(InviteFriendSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -129,7 +143,14 @@ export default function GuildRoute() {
   const [createChannelForm, createChannelFields] = useForm({
     id: 'create-channel',
     defaultValue: { name: '' },
+<<<<<<< HEAD
     lastResult: createChannelFetcher.data,
+=======
+    lastResult:
+      actionData?.initialValue?.intent === 'create-channel'
+        ? actionData
+        : undefined,
+>>>>>>> a2bc152 (lintinggggggggg)
     constraint: getZodConstraint(NewChannelFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
@@ -141,7 +162,11 @@ export default function GuildRoute() {
   const [renameChannelForm, renameChannelFields] = useForm({
     id: 'rename-channel',
     defaultValue: { name: '' },
+<<<<<<< HEAD
     lastResult: renameChannelFetcher.data,
+=======
+    lastResult: renameChannelFetcher.data,
+>>>>>>> a2bc152 (lintinggggggggg)
     constraint: getZodConstraint(NewChannelFormSchema),
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
