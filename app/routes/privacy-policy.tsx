@@ -79,7 +79,8 @@ export default function PrivacyPolicy() {
       <Space h="lg" />
       <Title order={2}>6. Contact Information</Title>
       <Text>
-        For inquiries regarding this Policy, please contact: hirosuzu (Discord ID: 746779966657659031).
+        For inquiries regarding this Policy, please contact: hirosuzu (Discord
+        ID: 746779966657659031).
       </Text>
     </Container>
   )
