@@ -101,7 +101,7 @@ export default function GuildRoute() {
     id: 'rename-server',
     defaultValue: { name: guild.name },
     lastResult:
-      actionData?.initialValue?.['intent'] === 'rename-server'
+      actionData?.initialValue?.intent === 'rename-server'
         ? actionData
         : undefined,
     constraint: getZodConstraint(NewGuildFormSchema),
@@ -116,7 +116,7 @@ export default function GuildRoute() {
     id: 'invite-friend',
     defaultValue: { name: '' },
     lastResult:
-      actionData?.initialValue?.['intent'] === 'invite-friend'
+      actionData?.initialValue?.intent === 'invite-friend'
         ? actionData
         : undefined,
     constraint: getZodConstraint(InviteFriendSchema),
@@ -131,7 +131,7 @@ export default function GuildRoute() {
     id: 'create-channel',
     defaultValue: { name: '' },
     lastResult:
-      actionData?.initialValue?.['intent'] === 'create-channel'
+      actionData?.initialValue?.intent === 'create-channel'
         ? actionData
         : undefined,
     constraint: getZodConstraint(NewChannelFormSchema),
@@ -146,7 +146,7 @@ export default function GuildRoute() {
     id: 'rename-channel',
     defaultValue: { name: '' },
     lastResult:
-      actionData?.initialValue?.['intent'] === 'rename-channel'
+      actionData?.initialValue?.intent === 'rename-channel'
         ? actionData
         : undefined,
     constraint: getZodConstraint(NewChannelFormSchema),

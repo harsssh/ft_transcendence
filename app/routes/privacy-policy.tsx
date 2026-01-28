@@ -1,4 +1,4 @@
-import { Container, Title, Text, Space } from '@mantine/core';
+import { Container, Space, Text, Title } from '@mantine/core'
 
 export default function PrivacyPolicy() {
   return (
@@ -15,9 +15,7 @@ export default function PrivacyPolicy() {
       <Text>The Service may collect the following information:</Text>
       <ul>
         <li>
-          <Text>
-            Account Information: Username, email address.
-          </Text>
+          <Text>Account Information: Username, email address.</Text>
         </li>
         <li>
           <Text>
@@ -85,5 +83,5 @@ export default function PrivacyPolicy() {
         (Discord ID: 746779966657659031)]
       </Text>
     </Container>
-  );
+  )
 }
