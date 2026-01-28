@@ -133,7 +133,7 @@ export function TextChannelView({
             try {
               const parsedData = JSON.parse(event.data)
 
-              // Handle 3D Asset Updates
+              // [3D Refine] Handle 3D Asset Updates (including refine/revert status)
               if (parsedData.type === 'message_update' && parsedData.data) {
                 const update = parsedData.data
                 setMessages((prev) => prev.map((m) => {
@@ -141,8 +141,11 @@ export function TextChannelView({
                     return {
                       ...m,
                       asset3D: {
+                        ...m.asset3D,
                         status: update.status,
-                        modelUrl: update.modelUrl
+                        modelUrl: update.modelUrl,
+                        // Include other fields like precedingTasks
+                        ...update
                       }
                     }
                   }
@@ -404,6 +407,7 @@ export function TextChannelView({
                     : {})}
                 >
                   <Message
+                    id={entry.message.id}
                     senderId={entry.message.sender.id}
                     senderName={entry.message.sender.name}
                     senderDisplayName={entry.message.sender.displayName}

@@ -1,13 +1,15 @@
 import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
+import { useParams } from 'react-router'
 import { useContext, useSyncExternalStore } from 'react'
 import { LoggedInUserContext } from '../../../contexts/user'
 import { UserAvatarPopover } from './UserAvatarPopover'
 
-import { ThreeViewer } from './ThreeViewer'
+import { ThreeViewer } from '../../../../3D/ui/ThreeViewer'
 
 type Props = {
+  id: number
   createdAt: Date
   senderId: number
   senderName: string
@@ -18,10 +20,13 @@ type Props = {
   asset3D?: {
     status: string
     modelUrl: string | null
+    // [3D Refine] Added mode property
+    mode?: string
   } | undefined | null
 }
 
 export function Message({
+  id,
   createdAt,
   senderId,
   senderName,
@@ -39,6 +44,8 @@ export function Message({
   )
   const { ref: hoverRef, hovered } = useHover()
   const loggedInUser = useContext(LoggedInUserContext)
+  const params = useParams()
+  const channelId = params['channelId'] ? parseInt(params['channelId']) : undefined
 
   return (
     <Box
@@ -88,7 +95,13 @@ export function Message({
         </Group>
         {asset3D && (
           <Box mt="sm" style={{ width: 300, height: 300, border: '1px solid #333', borderRadius: 8, overflow: 'hidden' }}>
-            <ThreeViewer modelUrl={asset3D.modelUrl} status={asset3D.status as any} />
+            <ThreeViewer
+              modelUrl={asset3D.modelUrl}
+              status={asset3D.status as any}
+              mode={asset3D.mode}
+              channelId={channelId}
+              messageId={id} // Assuming 'id' is available in scope (props)
+            />
           </Box>
         )}
       </Box>

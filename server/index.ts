@@ -7,10 +7,13 @@ import { initializeStorage } from '../app/contexts/storage'
 import { channels } from './channels'
 import { presence } from './users'
 import { proxy } from './proxy'
-
+// [3D Refine] Import recovery functionality
+import { recover3DJobs } from '../3D/jobs/recovery'
 
 // Run storage initialization
 await initializeStorage()
+// [3D Refine] Run 3D job recovery on startup
+recover3DJobs().catch(e => console.error(e))
 
 const createApp = (upgradeWebSocket: UpgradeWebSocket) =>
   new Hono()

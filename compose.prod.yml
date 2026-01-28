@@ -41,6 +41,8 @@ services:
       - STORAGE_PUBLIC_ENDPOINT=https://${STORAGE_HOST:?}
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:?}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:?}
+      - TEXT3D_PROVIDER=${TEXT3D_PROVIDER}
+      - MESHY_API_KEY=${MESHY_API_KEY}
     networks:
       - proxy
       - internal

@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import type { UpgradeWebSocket, WSContext } from 'hono/ws'
 import { db } from '../app/contexts/db'
 import { resume3DGeneration } from '../3D/jobs/processor'
+import { processRefineRequest } from '../3D/api/refine'
 import { STORAGE_PUBLIC_ENDPOINT } from '../app/contexts/storage'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import {
@@ -518,3 +519,132 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         }
       }),
     )
+    // [3D Refine] Added Refine endpoint
+    .post('/:channelId/messages/:messageId/asset/refine', async (c) => {
+      const channelId = parseInt(c.req.param('channelId'))
+      const messageId = parseInt(c.req.param('messageId'))
+      const apiKey = process.env['MESHY_API_KEY']
+
+      if (!apiKey) return c.json({ error: 'API Key not configured' }, 500)
+
+      try {
+        // Reuse broadcast logic (re-implemented here for simplicity since we are in a closure)
+        const broadcastUpdate = (cId: number, mId: number, update: { status: string, modelUrl: string | null }) => {
+          const cons = channelConnections.get(String(cId))
+          if (cons) {
+            const updateMsg = JSON.stringify({
+              type: 'message_update',
+              data: {
+                id: mId,
+                ...update // Flattened to match frontend expectation
+              }
+            })
+            for (const client of cons) {
+              client.send(updateMsg)
+            }
+          }
+        }
+
+        const result = await processRefineRequest(messageId, channelId, apiKey, broadcastUpdate)
+        return c.json(result)
+
+      } catch (e: any) {
+        console.error('Refine error:', e)
+        return c.json({ error: e.message || 'Refine failed' }, 500)
+      }
+    })
+    // [3D Refine] Added Revert endpoint for failure recovery
+    .post('/:channelId/messages/:messageId/asset/revert', async (c) => {
+      const channelId = parseInt(c.req.param('channelId'))
+      const messageId = parseInt(c.req.param('messageId'))
+
+      try {
+        // 1. Get Asset
+        const [asset] = await db.select()
+          .from(message3DAssets)
+          .where(eq(message3DAssets.messageId, messageId))
+          .limit(1)
+
+        if (!asset) return c.json({ error: 'Asset not found' }, 404)
+
+        // 2. Reset Status to 'ready' (keep URL)
+        await db.update(message3DAssets)
+          .set({ status: 'ready', updatedAt: new Date() })
+          .where(eq(message3DAssets.id, asset.id))
+
+        // 3. Broadcast
+        const broadcastUpdate = (cId: number, mId: number, update: { status: string, modelUrl: string | null }) => {
+          const cons = channelConnections.get(String(cId))
+          if (cons) {
+            const updateMsg = JSON.stringify({
+              type: 'message_update',
+              data: {
+                id: mId,
+                ...update
+              }
+            })
+            for (const client of cons) {
+              client.send(updateMsg)
+            }
+          }
+        }
+
+        broadcastUpdate(channelId, messageId, { status: 'ready', modelUrl: asset.modelUrl })
+        return c.json({ success: true, status: 'ready' })
+
+      } catch (e: any) {
+        console.error('Revert error:', e)
+        return c.json({ error: e.message || 'Revert failed' }, 500)
+      }
+    })
+    // [3D Refine] Added Resume endpoint for timeout recovery
+    .post('/:channelId/messages/:messageId/asset/resume', async (c) => {
+      const channelId = parseInt(c.req.param('channelId'))
+      const messageId = parseInt(c.req.param('messageId'))
+
+      try {
+        // 1. Get Asset
+        const [asset] = await db.select()
+          .from(message3DAssets)
+          .where(eq(message3DAssets.messageId, messageId))
+          .limit(1)
+
+        if (!asset) return c.json({ error: 'Asset not found' }, 404)
+
+        // 2. Resume Generation (Polling)
+        // Reuse broadcast logic
+        const broadcastUpdate = (cId: number, mId: number, update: { status: string, modelUrl: string | null }) => {
+          const cons = channelConnections.get(String(cId))
+          if (cons) {
+            const updateMsg = JSON.stringify({
+              type: 'message_update',
+              data: {
+                id: mId,
+                ...update
+              }
+            })
+            for (const client of cons) {
+              client.send(updateMsg)
+            }
+          }
+        }
+
+        // Set status to generating immediately to show UI feedback
+        // But only if it's not already ready/refined?
+        // Actually typical resume usage is from 'timeout' or 'generating' state.
+        await db.update(message3DAssets)
+          .set({ status: 'generating', updatedAt: new Date() })
+          .where(eq(message3DAssets.id, asset.id))
+        broadcastUpdate(channelId, messageId, { status: 'generating', modelUrl: asset.modelUrl })
+
+        // 3. Call Processor
+        resume3DGeneration(db, channelId, messageId, asset.id, asset.prompt, broadcastUpdate, () => { })
+          .catch(e => console.error('[Resume] Polling error:', e))
+
+        return c.json({ success: true, status: 'generating' })
+
+      } catch (e: any) {
+        console.error('Resume error:', e)
+        return c.json({ error: e.message || 'Resume failed' }, 500)
+      }
+    })

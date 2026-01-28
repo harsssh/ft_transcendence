@@ -13,6 +13,8 @@ export const MessageSchema = z.object({
   asset3D: z.object({
     status: z.string(),
     modelUrl: z.string().nullable(),
+    // [3D Refine] Added mode property to schema
+    mode: z.string().optional(),
   }).nullable().optional(),
 })
 
