@@ -1,4 +1,9 @@
-import { getFormProps, getInputProps, useForm } from '@conform-to/react'
+import {
+  getFormProps,
+  getInputProps,
+  type SubmissionResult,
+  useForm,
+} from '@conform-to/react'
 import {
   ActionIcon,
   Alert,
@@ -53,6 +58,18 @@ export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
 const InviteFriendSchema = SignupFormSchema.pick({ name: true })
 
+type ActionIntents =
+  | 'rename-server'
+  | 'invite-friend'
+  | 'create-channel'
+  | 'rename-channel'
+
+type ConformActionData = SubmissionResult<string[]> & {
+  initialValue?: {
+    intent: ActionIntents
+  } & Record<string, unknown>
+}
+
 export type GuildOutletContext = {
   guild: Awaited<ReturnType<typeof loader>>['guild']
   loggedInUser: Awaited<ReturnType<typeof loader>>['loggedInUser']
@@ -60,7 +77,7 @@ export type GuildOutletContext = {
 
 export default function GuildRoute() {
   const { guild, loggedInUser } = useLoaderData<typeof loader>()
-  const actionData = useActionData<typeof action>()
+  const actionData = useActionData<ConformActionData>()
 
   const isOwner = guild.ownerId === loggedInUser.id
   const canManageGuild = hasPermission(
