@@ -31,11 +31,11 @@ import {
 } from '../../contexts/onlineStatus'
 import { LoggedInUserContext } from '../../contexts/user'
 import { loggedInUserContext } from '../../contexts/user.server'
-import { authMiddleware } from '../../middlewares/auth'
 import { createWebSocket } from '../_shared/lib/websocket'
 import { Scaffold } from '../_shared/ui/Scaffold'
 import type { Route } from './+types/route'
 import { NewGuildFormSchema } from './model/newGuildForm'
+import { authMiddleware } from '../../middlewares/auth'
 
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 

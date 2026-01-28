@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import 'dotenv/config'
 
 /**
  * Read environment variables from file.
@@ -30,11 +31,14 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    // baseURL: 'http://localhost:3000',
-
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    baseURL:
+      process.env.E2E_BASE_URL ??
+      `https://${
+        // biome-ignore lint/complexity/useLiteralKeys: https://github.com/biomejs/biome/issues/463
+        process.env['WEBAPP_HOST'] ?? process.env.HOST ?? 'localhost'
+      }`,
   },
 
   /* Configure projects for major browsers */
@@ -43,26 +47,24 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], ignoreHTTPSErrors: true },
     },
-
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'], ignoreHTTPSErrors: true },
     },
-
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'], ignoreHTTPSErrors: true },
     },
 
     /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'], ignoreHTTPSErrors: true },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'], ignoreHTTPSErrors: true },
+    },
 
     /* Test against branded browsers. */
     // {
