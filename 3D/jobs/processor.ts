@@ -6,7 +6,7 @@ import type { TextTo3DProvider } from '../provider/types'
 type BroadcastUpdateFn = (
 	channelId: number,
 	messageId: number,
-	asset: { status: string; modelUrl: string | null }
+	asset: { status: string; modelUrl: string | null; precedingTasks?: number; mode?: string }
 ) => void
 
 // Fallback Mock Logic
@@ -40,7 +40,8 @@ export async function resume3DGeneration(
 	assetId: number,
 	prompt: string,
 	broadcastUpdate: BroadcastUpdateFn,
-	onComplete?: () => void
+	onComplete?: () => void,
+	successStatus: string = 'ready'
 ) {
 	const providerName = process.env.TEXT3D_PROVIDER || 'mock'
 	let apiKey = process.env.MESHY_API_KEY
@@ -60,79 +61,158 @@ export async function resume3DGeneration(
 
 	console.log(`[3D-Job] Resuming ${providerName} job for asset ${assetId} (message ${messageId}): "${prompt}"`)
 
-	// 1. (Skipped) Initial DB Insert - assumed done by caller
+	// 1. Check existing state to support Refine/Resume
+	// This prevents overwriting a Refine task (already 'generating' with ID) with a new Preview task
+	const [currentAsset] = await db.select()
+		.from(message3DAssets)
+		.where(eq(message3DAssets.id, assetId))
+		.limit(1)
 
-	broadcastUpdate(channelId, messageId, { status: 'queued', modelUrl: null })
+	let taskId = currentAsset?.externalId
+
+	broadcastUpdate(channelId, messageId, { status: currentAsset?.status || 'queued', modelUrl: currentAsset?.modelUrl || null })
+
+	// Determine failure behavior
+	// If this was a Refine task (successStatus === 'refined') and we have a previous model,
+	// we keep 'failed' status but preserve the URL so the UI can show the button.
+	const failureStatus = 'failed'
+	const failureUrl = (successStatus === 'refined' && currentAsset?.modelUrl) ? currentAsset.modelUrl : null
 
 	// 2. Select Provider
 	if (providerName === 'meshy' && apiKey) {
 		const provider = new MeshyProvider(apiKey)
-		try {
-			const taskId = await provider.createTask(prompt)
+		const MAX_RETRIES = 3
+		let retryCount = 0
+		let success = false
 
-			// Update External ID
-			await db.update(message3DAssets)
-				.set({ externalId: taskId, status: 'generating' })
-				.where(eq(message3DAssets.id, assetId))
+		while (retryCount < MAX_RETRIES && !success) {
+			try {
+				// Only create a new task if we don't have a valid running one
+				if (!taskId || currentAsset?.status === 'queued') {
+					taskId = await provider.createTask(prompt)
 
-			broadcastUpdate(channelId, messageId, { status: 'generating', modelUrl: null })
-
-			// 3D Polling Loop
-			let attempts = 0
-			const maxAttempts = 60 // 5s * 60 = 5 minutes
-			const pollInterval = setInterval(async () => {
-				attempts++
-				if (attempts > maxAttempts) {
-					clearInterval(pollInterval)
-					console.error(`[3D-Job] Timeout polling ${taskId}`)
+					// Update External ID
 					await db.update(message3DAssets)
-						.set({ status: 'failed' })
+						.set({ externalId: taskId, status: 'generating' })
 						.where(eq(message3DAssets.id, assetId))
-					broadcastUpdate(channelId, messageId, { status: 'failed', modelUrl: null })
+
+					// If Refine, keep showing the old model while generating
+					const initialUrl = (successStatus === 'refined' && currentAsset?.modelUrl) ? currentAsset.modelUrl : null
+					broadcastUpdate(channelId, messageId, { status: 'generating', modelUrl: initialUrl })
+				} else {
+					console.log(`[3D-Job] Continuing existing task ${taskId}`)
+				}
+
+				if (!taskId) throw new Error('Task ID missing')
+
+				// 3D Polling Loop
+				let attempts = 0
+				const maxAttempts = 120 // 5s * 120 = 10 minutes extended
+
+				await new Promise<void>((resolve) => {
+					const pollInterval = setInterval(async () => {
+						attempts++
+						if (attempts > maxAttempts) {
+							clearInterval(pollInterval)
+							console.error(`[3D-Job] Timeout polling ${taskId}`)
+
+							// Timeout behavior:
+							// If we have a modelUrl (Refine), we keep it (so user can see old model or try again).
+							// Status becomes 'timeout' to indicate we stopped polling.
+							const timeoutStatus = 'timeout'
+							const timeoutUrl = currentAsset?.modelUrl || null
+
+							await db.update(message3DAssets)
+								.set({ status: timeoutStatus, modelUrl: timeoutUrl })
+								.where(eq(message3DAssets.id, assetId))
+							broadcastUpdate(channelId, messageId, { status: timeoutStatus, modelUrl: timeoutUrl })
+							onComplete?.()
+							resolve()
+							return
+						}
+
+						try {
+							const statusRes = await provider.getTaskStatus(taskId)
+							console.log(`[3D-Job] Polling ${taskId}: ${statusRes.status} ${statusRes.progress}%`)
+
+							// Broadcast status including queue position if pending
+							if (statusRes.status === 'PENDING' && statusRes.preceding_tasks !== undefined) {
+								broadcastUpdate(channelId, messageId, {
+									status: 'queued',
+									modelUrl: null,
+									precedingTasks: statusRes.preceding_tasks
+								})
+							}
+
+							if (statusRes.status === 'SUCCEEDED') {
+								clearInterval(pollInterval)
+								const finalUrl = statusRes.model_urls?.glb || statusRes.model_urls?.gameready_glb || statusRes.modelUrl
+
+								await db.update(message3DAssets)
+									.set({ status: successStatus, modelUrl: finalUrl })
+									.where(eq(message3DAssets.id, assetId))
+
+								broadcastUpdate(channelId, messageId, { status: successStatus, modelUrl: finalUrl! })
+								success = true
+								onComplete?.()
+								resolve()
+							} else if (statusRes.status === 'FAILED' || statusRes.status === 'EXPIRED') {
+								// Check for Server Busy to retry
+								if (statusRes.task_error?.message?.toLowerCase().includes('busy')) {
+									console.warn(`[3D-Job] Server busy detected for ${taskId}. Will retry...`)
+									clearInterval(pollInterval)
+									resolve() // Break polling loop, let outer loop retry
+									return
+								}
+
+								clearInterval(pollInterval)
+								await db.update(message3DAssets)
+									.set({ status: failureStatus, modelUrl: failureUrl }) // Failed but keep URL
+									.where(eq(message3DAssets.id, assetId))
+								broadcastUpdate(channelId, messageId, { status: failureStatus, modelUrl: failureUrl })
+								success = true // Stop outer loop
+								onComplete?.()
+								resolve()
+							}
+						} catch (e) {
+							console.error('[3D-Job] Polling Error:', e)
+						}
+					}, 5000)
+				})
+
+				if (success) return
+
+			} catch (e: any) {
+				console.error(`[3D-Job] Attempt ${retryCount + 1} Error:`, e)
+				if (e.message?.toLowerCase().includes('busy') || e.status === 429) {
+					// Continue to retry
+				} else {
+					// Hard fail logic
+					await db.update(message3DAssets).set({ status: failureStatus, modelUrl: failureUrl }).where(eq(message3DAssets.id, assetId))
+					broadcastUpdate(channelId, messageId, { status: failureStatus, modelUrl: failureUrl })
 					onComplete?.()
 					return
 				}
+			}
 
-				try {
-					const statusRes = await provider.getTaskStatus(taskId)
-					console.log(`[3D-Job] Polling ${taskId}: ${statusRes.status} ${statusRes.progress}%`)
+			retryCount++
+			if (retryCount < MAX_RETRIES) {
+				const waitTime = retryCount * 5000
+				console.log(`[3D-Job] Waiting ${waitTime}ms before retry...`)
+				await new Promise(r => setTimeout(r, waitTime))
+			}
+		}
 
-					if (statusRes.status === 'SUCCEEDED') {
-						clearInterval(pollInterval)
-						await db.update(message3DAssets)
-							.set({ status: 'ready', modelUrl: statusRes.modelUrl })
-							.where(eq(message3DAssets.id, assetId))
-						broadcastUpdate(channelId, messageId, { status: 'ready', modelUrl: statusRes.modelUrl! })
-						onComplete?.()
-					} else if (statusRes.status === 'FAILED' || statusRes.status === 'EXPIRED') {
-						clearInterval(pollInterval)
-						await db.update(message3DAssets)
-							.set({ status: 'failed' })
-							.where(eq(message3DAssets.id, assetId))
-						broadcastUpdate(channelId, messageId, { status: 'failed', modelUrl: null })
-						onComplete?.()
-						return
-					}
-					// If PENDING or IN_PROGRESS, continue polling
-				} catch (e) {
-					console.error('[3D-Job] Polling Error:', e)
-				}
-			}, 5000) // Poll every 5s
-
-		} catch (e) {
-			console.error('[3D-Job] Creation Error:', e)
-			await db.update(message3DAssets)
-				.set({ status: 'failed' })
-				.where(eq(message3DAssets.id, assetId))
-			broadcastUpdate(channelId, messageId, { status: 'failed', modelUrl: null })
+		// Final failure after retries
+		if (!success) {
+			await db.update(message3DAssets).set({ status: failureStatus, modelUrl: failureUrl }).where(eq(message3DAssets.id, assetId))
+			broadcastUpdate(channelId, messageId, { status: failureStatus, modelUrl: failureUrl })
 			onComplete?.()
 		}
+
 	} else {
 		// Fallback to Mock
 		runMock(db, channelId, messageId, assetId, broadcastUpdate)
-		// Mock finishes async but we can just release lock immediately or timeout?
-		// Let's assume Mock is fast enough or doesn't need strict lock.
-		// Actually runMock has setTimeout.
 		setTimeout(() => onComplete?.(), 7000)
 	}
 }

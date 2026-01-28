@@ -12,8 +12,29 @@ function Model({ url }: { url: string }) {
 
 	useEffect(() => {
 		if (!group.current) return
-		// Auto-centering and scaling logic is handled better by @react-three/drei <Center> or <Stage>,
-		// but preserving manual logic for now as requested to fix specific issues.
+
+		console.log('[ThreeViewer] Scene loaded:', scene)
+		scene.traverse((child) => {
+			if ((child as THREE.Mesh).isMesh) {
+				const mesh = child as THREE.Mesh
+				mesh.castShadow = true
+				mesh.receiveShadow = true
+
+				console.log('[ThreeViewer] Mesh found:', mesh.name)
+				const material = mesh.material as THREE.MeshStandardMaterial
+				if (material) {
+					console.log('[ThreeViewer] Material:', material.name, {
+						type: material.type,
+						map: material.map ? 'Present' : 'Missing',
+						emissiveMap: material.emissiveMap ? 'Present' : 'Missing',
+						color: material.color?.getHexString(),
+						metalness: material.metalness,
+						roughness: material.roughness,
+						vertexColors: material.vertexColors
+					})
+				}
+			}
+		})
 
 		const box = new THREE.Box3().setFromObject(scene)
 		const size = box.getSize(new THREE.Vector3())
@@ -33,36 +54,40 @@ function Model({ url }: { url: string }) {
 
 type Props = {
 	modelUrl: string
+	channelId?: number | undefined
+	messageId?: number | undefined
 }
 
-export default function ThreeViewerCanvas({ modelUrl }: Props) {
+export default function ThreeViewerCanvas({ modelUrl, channelId, messageId }: Props) {
 	// Use proxy to avoid CORS
 	const proxiedUrl = `/api/proxy/model?url=${encodeURIComponent(modelUrl)}`
 	const { ambientLight, directionalLight, environment } = defaultLightingConfig
 
 	return (
-		<Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
-			<ambientLight intensity={ambientLight.intensity} color={ambientLight.color} />
-			<directionalLight
-				position={directionalLight.position}
-				intensity={directionalLight.intensity}
-				color={directionalLight.color}
-				castShadow={directionalLight.castShadow}
-			/>
-
-			{environment.enabled && (
-				<Environment
-					files={environment.hdri || undefined}
-					preset={environment.hdri ? undefined : 'city'}
-					background={environment.background}
-					blur={environment.blur}
+		<>
+			<Canvas camera={{ position: [0, 0, 5], fov: 45 }} gl={{ outputColorSpace: THREE.SRGBColorSpace }}>
+				<ambientLight intensity={ambientLight.intensity} color={ambientLight.color} />
+				<directionalLight
+					position={directionalLight.position}
+					intensity={directionalLight.intensity}
+					color={directionalLight.color}
+					castShadow={directionalLight.castShadow}
 				/>
-			)}
 
-			<Suspense fallback={null}>
-				<Model url={proxiedUrl} />
-			</Suspense>
-			<OrbitControls makeDefault />
-		</Canvas>
+				{environment.enabled && (
+					<Environment
+						files={environment.hdri || undefined}
+						preset={environment.hdri ? undefined : 'city'}
+						background={environment.background}
+						blur={environment.blur}
+					/>
+				)}
+
+				<Suspense fallback={null}>
+					<Model url={proxiedUrl} />
+				</Suspense>
+				<OrbitControls makeDefault />
+			</Canvas>
+		</>
 	)
 }
