@@ -10,3 +10,7 @@ CLAUDE.md
 .vscode/mcp.json
 
 .secrets
+
+# 3D Assets (Large binaries)
+*.hdr
+*.exr
