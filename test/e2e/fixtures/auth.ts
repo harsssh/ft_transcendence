@@ -9,15 +9,11 @@ import { test } from '.'
 
 const AUTH_PASSWORD = 'password'
 
-export type AuthTestTestFixtures = {
-  afterEachTest: undefined
-}
 export type AuthTestWorkerFixtures = {
   authState: string
 }
 
 export const authTestFixtures: FixturesExtension<{
-  test: AuthTestTestFixtures
   worker: AuthTestWorkerFixtures
 }> = {
   storageState: ({ authState }, use) => use(authState),
@@ -64,22 +60,6 @@ export const authTestFixtures: FixturesExtension<{
       await use(fileName)
     },
     { scope: 'worker' },
-  ],
-
-  // Save the storage state after each test because of auth0 refresh token
-  afterEachTest: [
-    async ({ page }, use) => {
-      await use(undefined)
-      // Any code after `await use()` will run after each test.
-      const id = test.info().parallelIndex
-      const fileName = path.resolve(
-        test.info().project.outputDir,
-        `.auth/worker-${id}.json`,
-      )
-      // Save the storage state after each test.
-      await page.context().storageState({ path: fileName })
-    },
-    { auto: true, scope: 'test' }, // Automatically run after each test
   ],
 }
 
