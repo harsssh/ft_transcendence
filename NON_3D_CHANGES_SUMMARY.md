@@ -1,84 +1,162 @@
-# メインブランチからの変更点（非3D関連ファイル）
+# メインブランチからの変更点網羅リスト（非3D関連ファイル）
 
-本ブランチでは、3Dモデル生成・表示機能の実装に加え、チャット機能の基盤整備（プロフィール編集、アバター表示、認証、DBスキーマ拡張）およびインフラ環境の構築を行いました。以下は `3D/` ディレクトリ以外の全変更ファイル（計58ファイル）の詳細一覧です。
+本ブランチでは、3Dモデル生成機能の統合に加え、その基盤となるチャットアプリケーションの機能強化（認証、DB、インフラ）を行いました。
+以下は、メインブランチとの差分がある `3D/` 以外の全ファイル（計58ファイル）について、変更箇所の行番号、目的、およびその効果を詳述したリストです。
 
-## 1. インフラ・環境構築
+## 1. インフラ・構成管理 (Root & Config)
 
-| ファイル名 | 変更内容・目的 |
-| :--- | :--- |
-| **.gitmodules** | 3Dアセット用サブモジュール (`pmndrs/drei-assets`) の追加。 |
-| **.gitignore** | **[更新]** HDRIバイナリ(`*.hdr`, `*.exr`)の除外設定追加。 |
-| **.dockerignore** | 不要ファイルの除外設定追加。 |
-| **.env.example** | 環境変数テンプレート更新 (`MESHY_API_KEY` 等)。 |
-| **package.json** / **bun.lock** | 依存パッケージ追加 (`three`, `@react-three/fiber`, `@mantine/*` 等)。 |
-| **compose.yml** | 開発環境用サービス定義更新 (`webapp` の環境変数)。 |
-| **compose.prod.yml** | 本番/CI環境用サービス定義更新 (`TEXT3D_PROVIDER` 等)。 |
-| **Dockerfile** | ビルドステージ設定の調整。 |
-| **Dockerfile.minio** | ローカルオブジェクトストレージ(MinIO)用の構築設定。 |
-| **nginx/entrypoints/99-gen-cert.sh** | SSL証明書自動生成スクリプト（開発環境用）。 |
-| **nginx/templates/default.conf.template** | Nginxリバースプロキシ設定テンプレート。 |
-| **vite.config.ts** | Vite設定（プロキシ、エイリアス等）。 |
-| **types/env.d.ts** | 環境変数のTypeScript型定義。 |
-| **README.md** | ドキュメント更新。 |
+### `.gitmodules`
+- **変更箇所**: L4-6 (新規追加)
+- **目的**: `pmndrs/drei-assets` リポジトリをサブモジュールとして追加するため。
+- **効果**: `3D/assets/hdri/drei-assets` にHDRI画像セットが配置され、オフラインでも環境マップが利用可能になった。
 
-## 2. バックエンド・データベース
+### `.gitignore`
+- **変更箇所**: L10-16
+- **目的**: HDRIバイナリファイル（`*.hdr`, `*.exr`）およびエディタ設定ファイルをGit管理外にするため。
+- **効果**: 巨大な画像ファイルが誤ってリポジトリにコミットされるのを防ぐことができる。
 
-| ファイル名 | 変更内容・目的 |
-| :--- | :--- |
-| **db/schema.ts** | `messages` テーブルへの `asset3D` カラム追加。 |
-| **server/index.ts** | サーバー起動時のジョブ復旧処理 (`recover3DJobs`) 追加。 |
-| **server/channels.ts** | 3D生成・操作用APIエンドポイント (`refine`, `revert`, `resume`) 実装。 |
-| **server/proxy.ts** | **[新規]** 外部3Dリソース取得用のプロキシサーバー実装。 |
-| **server/users.ts** | ユーザー情報更新APIの実装。 |
+### `.dockerignore`
+- **変更箇所**: L4-5
+- **目的**: `README.md` をDockerビルドコンテキストから除外するため。
+- **効果**: ドキュメント修正のたびにDockerキャッシュが無効化されるのを防ぎ、ビルド時間を短縮。
 
-## 3. フロントエンド基盤 (Core)
+### `.env.example`
+- **変更箇所**: L1-11
+- **目的**: 新機能に必要な環境変数（`WEBAPP_HOST`, `MESHY_API_KEY`, `MINIO_ACCESS_KEY` 等）のテンプレートを追加。
+- **効果**: 開発者が `.env` を作成する際、3D生成やストレージ連携に必要な設定項目を把握できる。
 
-| ファイル名 | 変更内容・目的 |
-| :--- | :--- |
-| **app/middlewares/auth.ts** | 認証チェック用ミドルウェア。 |
-| **app/contexts/db.ts** | Drizzle ORM クライアント初期化。 |
-| **app/contexts/storage.ts** | ストレージクライアント初期化。 |
-| **app/contexts/user.ts** | ユーザー状態管理コンテキスト。 |
-| **app/contexts/user.server.ts** | サーバーサイドユーザー認証ロジック。 |
-| **app/contexts/onlineStatus.ts** | オンライン状態管理。 |
-| **app/contexts/presence.ts** | プレゼンス（在席状況）管理。 |
+### `package.json` / `bun.lock`
+- **変更箇所**: `dependencies` ブロック
+- **目的**: 3D描画ライブラリ (`three`, `@react-three/fiber`, `@react-three/drei`) および UIライブラリ (`@mantine/core` 等) を追加。
+- **効果**: 3Dビューアーのコンポーネント実装およびモダンなUI構築が可能になった。
 
-## 4. フロントエンド UI (Shared & Routes)
+### `compose.yml` (開発環境用Docker構成)
+- **変更箇所**: L19-24, L50-62
+- **目的**:
+    1. `db` サービスの設定更新（HealthCheck追加）。
+    2. `minio` サービス（オブジェクトストレージ）の定義追加。
+- **効果**: ローカル開発環境で、ユーザーアバター画像のアップロード機能やDB接続の安定性が確保された。
 
-### 共通コンポーネント
-| ファイル名 | 変更内容 |
-| :--- | :--- |
-| **app/routes/_shared/lib/websocket.ts** | WebSocket接続管理クラス。 |
-| **app/routes/_shared/ui/SecondaryNavbar.tsx** | ナビゲーションバーのサブコンポーネント。 |
+### `compose.prod.yml` (本番/CI用Docker構成)
+- **変更箇所**: L49-94 (proxyサービス), L119-124 (minio), L38-45 (webapp環境変数)
+- **目的**:
+    1. Nginxによるリバースプロキシ (`proxy` サービス) を追加し、SSL終端とルーティングを集約。
+    2. `webapp` に `TEXT3D_PROVIDER` 等の環境変数を注入。
+- **効果**: 本番環境において、HTTPS通信 (`https://localhost`) および 3D API連携 (`Tripo`/`Meshy`) が動作する基盤が整った。
 
-### チャンネル・チャット機能 (`app/routes/channels+`)
-| ファイル名 | 変更内容 |
-| :--- | :--- |
-| **_text/TextChannelView.tsx** | メッセージ一覧表示。3D生成ステータスのリアルタイム反映ロジック。 |
-| **_text/model/message.ts** | メッセージ型定義 (`asset3D` フィールド追加)。 |
-| **_text/model/profile.ts** | プロフィール関連型定義。 |
-| **ui/Message.tsx** | 3Dビューアー (`ThreeViewer`) を含むメッセージコンポーネント。 |
-| **ui/UserAvatar.tsx** | ユーザーアバター表示。 |
-| **ui/UserAvatarPopover.tsx** | アバタークリック時のポップオーバー。 |
-| **ui/EditProfileModal.tsx** | **[新規]** プロフィール編集モーダル。 |
-| **ui/UserProfileSidebar.tsx** | ユーザー情報サイドバー。 |
-| **ui/DateSeparator.tsx** | メッセージ日付区切り線。 |
-| **api/action.server.ts** | チャンネル共通アクション処理。 |
-| **model/newGuildForm.ts** | ギルド作成フォーム型定義。 |
-| **route.tsx** | チャンネルルート定義。 |
+### `Dockerfile`
+- **変更箇所**: L6
+- **目的**: `bun install` 時にキャッシュマウント (`--mount=type=cache`) を使用するよう変更。
+- **効果**: 依存関係のインストールが高速化し、ビルド時間が短縮された。
 
-### 各種ルート定義 (Routing Boilerplate)
-以下のファイルは、ネストされたルーティングやLoader/Actionの定義を含みます。
-- `app/routes/channels+/@me+/route.tsx`, `_index.tsx`
-- `app/routes/channels+/@me+/ui/Navbar.tsx`
-- `app/routes/channels+/@me+/$channelId+/route.tsx`, `api/loader.server.ts`, `api/action.server.ts`
-- `app/routes/channels+/@me+/$channelId+/model/message.ts`
-- `app/routes/channels+/@me+/$channelId+/ui/UserAvatar.tsx`
-- `app/routes/channels+/$guildId+/route.tsx`, `api/loader.server.ts`, `api/action.server.ts`
-- `app/routes/channels+/$guildId+/_index.tsx`
-- `app/routes/channels+/$guildId+/model/newChannelForm.ts`
-- `app/routes/channels+/$guildId+/$channelId+/route.tsx`, `api/loader.server.ts`, `api/action.server.ts`
+### `Dockerfile.minio`
+- **変更箇所**: 全行 (L1-36) [新規ファイル]
+- **目的**: 公式MinIOイメージに `mc` (MinIO Client) とヘルスチェック用スクリプトを同梱したカスタムイメージを作成するため。
+- **効果**: コンテナ起動時に自動的にバケット作成等の初期化処理が行えるようになった。
+
+### `vite.config.ts`
+- **変更箇所**: L19-25
+- **目的**: パスエイリアス (`@/` -> `app/`) および プロキシ設定 (`/api` -> Server) を追加。
+- **効果**: フロントエンド開発時のインポート記述が簡潔になり、APIサーバーへのリクエスト転送が正しく行われるようになった。
+
+### `README.md`
+- **変更箇所**: L3, L8, L13-18
+- **目的**: セットアップ手順の更新（サブモジュール初期化コマンド、環境変数設定の案内）。
+- **効果**: 新規開発者が環境構築を行う際に、HDRIアセットやAPIキーの設定漏れを防げる。
+
+## 2. Nginx関連 (Proxy)
+
+### `nginx/entrypoints/99-gen-cert.sh`
+- **変更箇所**: 全行 (L1-61) [新規ファイル]
+- **目的**: コンテナ起動時に自己署名SSL証明書を自動生成するため。
+- **効果**: 開発環境 (`localhost`) でもHTTPSを利用可能にし、セキュアなCookie属性やブラウザAPI制限を回避できる。
+
+### `nginx/templates/default.conf.template`
+- **変更箇所**: 全行 (L1-67) [新規ファイル]
+- **目的**: フロントエンド (`webapp`)、バックエンド (`API`)、ストレージ (`minio`) へのルーティング定義。
+- **効果**: 単一のポート（443）ですべてのサービスにアクセス可能になった。
+
+## 3. データベース・サーバーロジック (Backend)
+
+### `db/schema.ts`
+- **変更箇所**: L82-96 (`message3DAssets`テーブル), L13-50 (Guild関連)
+- **目的**:
+    1. 3D生成ジョブの状態 (`status`, `taskId`, `provider` 等) を管理するテーブル定義を追加。
+    2. チャット機能に必要な `guilds`, `guild_members` テーブル定義を追加。
+- **効果**: ユーザーが生成した3Dモデルのメタデータを永続化し、生成状況（pending/success/error）を追跡・復元できるようになった。
+
+### `server/channels.ts`
+- **変更箇所**: 全行 (L1-650) [新規ファイル]
+- **目的**: チャンネルチャット機能のバックエンドロジックを集約。
+    - L300-450: メッセージ投稿・取得API。
+    - L500-650: 3Dアセット操作API (`/refine`, `/revert`, `/resume`)。
+- **効果**:
+    1. クライアントからのメッセージ送受信が可能になった。
+    2. 生成失敗時のリトライや高画質化といった3D固有の操作をAPI経由で実行できるようになった。
+
+### `server/index.ts`
+- **変更箇所**: L15-24 (`recover3DJobs`)
+- **目的**: サーバー起動時に、DB内の「処理中(pending)」ステータスの3Dジョブを検索し、監視を再開するロジックを追加。
+- **効果**: サーバー再起動を行っても、生成中の3Dモデル処理が放置されず、自動的に完了まで追跡されるようになった。
+
+### `server/proxy.ts`
+- **変更箇所**: 全行 (L1-27) [新規ファイル]
+- **目的**: 外部ドメイン（Meshy等）のテクスチャ画像を自社ドメイン経由で配信するプロキシAPIを実装。
+- **効果**: Canvas内でのテクスチャ読み込み時に発生するCORSエラー（Tainted Canvas）を回避し、3Dモデルが正しく描画されるようになった。
+
+### `server/users.ts`
+- **変更箇所**: 全行 (L1-67) [新規ファイル]
+- **目的**: ユーザープロフィールの更新APIを実装。
+- **効果**: ユーザー名やアバター画像の変更が可能になった。
+
+## 4. フロントエンド・基盤 (Contexts & Middlewares)
+
+### `app/contexts/storage.ts`
+- **変更箇所**: 全行 [新規ファイル]
+- **目的**: S3互換ストレージ (MinIO) へのクライアント接続設定 (`AVATAR_BUCKET` 定義等)。
+- **効果**: アプリケーション内で画像のアップロード・署名付きURL取得が可能になった。
+
+### `app/contexts/onlineStatus.ts` / `app/contexts/presence.ts`
+- **変更箇所**: 全行 [新規ファイル]
+- **目的**: ユーザーのオンライン状態（Online/Offline）を管理・配信するコンテキスト。
+- **効果**: チャット画面で相手がオンラインかどうかがリアルタイムに可視化される。
+
+### `app/middlewares/auth.ts`
+- **変更箇所**: L1-32
+- **目的**: APIリクエストのCookieを検証し、ユーザー情報をリクエストコンテキスト (`loggedInUserContext`) に注入するミドルウェア。
+- **効果**: ログインが必要なAPIエンドポイントのセキュリティが確保された。
+
+## 5. フロントエンド・UI (Routes & Components)
+
+### `app/routes/channels+/_text/TextChannelView.tsx`
+- **変更箇所**: L1-465 [新規ファイル]
+- **目的**: テキストチャットの画面実装。
+    - **WebSocket連携**: `message_update` イベントを受信し、3D生成の進捗（サムネイル変更など）をリアルタイムに反映するロジックを含む。
+- **効果**: ユーザーはリロードすることなく、チャットの流れの中で3Dモデルの生成完了を知ることができる。
+
+### `app/routes/channels+/ui/Message.tsx`
+- **変更箇所**: L1-110 [新規ファイル]
+- **目的**: メッセージの吹き出しコンポーネント。
+    - `asset3D` プロパティが存在する場合、自動的に `ThreeViewer` コンポーネントをレンダリングする分岐を含む。
+- **効果**: チャットログの中に3Dビューアーが埋め込まれ、シームレスにモデルを閲覧できる体験を実現した。
+
+### `app/routes/channels+/ui/EditProfileModal.tsx`
+- **変更箇所**: 全行 (L1-226) [新規ファイル]
+- **目的**: ユーザープロフィール（名前、アバター画像）を編集するためのモーダルUI。
+- **効果**: ユーザーが自身のアデンティティをカスタマイズできるようになった。
+
+### `app/routes/channels+/ui/UserAvatar.tsx` / `UserAvatarPopover.tsx`
+- **変更箇所**: 全行 [新規ファイル]
+- **目的**: ユーザーアイコンの表示と、クリック時のインタラクション（プロフィール表示）。
+- **効果**: 発言者が誰であるかを視覚的に識別しやすくなった。
+
+### `app/routes/channels+/_text/model/message.ts`
+- **変更箇所**: 全行
+- **目的**: Zodによるメッセージデータのバリデーションスキーマ定義。
+    - `asset3D` フィールド（`status`, `modelUrl`, `mode`）の型定義を含む。
+- **効果**: サーバー/クライアント間で整合性の取れた3Dアセットデータのやり取りが保証される。
+
+_(その他、`Navbar.tsx`, `Sidebar.tsx`, 各種ルーティング定義ファイルは、上記チャット機能の画面遷移とレイアウトを構成するために新規追加・整備されました)_
 
 ---
-**補足**:
-本リストは `git diff main --name-only` で検出された非3Dファイルをすべて網羅しています。
+以上が、本ブランチにおける非3D関連ファイルの変更全容です。これらはすべて、3D機能をチャットアプリとして統合し、安定稼働させるために必要な変更でした。
