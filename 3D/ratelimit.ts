@@ -1,7 +1,7 @@
 import { presenceClient } from '../app/contexts/presence'
 
 // Rate Limit (1 req / 3 min)
-export async function checkRateLimit(userId: number, limit: number = 1, windowSeconds: number = 180): Promise<{ allowed: boolean; remaining: number }> {
+export async function checkRateLimit(userId: number, _limit: number = 1, windowSeconds: number = 180): Promise<{ allowed: boolean; remaining: number }> {
 	const key = `ratelimit:3d:${userId}`
 
 	// Try to set the key if it doesn't exist

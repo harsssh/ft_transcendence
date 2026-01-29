@@ -20,8 +20,6 @@ type Props = {
   asset3D?: {
     status: string
     modelUrl: string | null
-    // [3D Refine] Added mode property
-    mode?: string
   } | undefined | null
   roles?: Role[] | undefined
   guild?: GuildOutletContext['guild'] | undefined
@@ -113,7 +111,6 @@ export function Message({
             <ThreeViewer
               modelUrl={asset3D.modelUrl}
               status={asset3D.status as any}
-              mode={asset3D.mode}
               channelId={channelId}
               messageId={id} // Assuming 'id' is available in scope (props)
             />

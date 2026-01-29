@@ -1,12 +1,11 @@
 import { eq } from 'drizzle-orm'
 import { message3DAssets } from '../../db/schema'
 import { MeshyProvider } from '../provider/meshy'
-import type { TextTo3DProvider } from '../provider/types'
 
 type BroadcastUpdateFn = (
 	channelId: number,
 	messageId: number,
-	asset: { status: string; modelUrl: string | null; precedingTasks?: number; mode?: string }
+	asset: { status: string; modelUrl: string | null; precedingTasks?: number }
 ) => void
 
 // Fallback Mock Logic
@@ -49,7 +48,7 @@ export async function resume3DGeneration(
 	if (providerName === 'meshy' && !apiKey) {
 		try {
 			// Try reading from Docker secret
-			const fs = await import('fs')
+			const fs = await import('node:fs')
 			// Check if file exists first or just try reading
 			if (fs.existsSync('/run/secrets/meshy_api_key')) {
 				apiKey = fs.readFileSync('/run/secrets/meshy_api_key', 'utf8').trim()

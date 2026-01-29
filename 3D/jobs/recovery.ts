@@ -7,7 +7,7 @@ import { resume3DGeneration } from './processor'
 export async function recover3DJobs() {
 	console.log('[3D-Recovery] Starting recovery for pending/failed jobs...')
 
-	const apiKey = process.env['MESHY_API_KEY']
+	const apiKey = process.env.MESHY_API_KEY
 	if (!apiKey) {
 		console.warn('[3D-Recovery] No API Key found, skipping recovery.')
 		return

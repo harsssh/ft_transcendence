@@ -1,4 +1,4 @@
-import { Box, Loader, Text, ActionIcon, Tooltip, Popover, SegmentedControl, Select, Stack, Group } from '@mantine/core'
+import { Box, Loader, Text, ActionIcon, Tooltip, Popover, SegmentedControl, Select, Stack } from '@mantine/core'
 import { Suspense, useState, lazy, useEffect } from 'react'
 import { IconCameraRotate, IconSparkles, IconDownload, IconRefresh, IconSettings } from '@tabler/icons-react'
 
@@ -10,7 +10,6 @@ type Props = {
 	channelId?: number | undefined
 	messageId?: number | undefined
 	precedingTasks?: number | undefined
-	mode?: string | undefined
 }
 
 type BackgroundMode = 'dark' | 'light' | 'hdri'
@@ -29,7 +28,7 @@ const PRESETS = [
 	{ value: 'potsdamer_platz', label: 'Plaza' },
 ]
 
-export function ThreeViewer({ status, modelUrl, channelId, messageId, precedingTasks, mode }: Props) {
+export function ThreeViewer({ status, modelUrl, channelId, messageId, precedingTasks }: Props) {
 	const [key, setKey] = useState(0)
 	const [isMounted, setIsMounted] = useState(false)
 	const [isRefining, setIsRefining] = useState(false)
