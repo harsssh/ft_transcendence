@@ -1,14 +1,14 @@
 // Import HDRI assets from submodule
-import city from '../assets/hdri/drei-assets/hdri/potsdamer_platz_1k.hdr?url'
-import sunset from '../assets/hdri/drei-assets/hdri/venice_sunset_1k.hdr?url'
-import dawn from '../assets/hdri/drei-assets/hdri/kiara_1_dawn_1k.hdr?url'
-import night from '../assets/hdri/drei-assets/hdri/dikhololo_night_1k.hdr?url'
-import warehouse from '../assets/hdri/drei-assets/hdri/empty_warehouse_01_1k.hdr?url'
-import forest from '../assets/hdri/drei-assets/hdri/forest_slope_1k.hdr?url'
-import studio from '../assets/hdri/drei-assets/hdri/studio_small_03_1k.hdr?url'
-import apartment from '../assets/hdri/drei-assets/hdri/lebombo_1k.hdr?url'
-import park from '../assets/hdri/drei-assets/hdri/rooitou_park_1k.hdr?url'
-import lobby from '../assets/hdri/drei-assets/hdri/st_fagans_interior_1k.hdr?url'
+import city from '../assets/hdri/potsdamer_platz_1k.hdr?url'
+import sunset from '../assets/hdri/venice_sunset_1k.hdr?url'
+import dawn from '../assets/hdri/kiara_1_dawn_1k.hdr?url'
+import night from '../assets/hdri/dikhololo_night_1k.hdr?url'
+import warehouse from '../assets/hdri/empty_warehouse_01_1k.hdr?url'
+import forest from '../assets/hdri/forest_slope_1k.hdr?url'
+import studio from '../assets/hdri/studio_small_03_1k.hdr?url'
+import apartment from '../assets/hdri/lebombo_1k.hdr?url'
+import park from '../assets/hdri/rooitou_park_1k.hdr?url'
+import lobby from '../assets/hdri/st_fagans_interior_1k.hdr?url'
 
 export const HDRI_PRESETS = {
 	city,

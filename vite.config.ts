@@ -19,7 +19,7 @@ export default defineConfig((config) => ({
       resolve: {
         alias: {
           'react-dom/server': 'react-dom/server.node',
-          'three': './3D/lib/three-shim.ts',
+          three: './3D/lib/three-shim.ts',
         },
       },
     }

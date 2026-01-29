@@ -7,7 +7,7 @@ import { defaultLightingConfig, HDRI_PRESETS, type HdriPresetKey } from '../conf
 
 // Error Boundary for catching Loader errors
 class ErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
-	state = { hasError: false }
+	override state = { hasError: false }
 	static getDerivedStateFromError() {
 		return { hasError: true }
 	}
