@@ -1,4 +1,4 @@
-import { reactRouter } from '@react-router/dev/vite'
+﻿import { reactRouter } from '@react-router/dev/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { reactRouterHonoServer } from 'react-router-hono-server/dev'
 import { defineConfig } from 'vite'
@@ -16,12 +16,12 @@ export default defineConfig((config) => ({
   ],
   ...(config.command === 'build'
     ? {
-      resolve: {
-        alias: {
-          'react-dom/server': 'react-dom/server.node',
-          three: './3D/lib/three-shim.ts',
+        resolve: {
+          alias: {
+            'react-dom/server': 'react-dom/server.node',
+            three: './3D/lib/three-shim.ts',
+          },
         },
-      },
-    }
+      }
     : {}),
 }))
