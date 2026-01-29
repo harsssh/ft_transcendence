@@ -1,4 +1,5 @@
 import { AppShell, type AppShellProps, Center, Text } from '@mantine/core'
+import { Link } from 'react-router'
 
 type Props = {
   navbar?: React.ReactNode
@@ -22,7 +23,12 @@ export function Scaffold({ children, navbar, navbarWidth }: Props) {
     <AppShell {...appShellConfig} withBorder={false}>
       <AppShell.Header bg="#121214">
         <Center>
-          <Text>ft_transcendence</Text>
+          <Link
+            to="/privacy-policy"
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
+            <Text>Privacy Policy</Text>
+          </Link>
         </Center>
       </AppShell.Header>
 
