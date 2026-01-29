@@ -18,7 +18,7 @@ type BackgroundMode = 'dark' | 'light' | 'hdri'
 const PRESETS = [
 	{ value: 'city', label: 'City' },
 	{ value: 'sunset', label: 'Sunset' },
-	{ value: 'boulder', label: 'Boulder' }, // Replacing 'dawn' with 'boulder' as dawn isn't standard in older drie versions sometimes
+	{ value: 'dawn', label: 'Dawn' }, // Replacing 'dawn' with 'boulder' as dawn isn't standard in older drie versions sometimes
 	{ value: 'night', label: 'Night' },
 	{ value: 'warehouse', label: 'Warehouse' },
 	{ value: 'forest', label: 'Forest' },

@@ -1,5 +1,5 @@
 
-export type Message3DStatus = 'queued' | 'generating' | 'ready' | 'failed'
+export type Message3DStatus = 'queued' | 'generating' | 'refining' | 'ready' | 'failed' | 'refined' | 'timeout'
 
 export interface Message3DAsset {
   id: number

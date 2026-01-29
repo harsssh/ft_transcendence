@@ -1,8 +1,37 @@
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF, Environment } from '@react-three/drei'
-import { Suspense, useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef, Component, type ReactNode } from 'react'
 import * as THREE from 'three'
+import { Text } from '@react-three/drei'
 import { defaultLightingConfig, HDRI_PRESETS, type HdriPresetKey } from '../config/lighting'
+
+// Error Boundary for catching Loader errors
+class ErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
+	state = { hasError: false }
+	static getDerivedStateFromError() {
+		return { hasError: true }
+	}
+	override componentDidCatch(error: any) {
+		console.error('ThreeViewer Error:', error)
+	}
+	override render() {
+		if (this.state.hasError) return this.props.fallback
+		return this.props.children
+	}
+}
+
+function ErrorFallback() {
+	return (
+		<group>
+			<Text color="red" position={[0, 0, 0]} fontSize={0.5}>
+				Failed to load model
+			</Text>
+			<Text color="white" position={[0, -0.6, 0]} fontSize={0.2}>
+				(Check URL or Proxy settings)
+			</Text>
+		</group>
+	)
+}
 
 // Native GLTF Loader wrapper (keeping this as fallback or custom loader if standard useGLTF has issues)
 function Model({ url }: { url: string }) {
@@ -61,7 +90,7 @@ type Props = {
 	hdriPreset?: string
 }
 
-export default function ThreeViewerCanvas({ modelUrl, channelId, messageId, bgMode = 'dark', hdriPreset = 'city' }: Props) {
+export default function ThreeViewerCanvas({ modelUrl, bgMode = 'dark', hdriPreset = 'city' }: Props) {
 	// Use proxy to avoid CORS
 	const proxiedUrl = `/api/proxy/model?url=${encodeURIComponent(modelUrl)}`
 	const { ambientLight, directionalLight, environment } = defaultLightingConfig
@@ -87,15 +116,26 @@ export default function ThreeViewerCanvas({ modelUrl, channelId, messageId, bgMo
 					castShadow={directionalLight.castShadow}
 				/>
 
-				<Environment
-					files={hdriFile || undefined}
-					background={showHdriBackground}
-					blur={showHdriBackground ? 0 : environment.blur}
-				/>
+				{/* Environment Component Handling: explicitly pass files or handle unmounted if missing */}
+				{hdriFile ? (
+					<Environment
+						files={hdriFile}
+						background={showHdriBackground}
+						blur={showHdriBackground ? 0 : environment.blur}
+					/>
+				) : (
+					<Environment
+						preset="city" // Fallback preset if no file
+						background={showHdriBackground}
+						blur={showHdriBackground ? 0 : environment.blur}
+					/>
+				)}
 
-				<Suspense fallback={null}>
-					<Model url={proxiedUrl} />
-				</Suspense>
+				<ErrorBoundary fallback={<ErrorFallback />}>
+					<Suspense fallback={null}>
+						<Model url={proxiedUrl} />
+					</Suspense>
+				</ErrorBoundary>
 				<OrbitControls makeDefault />
 			</Canvas>
 		</>

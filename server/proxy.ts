@@ -7,6 +7,22 @@ export const proxy = new Hono().get('/model', async (c) => {
 	}
 
 	try {
+		const targetUrl = new URL(url)
+
+		// [Security] SSRF Protection
+		// 1. Enforce HTTPS
+		if (targetUrl.protocol !== 'https:') {
+			return c.text('Invalid protocol: https required', 400)
+		}
+
+		// 2. Domain Whitelist
+		const allowedDomains = ['.meshy.ai'] // Suffix check
+		const isAllowed = allowedDomains.some(d => targetUrl.hostname.endsWith(d)) || targetUrl.hostname === 'meshy.ai'
+
+		if (!isAllowed) {
+			return c.text('Forbidden: Domain not whitelisted', 403)
+		}
+
 		const response = await fetch(url)
 		if (!response.ok) {
 			return c.text(`Failed to fetch model: ${response.statusText}`, 502)
@@ -17,7 +33,7 @@ export const proxy = new Hono().get('/model', async (c) => {
 		// Set CORS headers explicitly (though Hono might handle if middleware set)
 		c.header('Access-Control-Allow-Origin', '*')
 
-		return c.body(response.body, 200, {
+		return c.body(response.body as any, 200, {
 			'Content-Type': contentType,
 		})
 	} catch (error) {

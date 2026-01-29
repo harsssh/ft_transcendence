@@ -1,4 +1,4 @@
-import type { Message3DStatus } from '../types'
+
 import type { TextTo3DProvider, ProviderStatus, TaskStatusResponse } from './types'
 
 const MESHY_API_BASE = 'https://api.meshy.ai/openapi/v2/text-to-3d'

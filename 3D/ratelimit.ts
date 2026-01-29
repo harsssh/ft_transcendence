@@ -2,13 +2,18 @@ import { presenceClient } from '../app/contexts/presence'
 
 // Rate Limit (1 req / 3 min)
 export async function checkRateLimit(userId: number, limit: number = 1, windowSeconds: number = 180): Promise<{ allowed: boolean; remaining: number }> {
-	// ... existing ... (keeping existing logic for fallback spam protection)
-	// Actually, user asked to block if *previous not completed*. 
-	// This implies a lock. But they also said "successively sent... Rate Limit Exceeded logs appearing".
-	// So the existing Time-Window limit IS working but they want the "Job Lock" behavior specifically?
-	// "Make it appear if previous instruction is not completed"
-	// Let's Add a Lock check here.
-	return { allowed: true, remaining: 0 }
+	const key = `ratelimit:3d:${userId}`
+
+	// Try to set the key if it doesn't exist
+	const result = await presenceClient.set(key, '1', { NX: true, EX: windowSeconds })
+
+	if (result === 'OK') {
+		return { allowed: true, remaining: 0 }
+	}
+
+	// Calculate remaining time
+	const ttl = await presenceClient.ttl(key)
+	return { allowed: false, remaining: ttl > 0 ? ttl : windowSeconds }
 }
 
 // New Job Lock Logic

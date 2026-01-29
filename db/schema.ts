@@ -86,7 +86,7 @@ export const message3DAssets = p.pgTable('message_3d_assets', {
     .references(() => messages.id, { onDelete: 'cascade' })
     .notNull(),
   externalId: p.text('external_id'),
-  status: p.text().notNull(), // 'queued' | 'generating' | 'ready' | 'failed'
+  status: p.text().notNull(), // 'queued' | 'generating' | 'ready' | 'failed' | 'timeout' | 'refined'
   modelUrl: p.text('model_url'),
   prompt: p.text().notNull(),
   createdAt: p.timestamp('created_at').defaultNow().notNull(),
