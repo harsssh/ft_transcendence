@@ -1,3 +1,6 @@
 [submodule "submodules/minio"]
 	path = submodules/minio
 	url = https://github.com/minio/minio.git
+[submodule "3D/assets/hdri/drei-assets"]
+	path = 3D/assets/hdri/drei-assets
+	url = https://github.com/pmndrs/drei-assets

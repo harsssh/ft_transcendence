@@ -2,7 +2,7 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, useGLTF, Environment } from '@react-three/drei'
 import { Suspense, useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { defaultLightingConfig } from '../config/lighting'
+import { defaultLightingConfig, HDRI_PRESETS, type HdriPresetKey } from '../config/lighting'
 
 // Native GLTF Loader wrapper (keeping this as fallback or custom loader if standard useGLTF has issues)
 function Model({ url }: { url: string }) {
@@ -52,20 +52,33 @@ function Model({ url }: { url: string }) {
 	return <primitive object={scene} ref={group} />
 }
 
+
 type Props = {
 	modelUrl: string
 	channelId?: number | undefined
 	messageId?: number | undefined
+	bgMode?: 'dark' | 'light' | 'hdri'
+	hdriPreset?: string
 }
 
-export default function ThreeViewerCanvas({ modelUrl, channelId, messageId }: Props) {
+export default function ThreeViewerCanvas({ modelUrl, channelId, messageId, bgMode = 'dark', hdriPreset = 'city' }: Props) {
 	// Use proxy to avoid CORS
 	const proxiedUrl = `/api/proxy/model?url=${encodeURIComponent(modelUrl)}`
 	const { ambientLight, directionalLight, environment } = defaultLightingConfig
 
+	// Determine background color based on mode
+	const bgColor = bgMode === 'light' ? '#dddddd' : '#111111'
+	const showHdriBackground = bgMode === 'hdri'
+
+	// Resolve HDRI file from preset name
+	const hdriFile = HDRI_PRESETS[hdriPreset as HdriPresetKey] || environment.hdri
+
 	return (
 		<>
 			<Canvas camera={{ position: [0, 0, 5], fov: 45 }} gl={{ outputColorSpace: THREE.SRGBColorSpace }}>
+				{/* Background Color (Validation: Only render if NOT in HDRI mode) */}
+				{!showHdriBackground && <color attach="background" args={[bgColor]} />}
+
 				<ambientLight intensity={ambientLight.intensity} color={ambientLight.color} />
 				<directionalLight
 					position={directionalLight.position}
@@ -74,14 +87,11 @@ export default function ThreeViewerCanvas({ modelUrl, channelId, messageId }: Pr
 					castShadow={directionalLight.castShadow}
 				/>
 
-				{environment.enabled && (
-					<Environment
-						files={environment.hdri || undefined}
-						preset={environment.hdri ? undefined : 'city'}
-						background={environment.background}
-						blur={environment.blur}
-					/>
-				)}
+				<Environment
+					files={hdriFile || undefined}
+					background={showHdriBackground}
+					blur={showHdriBackground ? 0 : environment.blur}
+				/>
 
 				<Suspense fallback={null}>
 					<Model url={proxiedUrl} />

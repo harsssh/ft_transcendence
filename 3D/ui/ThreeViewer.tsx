@@ -1,6 +1,6 @@
-import { Box, Loader, Text, ActionIcon, Tooltip } from '@mantine/core'
+import { Box, Loader, Text, ActionIcon, Tooltip, Popover, SegmentedControl, Select, Stack, Group } from '@mantine/core'
 import { Suspense, useState, lazy, useEffect } from 'react'
-import { IconCameraRotate, IconSparkles, IconDownload, IconRefresh } from '@tabler/icons-react'
+import { IconCameraRotate, IconSparkles, IconDownload, IconRefresh, IconSettings } from '@tabler/icons-react'
 
 const ThreeViewerCanvas = lazy(() => import('./ThreeViewerCanvas'))
 
@@ -13,14 +13,56 @@ type Props = {
 	mode?: string | undefined
 }
 
+type BackgroundMode = 'dark' | 'light' | 'hdri'
+
+const PRESETS = [
+	{ value: 'city', label: 'City' },
+	{ value: 'sunset', label: 'Sunset' },
+	{ value: 'boulder', label: 'Boulder' }, // Replacing 'dawn' with 'boulder' as dawn isn't standard in older drie versions sometimes
+	{ value: 'night', label: 'Night' },
+	{ value: 'warehouse', label: 'Warehouse' },
+	{ value: 'forest', label: 'Forest' },
+	{ value: 'studio', label: 'Studio' },
+	{ value: 'apartment', label: 'Apartment' },
+	{ value: 'park', label: 'Park' },
+	{ value: 'lobby', label: 'Lobby' },
+	{ value: 'potsdamer_platz', label: 'Plaza' },
+]
+
 export function ThreeViewer({ status, modelUrl, channelId, messageId, precedingTasks, mode }: Props) {
 	const [key, setKey] = useState(0)
 	const [isMounted, setIsMounted] = useState(false)
 	const [isRefining, setIsRefining] = useState(false)
 
+	// Local Preference State
+	const [bgMode, setBgMode] = useState<BackgroundMode>('dark')
+	const [hdriPreset, setHdriPreset] = useState<string>('city')
+
 	useEffect(() => {
 		setIsMounted(true)
+		// Load preferences from localStorage
+		try {
+			const storedBg = localStorage.getItem('three-viewer-bg-mode')
+			const storedPreset = localStorage.getItem('three-viewer-hdri-preset')
+			if (storedBg) setBgMode(storedBg as BackgroundMode)
+			if (storedPreset) setHdriPreset(storedPreset)
+		} catch (e) {
+			console.warn('Failed to load preferences via localStorage', e)
+		}
 	}, [])
+
+	// Persist preferences
+	const handleBgChange = (val: string) => {
+		setBgMode(val as BackgroundMode)
+		localStorage.setItem('three-viewer-bg-mode', val)
+	}
+
+	const handlePresetChange = (val: string | null) => {
+		if (val) {
+			setHdriPreset(val)
+			localStorage.setItem('three-viewer-hdri-preset', val)
+		}
+	}
 
 	// Force re-mount when modelUrl changes (e.g. Refine complete) to refresh texture
 	useEffect(() => {
@@ -135,6 +177,8 @@ export function ThreeViewer({ status, modelUrl, channelId, messageId, precedingT
 								modelUrl={modelUrl}
 								channelId={channelId}
 								messageId={messageId}
+								bgMode={bgMode}
+								hdriPreset={hdriPreset}
 							/>
 						</Suspense>
 					)}
@@ -164,6 +208,46 @@ export function ThreeViewer({ status, modelUrl, channelId, messageId, precedingT
 						minWidth: 48   // Ensure fixed width
 					}}
 				>
+					{/* Settings Popover */}
+					<Popover width={200} position="left-start" withArrow shadow="md" withinPortal zIndex={1001}>
+						<Popover.Target>
+							<Tooltip label="Viewer Settings" position="left" withArrow withinPortal zIndex={1000}>
+								<ActionIcon variant="default" color="gray" size="lg" radius="md">
+									<IconSettings size={20} />
+								</ActionIcon>
+							</Tooltip>
+						</Popover.Target>
+						<Popover.Dropdown bg="#25262b" style={{ border: '1px solid #444' }}>
+							<Stack gap="xs">
+								<Text size="xs" fw={500} c="dimmed">Background</Text>
+								<SegmentedControl
+									size="xs"
+									fullWidth
+									value={bgMode}
+									onChange={handleBgChange}
+									data={[
+										{ label: 'Dark', value: 'dark' },
+										{ label: 'Light', value: 'light' },
+										{ label: 'HDRI', value: 'hdri' },
+									]}
+								/>
+
+								{bgMode === 'hdri' && (
+									<>
+										<Text size="xs" fw={500} c="dimmed" mt={4}>Environment</Text>
+										<Select
+											size="xs"
+											data={PRESETS}
+											value={hdriPreset}
+											onChange={handlePresetChange}
+											allowDeselect={false}
+										/>
+									</>
+								)}
+							</Stack>
+						</Popover.Dropdown>
+					</Popover>
+
 					<Tooltip label="Reset Camera" position="left" withArrow withinPortal zIndex={1000}>
 						<ActionIcon
 							variant="default"
