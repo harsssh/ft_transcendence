@@ -3,8 +3,8 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconUserCircle } from '@tabler/icons-react'
 import { IconButton } from '../../../_shared/ui/IconButton'
 import { TextChannelView } from '../../_text/TextChannelView'
-import { UserAvatar } from '../../ui/UserAvatar'
-import { UserProfileSidebar } from '../../ui/UserProfileSidebar'
+import { UserAvatar } from '../../_text/ui/UserAvatar'
+import { UserProfileSidebar } from '../../_text/ui/UserProfileSidebar'
 import type { Route } from './+types/route'
 
 export { action } from './api/action.server'
@@ -57,6 +57,7 @@ export default function DMChannel({
         profileSidebarOpened ? <UserProfileSidebar profile={partner} /> : null
       }
       actionData={actionData ?? null}
+      loggedInUser={loaderData.loggedInUser}
     />
   )
 }

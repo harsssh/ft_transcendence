@@ -64,7 +64,18 @@ export const loader = async ({
           with: {
             messages: {
               with: {
-                sender: true,
+                sender: {
+                  with: {
+                    roles: {
+                      where: {
+                        guildId: guildId,
+                      },
+                      orderBy: {
+                        id: 'asc',
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -90,7 +101,14 @@ export const loader = async ({
             id: m.sender.id,
             name: m.sender.name,
             displayName: m.sender.displayName,
-            avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`,
+            avatarUrl: m.sender.avatarUrl
+              ? `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`
+              : null,
+            roles: (m.sender.roles ?? []).map((role) => ({
+              id: role.id,
+              name: role.name,
+              color: role.color,
+            })),
           },
         })),
         channel: {

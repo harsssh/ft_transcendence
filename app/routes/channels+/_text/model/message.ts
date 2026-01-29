@@ -9,6 +9,15 @@ export const MessageSchema = z.object({
     name: z.string(),
     displayName: z.string().nullable(),
     avatarUrl: z.string().nullable(),
+    roles: z
+      .array(
+        z.object({
+          id: z.coerce.number(),
+          name: z.string(),
+          color: z.string(),
+        }),
+      )
+      .optional(),
   }),
   asset3D: z.object({
     status: z.string(),

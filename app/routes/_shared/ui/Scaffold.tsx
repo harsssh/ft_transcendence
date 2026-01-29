@@ -32,7 +32,12 @@ export function Scaffold({ children, navbar, navbarWidth }: Props) {
         </AppShell.Navbar>
       )}
 
-      <AppShell.Main bg="#1A1A1E">{children}</AppShell.Main>
+      <AppShell.Main
+        bg="#1A1A1E"
+        h="calc(100vh - var(--app-shell-header-height, 0px))"
+      >
+        {children}
+      </AppShell.Main>
     </AppShell>
   )
 }

@@ -1,7 +1,7 @@
 import { Avatar, getSize, type MantineSize } from '@mantine/core'
 import { useId } from 'react'
 import * as R from 'remeda'
-import { useOnlineStatus } from '../../../contexts/onlineStatus'
+import { useOnlineStatus } from '../../../../contexts/onlineStatus'
 
 export type UserAvatarProps = {
   name: string | null

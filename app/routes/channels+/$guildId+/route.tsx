@@ -45,6 +45,7 @@ export { loader, action }
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import { SignupFormSchema } from '../../_auth+/signup+/model/signupForm'
 import { SecondaryNavbar } from '../../_shared/ui/SecondaryNavbar'
+import { hasPermission, Permissions } from '../_shared/permissions'
 import { NewGuildFormSchema } from '../model/newGuildForm'
 import { NewChannelFormSchema } from './model/newChannelForm'
 
@@ -52,11 +53,28 @@ export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
 const InviteFriendSchema = SignupFormSchema.pick({ name: true })
 
+export type GuildOutletContext = {
+  guild: Awaited<ReturnType<typeof loader>>['guild']
+  loggedInUser: Awaited<ReturnType<typeof loader>>['loggedInUser']
+}
+
 export default function GuildRoute() {
   const { guild, loggedInUser } = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
 
   const isOwner = guild.ownerId === loggedInUser.id
+  const canManageGuild = hasPermission(
+    loggedInUser.permissionsMask,
+    Permissions.MANAGE_GUILD,
+  )
+  const canManageChannels = hasPermission(
+    loggedInUser.permissionsMask,
+    Permissions.MANAGE_CHANNELS,
+  )
+  const canCreateInvite = hasPermission(
+    loggedInUser.permissionsMask,
+    Permissions.CREATE_INVITE,
+  )
 
   const { setSecondaryNavbar } = useOutletContext<ChannelsOutletContext>()
   const submit = useSubmit()
@@ -265,13 +283,15 @@ export default function GuildRoute() {
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item
-                  rightSection={<IconCookieMan size={18} />}
-                  onClick={openInvite}
-                >
-                  Invite to Server
-                </Menu.Item>
-                {isOwner && (
+                {canCreateInvite && (
+                  <Menu.Item
+                    rightSection={<IconCookieMan size={18} />}
+                    onClick={openInvite}
+                  >
+                    Invite to Server
+                  </Menu.Item>
+                )}
+                {canManageGuild && (
                   <Menu.Item
                     rightSection={<IconPencil size={18} />}
                     onClick={openRenameServer}
@@ -279,20 +299,24 @@ export default function GuildRoute() {
                     Rename Server
                   </Menu.Item>
                 )}
-                <Menu.Item
-                  rightSection={<IconPlus size={18} />}
-                  onClick={openCreateChannel}
-                >
-                  Create Channel
-                </Menu.Item>
+                {canManageChannels && (
+                  <Menu.Item
+                    rightSection={<IconPlus size={18} />}
+                    onClick={openCreateChannel}
+                  >
+                    Create Channel
+                  </Menu.Item>
+                )}
                 <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  rightSection={<IconLogout size={18} />}
-                  onClick={handleLeaveServer}
-                >
-                  Leave Server
-                </Menu.Item>
+                {!isOwner && (
+                  <Menu.Item
+                    color="red"
+                    rightSection={<IconLogout size={18} />}
+                    onClick={handleLeaveServer}
+                  >
+                    Leave Server
+                  </Menu.Item>
+                )}
                 {isOwner && (
                   <Menu.Item
                     color="red"
@@ -346,7 +370,7 @@ export default function GuildRoute() {
                       >
                         Rename Channel
                       </Menu.Item>
-                      {isOwner && (
+                      {canManageChannels && (
                         <>
                           <Menu.Divider />
                           <Menu.Item
@@ -386,12 +410,15 @@ export default function GuildRoute() {
     openCreateChannel,
     openRenameChannel,
     handleDeleteChannel,
+    canManageGuild,
+    canManageChannels,
+    canCreateInvite,
     isOwner,
   ])
 
   return (
     <>
-      <Outlet />
+      <Outlet context={{ guild, loggedInUser } satisfies GuildOutletContext} />
 
       <Modal
         opened={renameServerOpened}

@@ -2,11 +2,11 @@ import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
 import { useParams } from 'react-router'
-import { useContext, useSyncExternalStore } from 'react'
-import { LoggedInUserContext } from '../../../contexts/user'
-import { UserAvatarPopover } from './UserAvatarPopover'
+import { useSyncExternalStore } from 'react'
+import type { GuildOutletContext } from '../../$guildId+/route'
+import { type Role, UserAvatarPopover } from './UserAvatarPopover'
 
-import { ThreeViewer } from '../../../../3D/ui/ThreeViewer'
+import { ThreeViewer } from '../../../../../3D/ui/ThreeViewer'
 
 type Props = {
   id: number
@@ -23,6 +23,9 @@ type Props = {
     // [3D Refine] Added mode property
     mode?: string
   } | undefined | null
+  roles?: Role[] | undefined
+  guild?: GuildOutletContext['guild'] | undefined
+  loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
 }
 
 export function Message({
@@ -35,6 +38,9 @@ export function Message({
   avatarSrc = null,
   withProfile = false,
   asset3D,
+  roles,
+  guild,
+  loggedInUser,
 }: Props) {
   // サーバーとクライアントのロケールが異なる場合にhydration errorが発生するため、それを避けるハッチ
   const localeTimeCreatedAt = useSyncExternalStore(
@@ -43,9 +49,9 @@ export function Message({
     () => createdAt.toISOString(),
   )
   const { ref: hoverRef, hovered } = useHover()
-  const loggedInUser = useContext(LoggedInUserContext)
   const params = useParams()
   const channelId = params['channelId'] ? parseInt(params['channelId']) : undefined
+  const roleColor = roles?.[0]?.color
 
   return (
     <Box
@@ -69,6 +75,9 @@ export function Message({
             displayName={senderDisplayName}
             src={avatarSrc}
             isEditable={loggedInUser?.name === senderName}
+            roles={roles}
+            guild={guild}
+            loggedInUser={loggedInUser}
           />
         </Box>
       )}
@@ -82,7 +91,13 @@ export function Message({
       <Box>
         {withProfile && (
           <Group align="center" gap="xs">
-            <Text fw={700} size="sm" maw="40rem" truncate="end">
+            <Text
+              fw={700}
+              size="sm"
+              maw="40rem"
+              truncate="end"
+              {...(roleColor ? { c: roleColor } : {})}
+            >
               {senderDisplayName ?? senderName}
             </Text>
             <Text size="xs" c="dimmed">

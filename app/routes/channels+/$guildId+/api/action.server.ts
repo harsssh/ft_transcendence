@@ -1,10 +1,18 @@
 import { parseWithZod } from '@conform-to/zod/v4'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { redirect } from 'react-router'
-import { channels, guildMembers, guilds } from '../../../../../db/schema'
+import {
+  channels,
+  guildMembers,
+  guilds,
+  usersToRoles,
+} from '../../../../../db/schema'
 import { dbContext } from '../../../../contexts/db'
 import { loggedInUserContext } from '../../../../contexts/user.server'
 import { SignupFormSchema } from '../../../_auth+/signup+/model/signupForm'
+import { hasPermission, Permissions } from '../../_shared/permissions'
+import { AssignRoleSchema } from '../../model/assignRoleForm'
+import { KickMemberSchema } from '../../model/kickMemberForm'
 import { NewGuildFormSchema } from '../../model/newGuildForm'
 import type { Route } from '../+types/route'
 import { NewChannelFormSchema } from '../model/newChannelForm'
@@ -57,7 +65,32 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     })
   }
 
+  const userWithRoles = await db.query.users.findFirst({
+    where: {
+      id: user.id,
+    },
+    with: {
+      roles: {
+        where: {
+          guildId: guildId,
+        },
+      },
+    },
+  })
+  const userPermissions =
+    userWithRoles?.roles.reduce((acc, r) => acc | r.permissions, 0) ?? 0
+
+  const checkPermission = (requiredPermission: number) => {
+    if (!hasPermission(userPermissions, requiredPermission)) {
+      throw new Response('Forbidden: Insufficient permissions', { status: 403 })
+    }
+  }
+
+  const isOwner = guild.ownerId === user.id
+
   if (intent === 'invite-friend') {
+    checkPermission(Permissions.CREATE_INVITE)
+
     const InviteFriendSchema = SignupFormSchema.pick({ name: true })
     const submission = parseWithZod(formData, { schema: InviteFriendSchema })
     if (submission.status !== 'success') {
@@ -90,10 +123,29 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       })
     }
 
-    try {
-      await db.insert(guildMembers).values({
-        userId: targetUser.id,
+    const defaultUserRole = await db.query.roles.findFirst({
+      where: {
         guildId: guildId,
+        name: 'user',
+      },
+    })
+
+    if (!defaultUserRole) {
+      return submission.reply({
+        formErrors: ['User role not found in this guild'],
+      })
+    }
+
+    try {
+      await db.transaction(async (tx) => {
+        await tx.insert(guildMembers).values({
+          userId: targetUser.id,
+          guildId: guildId,
+        })
+        await tx.insert(usersToRoles).values({
+          userId: targetUser.id,
+          roleId: defaultUserRole.id,
+        })
       })
     } catch (error) {
       console.error('Error inviting user:', error)
@@ -107,11 +159,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'rename-server') {
-    if (guild.ownerId !== user.id) {
-      throw new Response('Only the server owner can rename the server', {
-        status: 403,
-      })
-    }
+    checkPermission(Permissions.MANAGE_GUILD)
 
     const submission = parseWithZod(formData, { schema: NewGuildFormSchema })
     if (submission.status !== 'success') {
@@ -132,6 +180,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'create-channel') {
+    checkPermission(Permissions.MANAGE_CHANNELS)
+
     const submission = parseWithZod(formData, { schema: NewChannelFormSchema })
     if (submission.status !== 'success') {
       return submission.reply()
@@ -161,6 +211,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'rename-channel') {
+    checkPermission(Permissions.MANAGE_CHANNELS)
+
     const channelId = Number(formData.get('channelId'))
     if (!channelId || Number.isNaN(channelId)) {
       throw new Response('Invalid channel ID', { status: 400 })
@@ -185,11 +237,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'delete-channel') {
-    if (guild.ownerId !== user.id) {
-      throw new Response('Only the server owner can delete the channel', {
-        status: 403,
-      })
-    }
+    checkPermission(Permissions.MANAGE_CHANNELS)
 
     const channelId = Number(formData.get('channelId'))
     if (!channelId || Number.isNaN(channelId)) {
@@ -210,15 +258,43 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'leave-server') {
+    if (isOwner) {
+      throw new Response('The server owner cannot leave the server', {
+        status: 403,
+      })
+    }
+
     try {
-      await db
-        .delete(guildMembers)
-        .where(
-          and(
-            eq(guildMembers.userId, user.id),
-            eq(guildMembers.guildId, guildId),
-          ),
-        )
+      await db.transaction(async (tx) => {
+        const guildRoles = await tx.query.roles.findMany({
+          where: {
+            guildId: guildId,
+          },
+          columns: {
+            id: true,
+          },
+        })
+        const guildRoleIds = guildRoles.map((r) => r.id)
+        if (guildRoleIds.length > 0) {
+          await tx
+            .delete(usersToRoles)
+            .where(
+              and(
+                eq(usersToRoles.userId, user.id),
+                inArray(usersToRoles.roleId, guildRoleIds),
+              ),
+            )
+        }
+
+        await tx
+          .delete(guildMembers)
+          .where(
+            and(
+              eq(guildMembers.userId, user.id),
+              eq(guildMembers.guildId, guildId),
+            ),
+          )
+      })
     } catch (error) {
       console.error('Error leaving guild:', error)
       throw new Response(
@@ -231,7 +307,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (intent === 'delete-server') {
-    if (guild.ownerId !== user.id) {
+    if (!isOwner) {
       throw new Response('Only the server owner can delete the server', {
         status: 403,
       })
@@ -248,6 +324,231 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     }
 
     throw redirect('/channels/@me')
+  }
+
+  if (intent === 'kick-member') {
+    checkPermission(Permissions.KICK_MEMBERS)
+
+    const submission = parseWithZod(formData, { schema: KickMemberSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { userId: targetUserId } = submission.value
+
+    if (guild.ownerId === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot kick the server owner'],
+      })
+    }
+
+    if (user.id === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot kick yourself'],
+      })
+    }
+
+    const existingMember = await db.query.guildMembers.findFirst({
+      where: {
+        userId: targetUserId,
+        guildId: guildId,
+      },
+    })
+
+    if (!existingMember) {
+      return submission.reply({
+        formErrors: ['User is not a member of this server'],
+      })
+    }
+
+    try {
+      await db.transaction(async (tx) => {
+        const guildRoles = await tx.query.roles.findMany({
+          where: {
+            guildId: guildId,
+          },
+          columns: {
+            id: true,
+          },
+        })
+        const guildRoleIds = guildRoles.map((r) => r.id)
+        if (guildRoleIds.length > 0) {
+          await tx
+            .delete(usersToRoles)
+            .where(
+              and(
+                eq(usersToRoles.userId, targetUserId),
+                inArray(usersToRoles.roleId, guildRoleIds),
+              ),
+            )
+        }
+
+        await tx
+          .delete(guildMembers)
+          .where(
+            and(
+              eq(guildMembers.userId, targetUserId),
+              eq(guildMembers.guildId, guildId),
+            ),
+          )
+      })
+    } catch (error) {
+      console.error('Error kicking member:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    return submission.reply()
+  }
+
+  if (intent === 'assign-role') {
+    const submission = parseWithZod(formData, { schema: AssignRoleSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { userId: targetUserId, roleId: targetRoleId } = submission.value
+
+    if (!isOwner) {
+      checkPermission(Permissions.MANAGE_ROLES)
+    }
+
+    if (!isOwner && guild.ownerId === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot manage roles of the server owner'],
+      })
+    }
+
+    const existingMember = await db.query.guildMembers.findFirst({
+      where: {
+        userId: targetUserId,
+        guildId: guildId,
+      },
+    })
+
+    if (!existingMember) {
+      return submission.reply({
+        formErrors: ['User is not a member of this server'],
+      })
+    }
+
+    const targetRole = await db.query.roles.findFirst({
+      where: {
+        id: targetRoleId,
+        guildId: guildId,
+      },
+    })
+
+    if (!targetRole) {
+      return submission.reply({
+        formErrors: ['Role not found in this guild'],
+      })
+    }
+
+    if (!isOwner) {
+      const missingPermissions = targetRole.permissions & ~userPermissions
+      const hasAdmin = hasPermission(userPermissions, Permissions.ADMINISTRATOR)
+      if (missingPermissions !== 0 && !hasAdmin) {
+        return submission.reply({
+          formErrors: [
+            'You cannot assign a role with permissions you do not possess',
+          ],
+        })
+      }
+    }
+
+    try {
+      await db
+        .insert(usersToRoles)
+        .values({
+          userId: targetUserId,
+          roleId: targetRoleId,
+        })
+        .onConflictDoNothing()
+    } catch (error) {
+      console.error('Error assigning role:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    return submission.reply()
+  }
+
+  if (intent === 'remove-role') {
+    const submission = parseWithZod(formData, { schema: AssignRoleSchema })
+    if (submission.status !== 'success') {
+      return submission.reply()
+    }
+    const { userId: targetUserId, roleId: targetRoleId } = submission.value
+
+    if (!isOwner) {
+      checkPermission(Permissions.MANAGE_ROLES)
+    }
+
+    if (!isOwner && guild.ownerId === targetUserId) {
+      return submission.reply({
+        formErrors: ['Cannot manage roles of the server owner'],
+      })
+    }
+
+    const existingMember = await db.query.guildMembers.findFirst({
+      where: {
+        userId: targetUserId,
+        guildId: guildId,
+      },
+    })
+
+    if (!existingMember) {
+      return submission.reply({
+        formErrors: ['User is not a member of this server'],
+      })
+    }
+
+    const targetRole = await db.query.roles.findFirst({
+      where: {
+        id: targetRoleId,
+        guildId: guildId,
+      },
+    })
+
+    if (!targetRole) {
+      return submission.reply({
+        formErrors: ['Role not found in this guild'],
+      })
+    }
+
+    if (!isOwner) {
+      const missingPermissions = targetRole.permissions & ~userPermissions
+      const hasAdmin = hasPermission(userPermissions, Permissions.ADMINISTRATOR)
+      if (missingPermissions !== 0 && !hasAdmin) {
+        return submission.reply({
+          formErrors: [
+            'You cannot remove a role with permissions you do not possess',
+          ],
+        })
+      }
+    }
+
+    try {
+      await db
+        .delete(usersToRoles)
+        .where(
+          and(
+            eq(usersToRoles.userId, targetUserId),
+            eq(usersToRoles.roleId, targetRoleId),
+          ),
+        )
+    } catch (error) {
+      console.error('Error removing role:', error)
+      throw new Response(
+        'An unexpected error occurred while processing your request.',
+        { status: 500 },
+      )
+    }
+
+    return submission.reply()
   }
 
   return null

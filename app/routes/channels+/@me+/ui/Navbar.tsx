@@ -12,6 +12,7 @@ import {
   Button,
   Group,
   Modal,
+  ScrollArea,
   Stack,
   Text,
   TextInput,
@@ -57,7 +58,7 @@ export function Navbar({ channels, lastResult }: Props) {
         <Group
           justify="space-between"
           align="center"
-          h="48"
+          mih="48"
           pl="sm"
           pr="sm"
           className="border-b"
@@ -74,15 +75,20 @@ export function Navbar({ channels, lastResult }: Props) {
             <IconPlus size={16} />
           </ActionIcon>
         </Group>
-        {channels.map((ch) => (
-          <Box key={ch.id} pl="sm" pr="sm" w="100%">
-            <Link to={`/channels/@me/${ch.id}`}>
-              <Text c="text-muted" truncate="end">
-                {ch.name}
-              </Text>
-            </Link>
-          </Box>
-        ))}
+
+        <ScrollArea type="hover" scrollHideDelay={0}>
+          <Stack gap="sm" h="100%">
+            {channels.map((ch) => (
+              <Box key={ch.id} pl="sm" pr="sm" w="100%">
+                <Link to={`/channels/@me/${ch.id}`}>
+                  <Text c="text-muted" truncate="end">
+                    {ch.name}
+                  </Text>
+                </Link>
+              </Box>
+            ))}
+          </Stack>
+        </ScrollArea>
       </SecondaryNavbar>
 
       <Modal opened={opened} onClose={close} title="Create DM Channel" centered>

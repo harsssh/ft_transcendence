@@ -14,3 +14,11 @@ CLAUDE.md
 # 3D Assets (Large binaries)
 *.hdr
 *.exr
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
