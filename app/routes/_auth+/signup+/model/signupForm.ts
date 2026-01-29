@@ -14,12 +14,10 @@ export const SignupFormSchema = z.object({
     })
     .max(255),
   password: z
-    .string(
-      {
-        error: (issue) =>
-          issue.input === undefined ? 'Password is required.' : issue.message,
-      },
-    )
+    .string({
+      error: (issue) =>
+        issue.input === undefined ? 'Password is required.' : issue.message,
+    })
     .min(8)
     .max(16),
 })

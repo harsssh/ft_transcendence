@@ -4,8 +4,8 @@ import { expect } from '@playwright/test'
 import { db } from '../../../app/contexts/db'
 import { hashPassword } from '../../../app/routes/_auth+/_shared/password.server'
 import { users } from '../../../db/schema'
-import type { FixturesExtension } from './types'
 import { test } from '.'
+import type { FixturesExtension } from './types'
 
 const AUTH_PASSWORD = 'password'
 
@@ -37,6 +37,7 @@ export const authTestFixtures: FixturesExtension<{
         // see: https://github.com/microsoft/playwright/issues/27558
         baseURL:
           process.env.E2E_BASE_URL ??
+          // biome-ignore lint/complexity/useLiteralKeys: うるさい
           `https://${process.env['WEBAPP_HOST'] ?? process.env.HOST ?? 'localhost'}`,
         ignoreHTTPSErrors: true,
       })

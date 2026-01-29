@@ -1,6 +1,6 @@
 import type { Page, TestInfo } from '@playwright/test'
-import type { FixturesExtension } from './types'
 import { test } from '.'
+import type { FixturesExtension } from './types'
 
 export type ScreenshotTestTestFixtures = {
   screenshotOnAfterEach: undefined
