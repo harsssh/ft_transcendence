@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { message3DAssets } from '../../db/schema'
+import { getMeshyApiKey } from '../../server/utils/env'
 import { MeshyProvider } from '../provider/meshy'
 
 type BroadcastUpdateFn = (
@@ -54,20 +55,7 @@ export async function resume3DGeneration(
   successStatus: string = 'ready',
 ) {
   const providerName = process.env.TEXT3D_PROVIDER || 'mock'
-  let apiKey = process.env.MESHY_API_KEY
-
-  if (providerName === 'meshy' && !apiKey) {
-    try {
-      // Try reading from Docker secret
-      const fs = await import('node:fs')
-      // Check if file exists first or just try reading
-      if (fs.existsSync('/run/secrets/meshy_api_key')) {
-        apiKey = fs.readFileSync('/run/secrets/meshy_api_key', 'utf8').trim()
-      }
-    } catch (e) {
-      console.warn('[3D-Job] Failed to read secret:', e)
-    }
-  }
+  const apiKey = getMeshyApiKey()
 
   console.log(
     `[3D-Job] Resuming ${providerName} job for asset ${assetId} (message ${messageId}): "${prompt}"`,
