@@ -41,7 +41,6 @@ const PRESETS = [
   { value: 'apartment', label: 'Apartment' },
   { value: 'park', label: 'Park' },
   { value: 'lobby', label: 'Lobby' },
-  { value: 'potsdamer_platz', label: 'Plaza' },
 ]
 
 export function ThreeViewer({

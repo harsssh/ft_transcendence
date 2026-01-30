@@ -22,6 +22,7 @@ export const HDRI_PRESETS = {
   apartment,
   park,
   lobby,
+  potsdamer_platz: city,
 } as const
 
 export type HdriPresetKey = keyof typeof HDRI_PRESETS

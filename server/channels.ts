@@ -17,6 +17,27 @@ import { getMeshyApiKey } from './utils/env'
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
 
+// Helper for broadcasting updates (Shared across WebSocket and HTTP endpoints)
+const broadcastMessageUpdate = (
+  channelId: number | string,
+  messageId: number,
+  data: { status: string; modelUrl: string | null; precedingTasks?: number },
+) => {
+  const cons = channelConnections.get(String(channelId))
+  if (cons) {
+    const updateMsg = JSON.stringify({
+      type: 'message_update',
+      data: {
+        id: messageId, // Frontend expects 'id' at root of data object
+        ...data,
+      },
+    })
+    for (const client of cons) {
+      client.send(updateMsg)
+    }
+  }
+}
+
 export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
   new Hono()
     .get(
@@ -272,21 +293,9 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 const broadcastUpdate = (
                   cId: number,
                   mId: number,
-                  asset: { status: string; modelUrl: string | null },
+                  asset: { status: string; modelUrl: string | null; precedingTasks?: number },
                 ) => {
-                  const cons = channelConnections.get(String(cId))
-                  if (cons) {
-                    const updateMsg = JSON.stringify({
-                      type: 'message_update',
-                      data: {
-                        id: mId,
-                        ...asset,
-                      },
-                    })
-                    for (const client of cons) {
-                      client.send(updateMsg)
-                    }
-                  }
+                  broadcastMessageUpdate(cId, mId, asset)
                 }
 
                 resume3DGeneration(
@@ -668,7 +677,6 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
       }),
     )
     // [3D Refine] Added Refine endpoint
-    // [3D Refine] Added Refine endpoint
     .post('/:channelId/messages/:messageId/asset/refine', async (c) => {
       const channelId = parseInt(c.req.param('channelId'), 10)
       const messageId = parseInt(c.req.param('messageId'), 10)
@@ -694,25 +702,13 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         if (message.channelId !== channelId)
           return c.json({ error: 'Invalid channel' }, 400)
 
-        // Reuse broadcast logic (re-implemented here for simplicity since we are in a closure)
+        // Reuse broadcast logic
         const broadcastUpdate = (
           cId: number,
           mId: number,
           update: { status: string; modelUrl: string | null },
         ) => {
-          const cons = channelConnections.get(String(cId))
-          if (cons) {
-            const updateMsg = JSON.stringify({
-              type: 'message_update',
-              data: {
-                id: mId,
-                ...update, // Flattened to match frontend expectation
-              },
-            })
-            for (const client of cons) {
-              client.send(updateMsg)
-            }
-          }
+          broadcastMessageUpdate(cId, mId, update)
         }
 
         const result = await processRefineRequest(
@@ -767,30 +763,12 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           .where(eq(message3DAssets.id, asset.id))
 
         // 3. Broadcast
-        const broadcastUpdate = (
-          cId: number,
-          mId: number,
-          update: { status: string; modelUrl: string | null },
-        ) => {
-          const cons = channelConnections.get(String(cId))
-          if (cons) {
-            const updateMsg = JSON.stringify({
-              type: 'message_update',
-              data: {
-                id: mId,
-                ...update,
-              },
-            })
-            for (const client of cons) {
-              client.send(updateMsg)
-            }
-          }
-        }
-
-        broadcastUpdate(channelId, messageId, {
+        broadcastMessageUpdate(channelId, messageId, {
           status: 'ready',
           modelUrl: asset.modelUrl,
         })
+
+
         return c.json({ success: true, status: 'ready' })
       } catch (e: unknown) {
         console.error('Revert error:', e)
@@ -872,7 +850,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           asset.id,
           asset.prompt,
           broadcastUpdate,
-          () => {},
+          () => { },
         ).catch((e) => console.error('[Resume] Polling error:', e))
 
         return c.json({ success: true, status: 'generating' })

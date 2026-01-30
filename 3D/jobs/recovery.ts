@@ -1,13 +1,14 @@
 import { desc, eq, or } from 'drizzle-orm'
 import { db } from '../../app/contexts/db'
 import { message3DAssets, messages } from '../../db/schema'
+import { getMeshyApiKey } from '../../server/utils/env'
 import { MeshyProvider } from '../provider/meshy'
 import { resume3DGeneration } from './processor'
 
 export async function recover3DJobs() {
   console.log('[3D-Recovery] Starting recovery for pending/failed jobs...')
 
-  const apiKey = process.env.MESHY_API_KEY
+  const apiKey = getMeshyApiKey()
   if (!apiKey) {
     console.warn('[3D-Recovery] No API Key found, skipping recovery.')
     return
@@ -48,11 +49,20 @@ export async function recover3DJobs() {
 
       // 1. Success
       if (statusRes.status === 'SUCCEEDED') {
-        console.log(`[3D-Recovery] Job ${asset.id} SUCCEEDED. Updating DB.`)
+        // If we have a modelUrl AND existing status was generating/queued, it was likely a Refine job
+        // (because Refine preserves the original modelUrl while generating)
+        // Or if it was initial, modelUrl is usually null (unless partial update happened)
+        // We use presence of modelUrl to imply 'refined' target status
+        const isRefine = !!asset.modelUrl
+        const successStatus = isRefine ? 'refined' : 'ready'
+
+        console.log(
+          `[3D-Recovery] Job ${asset.id} SUCCEEDED. Setting status to '${successStatus}'.`,
+        )
         await db
           .update(message3DAssets)
           .set({
-            status: 'ready',
+            status: successStatus,
             modelUrl: statusRes.modelUrl,
             updatedAt: new Date(),
           })
@@ -94,6 +104,9 @@ export async function recover3DJobs() {
           )
         }
 
+        const isRefine = !!asset.modelUrl
+        const successStatus = isRefine ? 'refined' : 'ready'
+
         // Resume polling (this will run in background)
         resume3DGeneration(
           db,
@@ -102,6 +115,8 @@ export async function recover3DJobs() {
           asset.id,
           asset.prompt,
           broadcastUpdate,
+          undefined,
+          successStatus,
         ).catch((e) =>
           console.error(`[3D-Recovery] Error resuming job ${asset.id}:`, e),
         )
