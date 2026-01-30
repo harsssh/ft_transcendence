@@ -17,13 +17,13 @@ type Props = {
   avatarSrc?: string | undefined | null
   withProfile?: boolean
   asset3D?:
-  | {
-    status: string
-    modelUrl: string | null
-    precedingTasks?: number | undefined
-  }
-  | undefined
-  | null
+    | {
+        status: string
+        modelUrl: string | null
+        precedingTasks?: number | undefined
+      }
+    | undefined
+    | null
   roles?: Role[] | undefined
   guild?: GuildOutletContext['guild'] | undefined
   loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
@@ -45,7 +45,7 @@ export function Message({
 }: Props) {
   // サーバーとクライアントのロケールが異なる場合にhydration errorが発生するため、それを避けるハッチ
   const localeTimeCreatedAt = useSyncExternalStore(
-    () => () => { },
+    () => () => {},
     () => createdAt.toLocaleTimeString(),
     () => createdAt.toISOString(),
   )
@@ -65,8 +65,8 @@ export function Message({
       style={
         withProfile
           ? {
-            marginTop: 'var(--mantine-spacing-md)',
-          }
+              marginTop: 'var(--mantine-spacing-md)',
+            }
           : {}
       }
     >
@@ -126,12 +126,12 @@ export function Message({
               modelUrl={asset3D.modelUrl}
               status={
                 asset3D.status as
-                | 'queued'
-                | 'generating'
-                | 'ready'
-                | 'failed'
-                | 'refined'
-                | 'timeout'
+                  | 'queued'
+                  | 'generating'
+                  | 'ready'
+                  | 'failed'
+                  | 'refined'
+                  | 'timeout'
               }
               channelId={channelId}
               messageId={id} // Assuming 'id' is available in scope (props)
