@@ -16,11 +16,11 @@ export default defineConfig((config) => ({
   ],
   ...(config.command === 'build'
     ? {
-      resolve: {
-        alias: {
-          'react-dom/server': 'react-dom/server.node',
+        resolve: {
+          alias: {
+            'react-dom/server': 'react-dom/server.node',
+          },
         },
-      },
-    }
+      }
     : {}),
 }))
