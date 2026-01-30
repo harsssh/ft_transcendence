@@ -38,6 +38,7 @@ import { authMiddleware } from '../../../middlewares/auth'
 import { SignupFormSchema } from '../../_auth+/signup+/model/signupForm'
 import { SecondaryNavbar } from '../../_shared/ui/SecondaryNavbar'
 import { hasPermission, Permissions } from '../_shared/permissions'
+import { UserPanel } from '../_shared/UserPanel'
 import { NewGuildFormSchema } from '../model/newGuildForm'
 import type { ChannelsOutletContext } from '../route'
 import type { Route } from './+types/route'
@@ -413,6 +414,7 @@ export default function GuildRoute() {
               />
             ))}
           </Flex>
+          <UserPanel />
         </Flex>
       </SecondaryNavbar>,
     )
