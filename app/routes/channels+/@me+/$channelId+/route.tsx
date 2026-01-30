@@ -1,10 +1,12 @@
 import { ActionIcon, Group, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconUserCircle } from '@tabler/icons-react'
+import { IconChevronLeft, IconUserCircle } from '@tabler/icons-react'
+import { useOutletContext } from 'react-router'
 import { IconButton } from '../../../_shared/ui/IconButton'
 import { TextChannelView } from '../../_text/TextChannelView'
 import { UserAvatar } from '../../_text/ui/UserAvatar'
 import { UserProfileSidebar } from '../../_text/ui/UserProfileSidebar'
+import type { ChannelsOutletContext } from '../../route'
 import type { Route } from './+types/route'
 
 export { action } from './api/action.server'
@@ -18,6 +20,8 @@ export default function DMChannel({
   const { messages, partner, locale } = loaderData
   const channelId = params.channelId
 
+  const { openNavbar } = useOutletContext<ChannelsOutletContext>()
+
   const [profileSidebarOpened, { toggle: toggleProfileSidebar }] =
     useDisclosure(false)
 
@@ -29,7 +33,16 @@ export default function DMChannel({
       websocketUrl={`/api/channels/${channelId}/ws`}
       headerContent={
         <>
-          <Group>
+          <Group gap="xs">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              aria-label="Open navbar"
+              onClick={openNavbar}
+              hiddenFrom="sm"
+            >
+              <IconChevronLeft size={18} />
+            </ActionIcon>
             <UserAvatar
               name={partner?.name}
               src={partner?.avatarUrl}
