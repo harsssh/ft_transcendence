@@ -1,17 +1,17 @@
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import type { UpgradeWebSocket, WSContext } from 'hono/ws'
-import { db } from '../app/contexts/db'
-import { resume3DGeneration } from '../3D/jobs/processor'
 import { processRefineRequest } from '../3D/api/refine'
+import { resume3DGeneration } from '../3D/jobs/processor'
+import { checkRateLimit, releaseJobLock } from '../3D/ratelimit'
+import { db } from '../app/contexts/db'
 import { STORAGE_PUBLIC_ENDPOINT } from '../app/contexts/storage'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import {
   type MessageType,
   SendMessageSchema,
 } from '../app/routes/channels+/_text/model/message'
-import { messages, users, message3DAssets } from '../db/schema'
-import { checkRateLimit, releaseJobLock } from '../3D/ratelimit'
+import { message3DAssets, messages, users } from '../db/schema'
 import { getMeshyApiKey } from './utils/env'
 
 // Store WebSocket connections per channel
@@ -107,7 +107,12 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
               }
 
               const txResult = await db.transaction(async (tx) => {
-                let trigger3D: { prompt: string, messageId: number, assetId: number, channelId: number } | null = null
+                let trigger3D: {
+                  prompt: string
+                  messageId: number
+                  assetId: number
+                  channelId: number
+                } | null = null
 
                 const channel = await db.query.channels.findFirst({
                   where: {
@@ -190,13 +195,19 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 if (msgContent.content.startsWith('/3D -URL ')) {
                   const url = msgContent.content.slice(9).trim()
                   // Basic URL validation
-                  if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-                    const [asset] = await tx.insert(message3DAssets).values({
-                      messageId: insertedMessage.id,
-                      prompt: 'Imported from URL',
-                      status: 'refined', // Disables Refine button
-                      modelUrl: url,
-                    }).returning()
+                  if (
+                    url &&
+                    (url.startsWith('http://') || url.startsWith('https://'))
+                  ) {
+                    const [asset] = await tx
+                      .insert(message3DAssets)
+                      .values({
+                        messageId: insertedMessage.id,
+                        prompt: 'Imported from URL',
+                        status: 'refined', // Disables Refine button
+                        modelUrl: url,
+                      })
+                      .returning()
 
                     if (asset) {
                       // Immediate broadcast of the 'refined' asset
@@ -207,8 +218,8 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                           data: {
                             id: insertedMessage.id,
                             status: 'refined',
-                            modelUrl: url
-                          }
+                            modelUrl: url,
+                          },
                         })
                         for (const client of cons) {
                           client.send(updateMsg)
@@ -219,26 +230,31 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 } else if (msgContent.content.startsWith('/3D ')) {
                   const limitResult = await checkRateLimit(userId)
                   if (!limitResult.allowed) {
-                    ws.send(JSON.stringify({
-                      type: 'error',
-                      error: `Rate limit exceeded. Please wait ${limitResult.remaining} seconds.`
-                    }))
+                    ws.send(
+                      JSON.stringify({
+                        type: 'error',
+                        error: `Rate limit exceeded. Please wait ${limitResult.remaining} seconds.`,
+                      }),
+                    )
                     return { trigger3D: null }
                   }
                   const prompt = msgContent.content.slice(4).trim()
                   if (prompt) {
-                    const [asset] = await tx.insert(message3DAssets).values({
-                      messageId: insertedMessage.id,
-                      prompt,
-                      status: 'queued',
-                    }).returning()
+                    const [asset] = await tx
+                      .insert(message3DAssets)
+                      .values({
+                        messageId: insertedMessage.id,
+                        prompt,
+                        status: 'queued',
+                      })
+                      .returning()
 
                     if (asset) {
                       trigger3D = {
                         prompt,
                         messageId: insertedMessage.id,
                         assetId: asset.id,
-                        channelId: Number(channelId)
+                        channelId: Number(channelId),
                       }
                     }
                   }
@@ -249,18 +265,23 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
               // Execute 3D Generation AFTER transaction commit
               if (txResult && txResult.trigger3D) {
-                const { prompt, messageId, assetId, channelId } = txResult.trigger3D
+                const { prompt, messageId, assetId, channelId } =
+                  txResult.trigger3D
 
                 // Helper for broadcasting updates from processor
-                const broadcastUpdate = (cId: number, mId: number, asset: { status: string, modelUrl: string | null }) => {
+                const broadcastUpdate = (
+                  cId: number,
+                  mId: number,
+                  asset: { status: string; modelUrl: string | null },
+                ) => {
                   const cons = channelConnections.get(String(cId))
                   if (cons) {
                     const updateMsg = JSON.stringify({
                       type: 'message_update',
                       data: {
                         id: mId,
-                        ...asset
-                      }
+                        ...asset,
+                      },
                     })
                     for (const client of cons) {
                       client.send(updateMsg)
@@ -268,7 +289,14 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   }
                 }
 
-                resume3DGeneration(db, channelId, messageId, assetId, prompt, broadcastUpdate).catch(e => console.error(e))
+                resume3DGeneration(
+                  db,
+                  channelId,
+                  messageId,
+                  assetId,
+                  prompt,
+                  broadcastUpdate,
+                ).catch((e) => console.error(e))
               }
             } catch (error) {
               console.error('Error handling message:', error)
@@ -389,7 +417,12 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
               }
 
               const txResult = await db.transaction(async (tx) => {
-                let trigger3D: { prompt: string, messageId: number, assetId: number, channelId: number } | null = null
+                let trigger3D: {
+                  prompt: string
+                  messageId: number
+                  assetId: number
+                  channelId: number
+                } | null = null
 
                 const channel = await db.query.channels.findFirst({
                   where: {
@@ -499,13 +532,19 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 if (msgContent.content.startsWith('/3D -URL ')) {
                   const url = msgContent.content.slice(9).trim()
                   // Basic URL validation
-                  if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-                    const [asset] = await tx.insert(message3DAssets).values({
-                      messageId: insertedMessage.id,
-                      prompt: 'Imported from URL',
-                      status: 'refined', // Disables Refine button
-                      modelUrl: url,
-                    }).returning()
+                  if (
+                    url &&
+                    (url.startsWith('http://') || url.startsWith('https://'))
+                  ) {
+                    const [asset] = await tx
+                      .insert(message3DAssets)
+                      .values({
+                        messageId: insertedMessage.id,
+                        prompt: 'Imported from URL',
+                        status: 'refined', // Disables Refine button
+                        modelUrl: url,
+                      })
+                      .returning()
 
                     if (asset) {
                       // Immediate broadcast of the 'refined' asset
@@ -516,8 +555,8 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                           data: {
                             id: insertedMessage.id,
                             status: 'refined',
-                            modelUrl: url
-                          }
+                            modelUrl: url,
+                          },
                         })
                         for (const client of cons) {
                           client.send(updateMsg)
@@ -528,26 +567,31 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 } else if (msgContent.content.startsWith('/3D ')) {
                   const limitResult = await checkRateLimit(userId)
                   if (!limitResult.allowed) {
-                    ws.send(JSON.stringify({
-                      type: 'error',
-                      error: `Rate limit exceeded. Please wait ${limitResult.remaining} seconds.`
-                    }))
+                    ws.send(
+                      JSON.stringify({
+                        type: 'error',
+                        error: `Rate limit exceeded. Please wait ${limitResult.remaining} seconds.`,
+                      }),
+                    )
                     return { trigger3D: null }
                   }
                   const prompt = msgContent.content.slice(4).trim()
                   if (prompt) {
-                    const [asset] = await tx.insert(message3DAssets).values({
-                      messageId: insertedMessage.id,
-                      prompt,
-                      status: 'queued',
-                    }).returning()
+                    const [asset] = await tx
+                      .insert(message3DAssets)
+                      .values({
+                        messageId: insertedMessage.id,
+                        prompt,
+                        status: 'queued',
+                      })
+                      .returning()
 
                     if (asset) {
                       trigger3D = {
                         prompt,
                         messageId: insertedMessage.id,
                         assetId: asset.id,
-                        channelId: Number(channelId)
+                        channelId: Number(channelId),
                       }
                     }
                   }
@@ -558,18 +602,23 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
               // Execute 3D Generation AFTER transaction commit
               if (txResult && txResult.trigger3D) {
-                const { prompt, messageId, assetId, channelId } = txResult.trigger3D
+                const { prompt, messageId, assetId, channelId } =
+                  txResult.trigger3D
 
                 // Helper for broadcasting updates from processor
-                const broadcastUpdate = (cId: number, mId: number, asset: { status: string, modelUrl: string | null }) => {
+                const broadcastUpdate = (
+                  cId: number,
+                  mId: number,
+                  asset: { status: string; modelUrl: string | null },
+                ) => {
                   const cons = channelConnections.get(String(cId))
                   if (cons) {
                     const updateMsg = JSON.stringify({
                       type: 'message_update',
                       data: {
                         id: mId,
-                        ...asset
-                      }
+                        ...asset,
+                      },
                     })
                     for (const client of cons) {
                       client.send(updateMsg)
@@ -577,11 +626,18 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   }
                 }
 
-                resume3DGeneration(db, channelId, messageId, assetId, prompt, broadcastUpdate, () => releaseJobLock(userId))
-                  .catch(e => {
-                    console.error(e)
-                    releaseJobLock(userId)
-                  })
+                resume3DGeneration(
+                  db,
+                  channelId,
+                  messageId,
+                  assetId,
+                  prompt,
+                  broadcastUpdate,
+                  () => releaseJobLock(userId),
+                ).catch((e) => {
+                  console.error(e)
+                  releaseJobLock(userId)
+                })
               }
             } catch (error) {
               console.error('Error handling message:', error)
@@ -627,21 +683,31 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         if (!userId) return c.json({ error: 'Unauthorized' }, 401)
 
         // [Security] Ownership check
-        const [message] = await db.select().from(messages).where(eq(messages.id, messageId)).limit(1)
+        const [message] = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.id, messageId))
+          .limit(1)
         if (!message) return c.json({ error: 'Message not found' }, 404)
-        if (message.senderId !== userId) return c.json({ error: 'Forbidden' }, 403)
-        if (message.channelId !== channelId) return c.json({ error: 'Invalid channel' }, 400)
+        if (message.senderId !== userId)
+          return c.json({ error: 'Forbidden' }, 403)
+        if (message.channelId !== channelId)
+          return c.json({ error: 'Invalid channel' }, 400)
 
         // Reuse broadcast logic (re-implemented here for simplicity since we are in a closure)
-        const broadcastUpdate = (cId: number, mId: number, update: { status: string, modelUrl: string | null }) => {
+        const broadcastUpdate = (
+          cId: number,
+          mId: number,
+          update: { status: string; modelUrl: string | null },
+        ) => {
           const cons = channelConnections.get(String(cId))
           if (cons) {
             const updateMsg = JSON.stringify({
               type: 'message_update',
               data: {
                 id: mId,
-                ...update // Flattened to match frontend expectation
-              }
+                ...update, // Flattened to match frontend expectation
+              },
             })
             for (const client of cons) {
               client.send(updateMsg)
@@ -649,9 +715,13 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           }
         }
 
-        const result = await processRefineRequest(messageId, channelId, apiKey, broadcastUpdate)
+        const result = await processRefineRequest(
+          messageId,
+          channelId,
+          apiKey,
+          broadcastUpdate,
+        )
         return c.json(result)
-
       } catch (e: any) {
         console.error('Refine error:', e)
         return c.json({ error: e.message || 'Refine failed' }, 500)
@@ -669,13 +739,20 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         if (!userId) return c.json({ error: 'Unauthorized' }, 401)
 
         // [Security] Ownership check
-        const [message] = await db.select().from(messages).where(eq(messages.id, messageId)).limit(1)
+        const [message] = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.id, messageId))
+          .limit(1)
         if (!message) return c.json({ error: 'Message not found' }, 404)
-        if (message.senderId !== userId) return c.json({ error: 'Forbidden' }, 403)
-        if (message.channelId !== channelId) return c.json({ error: 'Invalid channel' }, 400)
+        if (message.senderId !== userId)
+          return c.json({ error: 'Forbidden' }, 403)
+        if (message.channelId !== channelId)
+          return c.json({ error: 'Invalid channel' }, 400)
 
         // 1. Get Asset
-        const [asset] = await db.select()
+        const [asset] = await db
+          .select()
           .from(message3DAssets)
           .where(eq(message3DAssets.messageId, messageId))
           .limit(1)
@@ -683,20 +760,25 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         if (!asset) return c.json({ error: 'Asset not found' }, 404)
 
         // 2. Reset Status to 'ready' (keep URL)
-        await db.update(message3DAssets)
+        await db
+          .update(message3DAssets)
           .set({ status: 'ready', updatedAt: new Date() })
           .where(eq(message3DAssets.id, asset.id))
 
         // 3. Broadcast
-        const broadcastUpdate = (cId: number, mId: number, update: { status: string, modelUrl: string | null }) => {
+        const broadcastUpdate = (
+          cId: number,
+          mId: number,
+          update: { status: string; modelUrl: string | null },
+        ) => {
           const cons = channelConnections.get(String(cId))
           if (cons) {
             const updateMsg = JSON.stringify({
               type: 'message_update',
               data: {
                 id: mId,
-                ...update
-              }
+                ...update,
+              },
             })
             for (const client of cons) {
               client.send(updateMsg)
@@ -704,9 +786,11 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           }
         }
 
-        broadcastUpdate(channelId, messageId, { status: 'ready', modelUrl: asset.modelUrl })
+        broadcastUpdate(channelId, messageId, {
+          status: 'ready',
+          modelUrl: asset.modelUrl,
+        })
         return c.json({ success: true, status: 'ready' })
-
       } catch (e: any) {
         console.error('Revert error:', e)
         return c.json({ error: e.message || 'Revert failed' }, 500)
@@ -724,13 +808,20 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         if (!userId) return c.json({ error: 'Unauthorized' }, 401)
 
         // [Security] Ownership check
-        const [message] = await db.select().from(messages).where(eq(messages.id, messageId)).limit(1)
+        const [message] = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.id, messageId))
+          .limit(1)
         if (!message) return c.json({ error: 'Message not found' }, 404)
-        if (message.senderId !== userId) return c.json({ error: 'Forbidden' }, 403)
-        if (message.channelId !== channelId) return c.json({ error: 'Invalid channel' }, 400)
+        if (message.senderId !== userId)
+          return c.json({ error: 'Forbidden' }, 403)
+        if (message.channelId !== channelId)
+          return c.json({ error: 'Invalid channel' }, 400)
 
         // 1. Get Asset
-        const [asset] = await db.select()
+        const [asset] = await db
+          .select()
           .from(message3DAssets)
           .where(eq(message3DAssets.messageId, messageId))
           .limit(1)
@@ -739,15 +830,19 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
         // 2. Resume Generation (Polling)
         // Reuse broadcast logic
-        const broadcastUpdate = (cId: number, mId: number, update: { status: string, modelUrl: string | null }) => {
+        const broadcastUpdate = (
+          cId: number,
+          mId: number,
+          update: { status: string; modelUrl: string | null },
+        ) => {
           const cons = channelConnections.get(String(cId))
           if (cons) {
             const updateMsg = JSON.stringify({
               type: 'message_update',
               data: {
                 id: mId,
-                ...update
-              }
+                ...update,
+              },
             })
             for (const client of cons) {
               client.send(updateMsg)
@@ -758,17 +853,27 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         // Set status to generating immediately to show UI feedback
         // But only if it's not already ready/refined?
         // Actually typical resume usage is from 'timeout' or 'generating' state.
-        await db.update(message3DAssets)
+        await db
+          .update(message3DAssets)
           .set({ status: 'generating', updatedAt: new Date() })
           .where(eq(message3DAssets.id, asset.id))
-        broadcastUpdate(channelId, messageId, { status: 'generating', modelUrl: asset.modelUrl })
+        broadcastUpdate(channelId, messageId, {
+          status: 'generating',
+          modelUrl: asset.modelUrl,
+        })
 
         // 3. Call Processor
-        resume3DGeneration(db, channelId, messageId, asset.id, asset.prompt, broadcastUpdate, () => { })
-          .catch(e => console.error('[Resume] Polling error:', e))
+        resume3DGeneration(
+          db,
+          channelId,
+          messageId,
+          asset.id,
+          asset.prompt,
+          broadcastUpdate,
+          () => {},
+        ).catch((e) => console.error('[Resume] Polling error:', e))
 
         return c.json({ success: true, status: 'generating' })
-
       } catch (e: any) {
         console.error('Resume error:', e)
         return c.json({ error: e.message || 'Resume failed' }, 500)

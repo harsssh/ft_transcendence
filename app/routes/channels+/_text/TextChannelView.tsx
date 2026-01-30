@@ -70,7 +70,7 @@ export function TextChannelView({
   const MAX_RECONNECT_ATTEMPTS = 5
 
   const timeZone = useSyncExternalStore(
-    () => () => { },
+    () => () => {},
     () => Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
     () => 'UTC',
   )
@@ -141,21 +141,23 @@ export function TextChannelView({
               // [3D Refine] Handle 3D Asset Updates (including refine/revert status)
               if (parsedData.type === 'message_update' && parsedData.data) {
                 const update = parsedData.data
-                setMessages((prev) => prev.map((m) => {
-                  if (m.id === update.id) {
-                    return {
-                      ...m,
-                      asset3D: {
-                        ...m.asset3D,
-                        status: update.status,
-                        modelUrl: update.modelUrl,
-                        // Include other fields like precedingTasks
-                        ...update
+                setMessages((prev) =>
+                  prev.map((m) => {
+                    if (m.id === update.id) {
+                      return {
+                        ...m,
+                        asset3D: {
+                          ...m.asset3D,
+                          status: update.status,
+                          modelUrl: update.modelUrl,
+                          // Include other fields like precedingTasks
+                          ...update,
+                        },
                       }
                     }
-                  }
-                  return m
-                }))
+                    return m
+                  }),
+                )
                 return
               }
 

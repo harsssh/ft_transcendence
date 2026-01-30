@@ -93,7 +93,6 @@ export const message3DAssets = p.pgTable('message_3d_assets', {
   updatedAt: p.timestamp('updated_at').defaultNow().notNull(),
 })
 
-
 export const friendStatusEnum = p.pgEnum('friend_status', [
   'pending',
   'accepted',
@@ -273,8 +272,6 @@ export const relations = defineRelations(
         from: r.usersToRoles.roleId,
         to: r.roles.id,
       }),
-
     },
   }),
 )
-

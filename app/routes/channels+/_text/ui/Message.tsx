@@ -1,12 +1,11 @@
 import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
-import { useParams } from 'react-router'
 import { useSyncExternalStore } from 'react'
+import { useParams } from 'react-router'
+import { ThreeViewer } from '../../../../../3D/ui/ThreeViewer'
 import type { GuildOutletContext } from '../../$guildId+/route'
 import { type Role, UserAvatarPopover } from './UserAvatarPopover'
-
-import { ThreeViewer } from '../../../../../3D/ui/ThreeViewer'
 
 type Props = {
   id: number
@@ -17,10 +16,13 @@ type Props = {
   content: string
   avatarSrc?: string | undefined | null
   withProfile?: boolean
-  asset3D?: {
-    status: string
-    modelUrl: string | null
-  } | undefined | null
+  asset3D?:
+    | {
+        status: string
+        modelUrl: string | null
+      }
+    | undefined
+    | null
   roles?: Role[] | undefined
   guild?: GuildOutletContext['guild'] | undefined
   loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
@@ -42,13 +44,15 @@ export function Message({
 }: Props) {
   // サーバーとクライアントのロケールが異なる場合にhydration errorが発生するため、それを避けるハッチ
   const localeTimeCreatedAt = useSyncExternalStore(
-    () => () => { },
+    () => () => {},
     () => createdAt.toLocaleTimeString(),
     () => createdAt.toISOString(),
   )
   const { ref: hoverRef, hovered } = useHover()
   const params = useParams()
-  const channelId = params['channelId'] ? parseInt(params['channelId']) : undefined
+  const channelId = params['channelId']
+    ? parseInt(params['channelId'])
+    : undefined
   const roleColor = roles?.[0]?.color
 
   return (
@@ -60,8 +64,8 @@ export function Message({
       style={
         withProfile
           ? {
-            marginTop: 'var(--mantine-spacing-md)',
-          }
+              marginTop: 'var(--mantine-spacing-md)',
+            }
           : {}
       }
     >
@@ -107,7 +111,16 @@ export function Message({
           <Text style={{ wordBreak: 'break-word' }}>{content}</Text>
         </Group>
         {asset3D && (
-          <Box mt="sm" style={{ width: 300, height: 300, border: '1px solid #333', borderRadius: 8, overflow: 'hidden' }}>
+          <Box
+            mt="sm"
+            style={{
+              width: 300,
+              height: 300,
+              border: '1px solid #333',
+              borderRadius: 8,
+              overflow: 'hidden',
+            }}
+          >
             <ThreeViewer
               modelUrl={asset3D.modelUrl}
               status={asset3D.status as any}
