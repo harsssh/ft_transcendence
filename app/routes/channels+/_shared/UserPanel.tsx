@@ -54,7 +54,7 @@ export function UserPanel() {
               className="hover:bg-white/10"
             >
               <IconSettings
-                className="text-zinc-500 hover:text-zinc-200 transion-colors"
+                className="text-zinc-500 hover:text-zinc-200 transition-colors"
                 size={20}
               />
             </ActionIcon>
