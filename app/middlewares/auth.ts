@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { type MiddlewareFunction, redirect } from 'react-router'
 import { users } from '../../db/schema'
 import { dbContext } from '../contexts/db'
+import { STORAGE_PUBLIC_ENDPOINT } from '../contexts/storage'
 import { loggedInUserContext } from '../contexts/user.server'
 import {
   destroySession,
@@ -29,7 +30,12 @@ export const authMiddleware: MiddlewareFunction<Response> = async ({
         },
       })
     }
-    context.set(loggedInUserContext, user)
+    context.set(loggedInUserContext, {
+      ...user,
+      avatarUrl: user.avatarUrl
+        ? `${STORAGE_PUBLIC_ENDPOINT}/${user.avatarUrl}`
+        : null,
+    })
   } catch (e) {
     console.error(e)
     return redirect('/signin', {
