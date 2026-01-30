@@ -22,7 +22,12 @@ export function UserPanel() {
       }}
     >
       <Group justify="space-between" gap={4} wrap="nowrap">
-        <Group justify="flex-start" gap={4} wrap="nowrap">
+        <Group
+          justify="flex-start"
+          gap={4}
+          wrap="nowrap"
+          style={{ flex: 1, minWidth: 0 }}
+        >
           <UserAvatarPopover
             id={user.id}
             name={user.name}
@@ -30,11 +35,11 @@ export function UserPanel() {
             src={user.avatarUrl}
             isEditable={false}
           />
-          <div className="ml-2">
-            <Text size="sm" fw={700} c="white">
+          <div className="ml-2 min-w-0">
+            <Text size="sm" fw={700} c="white" truncate="end">
               {user.displayName ?? user.name}
             </Text>
-            <Text size="xs" c="dimmed">
+            <Text size="xs" c="dimmed" truncate="end">
               {user.name}
             </Text>
           </div>
