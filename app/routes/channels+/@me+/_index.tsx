@@ -314,6 +314,7 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
   const sentRequests = loaderData?.sentRequests ?? []
 
   const [page, setPage] = useState(1)
+  const [activeTab, setActiveTab] = useState<string | null>('all')
   const paginatedFriends = friends.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE,
@@ -326,13 +327,30 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
     }
   }, [page, totalPages])
 
+  const headerHeight = 48
+
   return (
-    <Stack h="100%" gap={0} mih="0">
+    <Stack
+      gap={5}
+      h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
+      style={{
+        borderTop: '1px solid var(--ft-border-color)',
+        overscrollBehavior: 'contain',
+        position: 'relative',
+      }}
+    >
       <Group
-        p="md"
-        bg="var(--mantine-color-body)"
+        h={headerHeight}
+        align="center"
+        pl="md"
+        pr="md"
+        gap="xs"
         style={{
-          borderBottom: '1px solid var(--mantine-color-default-border)',
+          borderBottom: '1px solid var(--ft-border-color)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          flexShrink: 0,
         }}
       >
         <ActionIcon
@@ -349,22 +367,39 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
       </Group>
 
       <Tabs
-        defaultValue="all"
+        value={activeTab}
+        onChange={setActiveTab}
         mih="0"
         display="flex"
         style={{ flexDirection: 'column' }}
+        variant="pills"
       >
         <Tabs.List px="md" style={{ flexShrink: 0 }}>
-          <Tabs.Tab value="all">All</Tabs.Tab>
-          <Tabs.Tab value="pending">
-            Pending
-            {pendingRequests.length > 0 && (
-              <Badge size="xs" circle ml={5}>
-                {pendingRequests.length}
-              </Badge>
-            )}
+          <Tabs.Tab value="all" color="gray">
+            All
           </Tabs.Tab>
-          <Tabs.Tab value="add" c="green">
+          <Tabs.Tab value="pending" color="gray">
+            <Group gap={5} align="center" wrap="nowrap">
+              Pending
+              {pendingRequests.length > 0 && (
+                <Badge size="xs" circle>
+                  {pendingRequests.length}
+                </Badge>
+              )}
+            </Group>
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="add"
+            c="white"
+            color="gray"
+            style={
+              activeTab !== 'add'
+                ? {
+                    backgroundColor: 'var(--mantine-color-indigo-filled)',
+                  }
+                : undefined
+            }
+          >
             Add Friend
           </Tabs.Tab>
         </Tabs.List>
