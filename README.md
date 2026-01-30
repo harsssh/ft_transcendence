@@ -12,6 +12,14 @@ git submodule update --init --recursive
 
 3. `.env.example`をコピーして、`.env`に必須の環境変数を設定
 
+    <details>
+    <summary>3D機能 (Meshy) の設定（オプション）</summary>
+
+    1. [Meshy](https://app.meshy.ai/) のアカウントを作成し、設定から API Key を発行する
+    2. `.env` に `MESHY_API_KEY` を設定する（または Docker secrets `meshy_api_key` を使用）
+    3. `.env` の `TEXT3D_PROVIDER` を `meshy` に設定する
+    </details>
+
 4. `/etc/hosts`を書き換えて`WEBAPP_HOST` `STORAGE_HOST` `KIBANA_HOST` で指定したドメインと127.0.0.1をbind
 ```
 127.0.0.1   <WEBAPP_HOSTで指定したhostname> <STORAGE_HOSTで指定したhostname> <KIBANA_HOSTで指定したhostname>
