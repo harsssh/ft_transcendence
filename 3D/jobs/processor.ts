@@ -10,6 +10,7 @@ type BroadcastUpdateFn = (
 
 // Fallback Mock Logic
 async function runMock(
+	// biome-ignore lint/suspicious/noExplicitAny: Mock DB type
 	db: any,
 	channelId: number,
 	messageId: number,
@@ -33,6 +34,7 @@ async function runMock(
 }
 
 export async function resume3DGeneration(
+	// biome-ignore lint/suspicious/noExplicitAny: DB type mismatch during migration
 	db: any,
 	channelId: number,
 	messageId: number,
@@ -151,6 +153,7 @@ export async function resume3DGeneration(
 									.set({ status: successStatus, modelUrl: finalUrl })
 									.where(eq(message3DAssets.id, assetId))
 
+								// biome-ignore lint/style/noNonNullAssertion: Guaranteed by success check
 								broadcastUpdate(channelId, messageId, { status: successStatus, modelUrl: finalUrl! })
 								success = true
 								onComplete?.()
@@ -181,6 +184,7 @@ export async function resume3DGeneration(
 
 				if (success) return
 
+				// biome-ignore lint/suspicious/noExplicitAny: Error handling
 			} catch (e: any) {
 				console.error(`[3D-Job] Attempt ${retryCount + 1} Error:`, e)
 				if (e.message?.toLowerCase().includes('busy') || e.status === 429) {

@@ -1,10 +1,10 @@
 // Import directly from the build file to avoid circular dependency with the alias in vite.config.ts
-// @ts-ignore
+// @ts-expect-error
 import * as THREE from '../../node_modules/three/build/three.module.js';
 
 // Re-export everything from actual three
-// @ts-ignore
-// @ts-ignore
+// @ts-expect-error
+// @ts-expect-error
 export * from '../../node_modules/three/build/three.module.js';
 
 // Manually export backward-compatibility aliases
