@@ -1,46 +1,73 @@
-import { ActionIcon, Group, Text, Tooltip, UnstyledButton } from '@mantine/core'
-import { IconSettings } from '@tabler/icons-react'
+import { ActionIcon, Box, Group, Menu, Text } from '@mantine/core'
+import { IconLogout, IconSettings } from '@tabler/icons-react'
 import { useContext } from 'react'
+import { useSubmit } from 'react-router'
 import { LoggedInUserContext } from '../../../contexts/user'
-import { UserAvatar } from '../_text/ui/UserAvatar'
+import { UserAvatarPopover } from '../_text/ui/UserAvatarPopover'
 
 export function UserPanel() {
   const user = useContext(LoggedInUserContext)
+  const submit = useSubmit()
 
   if (!user) return null
 
   return (
-    <div className="bg-gray w-full p-5 flex-shrink-0 border-t border-white/5">
+    <Box
+      p={14}
+      style={{
+        position: 'sticky',
+        bottom: 0,
+        borderTop: '1px solid var(--ft-border-color)',
+        flexShrink: 0,
+      }}
+    >
       <Group justify="space-between" gap={4} wrap="nowrap">
-        <UnstyledButton className="flex items-center flex-1 py-1 px-1.5 rounded-md transition-colors duration-200">
-          <UserAvatar
+        <Group justify="flex-start" gap={4} wrap="nowrap">
+          <UserAvatarPopover
             id={user.id}
             name={user.name}
+            displayName={user.displayName}
             src={user.avatarUrl}
-            withOnlineStatus
+            isEditable={false}
           />
           <div className="ml-2">
-            <Text size="sm" fw={700} c="white" style={{ lineHeight: 1.2 }}>
+            <Text size="sm" fw={700} c="white">
+              {user.displayName ?? user.name}
+            </Text>
+            <Text size="xs" c="dimmed">
               {user.name}
             </Text>
-            <Text size="xs" c="dimmed" style={{ lineHeight: 1.2 }}>
-              {'online'}
-            </Text>
           </div>
-        </UnstyledButton>
+        </Group>
 
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="md"
-          className="hover:bg-white/10"
-        >
-          <IconSettings
-            className="text-zinc-500 hover:text-zinc-200 transion-colors"
-            size={20}
-          />
-        </ActionIcon>
+        <Menu shadow="md" width={210}>
+          <Menu.Target>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="md"
+              className="hover:bg-white/10"
+            >
+              <IconSettings
+                className="text-zinc-500 hover:text-zinc-200 transion-colors"
+                size={20}
+              />
+            </ActionIcon>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Item
+              color="red"
+              leftSection={<IconLogout size={14} />}
+              onClick={() => {
+                submit(null, { method: 'post', action: '/logout' })
+              }}
+            >
+              Log Out
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
       </Group>
-    </div>
+    </Box>
   )
 }
