@@ -323,13 +323,30 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
     }
   }, [page, totalPages])
 
+  const headerHeight = 48
+
   return (
-    <Stack h="100%" gap={0} mih="0">
+    <Stack
+      gap={0}
+      h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
+      style={{
+        borderTop: '1px solid var(--ft-border-color)',
+        overscrollBehavior: 'contain',
+        position: 'relative',
+      }}
+    >
       <Group
-        p="md"
-        bg="var(--mantine-color-body)"
+        h={headerHeight}
+        align="center"
+        pl="md"
+        pr="md"
+        gap="xs"
         style={{
-          borderBottom: '1px solid var(--mantine-color-default-border)',
+          borderBottom: '1px solid var(--ft-border-color)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          flexShrink: 0,
         }}
       >
         <IconCookieMan size={25} />
