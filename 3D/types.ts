@@ -1,7 +1,6 @@
 export type Message3DStatus =
   | 'queued'
   | 'generating'
-  | 'refining'
   | 'ready'
   | 'failed'
   | 'refined'
