@@ -7,9 +7,15 @@ import {
 import { createContext } from 'react-router'
 
 export const AVATAR_BUCKET = 'avatars'
+
 export const STORAGE_PUBLIC_ENDPOINT =
-  process.env.NODE_ENV === 'production' && process.env.STORAGE_PUBLIC_ENDPOINT
-    ? process.env.STORAGE_PUBLIC_ENDPOINT
+  process.env['NODE_ENV'] === 'production'
+    ? buildHttpsUrl(
+        process.env['STORAGE_HOST'] && process.env['STORAGE_HOST'] !== '_'
+          ? process.env['STORAGE_HOST']
+          : (process.env['HOST'] ?? 'localhost'),
+        process.env['STORAGE_PORT'],
+      )
     : 'http://localhost:9000'
 
 const s3Client = new S3Client({
@@ -64,3 +70,45 @@ export async function initializeStorage() {
 }
 
 export const storageContext = createContext(s3Client)
+
+export function resolveStoragePublicEndpoint(request: Request): string {
+  if (process.env['NODE_ENV'] !== 'production') {
+    return STORAGE_PUBLIC_ENDPOINT
+  }
+
+  const getRequestHost = (request: Request) => {
+    const forwardedHost = request.headers.get('x-forwarded-host')
+    const hostHeader = (
+      forwardedHost ??
+      request.headers.get('host') ??
+      ''
+    ).trim()
+    const first = hostHeader.split(',')[0]?.trim() ?? ''
+    return first.split(':')[0] ?? ''
+  }
+
+  const requestHost = getRequestHost(request)
+  const webappHost = process.env['WEBAPP_HOST']
+  const storageHost = process.env['STORAGE_HOST']
+  const storagePort = process.env['STORAGE_PORT']
+  const hostIp = process.env['HOST']
+
+  const isDomainRequest =
+    !!webappHost && webappHost !== '_' && requestHost === webappHost
+
+  if (isDomainRequest && storageHost && storageHost !== '_') {
+    return buildHttpsUrl(storageHost, storagePort)
+  }
+
+  const isIPv4 = (value: string) => /^\d{1,3}(?:\.\d{1,3}){3}$/.test(value)
+
+  const ip = isIPv4(requestHost) ? requestHost : hostIp
+  return buildHttpsUrl(ip ?? 'localhost', storagePort)
+}
+
+function buildHttpsUrl(host: string, port: string | undefined): string {
+  if (!port || port === '443') {
+    return `https://${host}`
+  }
+  return `https://${host}:${port}`
+}

@@ -1,7 +1,7 @@
 import { err, ok, ResultAsync } from 'neverthrow'
 import z from 'zod'
 import { dbContext } from '../../../../../contexts/db'
-import { STORAGE_PUBLIC_ENDPOINT } from '../../../../../contexts/storage'
+import { resolveStoragePublicEndpoint } from '../../../../../contexts/storage'
 import { loggedInUserContext } from '../../../../../contexts/user.server'
 import type { Route } from '../+types/route'
 
@@ -29,6 +29,8 @@ export const loader = async ({
   if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }
+
+  const storagePublicEndpoint = resolveStoragePublicEndpoint(request)
 
   const db = context.get(dbContext)
   const { data: channelId, success: channelIdSuccess } = z.coerce
@@ -102,7 +104,7 @@ export const loader = async ({
             name: m.sender.name,
             displayName: m.sender.displayName,
             avatarUrl: m.sender.avatarUrl
-              ? `${STORAGE_PUBLIC_ENDPOINT}/${m.sender.avatarUrl}`
+              ? `${storagePublicEndpoint}/${m.sender.avatarUrl}`
               : null,
             roles: (m.sender.roles ?? []).map((role) => ({
               id: role.id,

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import type { UpgradeWebSocket, WSContext } from 'hono/ws'
 import { db } from '../app/contexts/db'
-import { STORAGE_PUBLIC_ENDPOINT } from '../app/contexts/storage'
+import { resolveStoragePublicEndpoint } from '../app/contexts/storage'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import {
   type MessageType,
@@ -20,6 +20,10 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
       upgradeWebSocket((c) => {
         const channelId = c.req.param('channelId')
         let connectedUserId: number | undefined
+
+        const storagePublicEndpoint = resolveStoragePublicEndpoint(
+          new Request(c.req.url, { headers: c.req.raw.headers }),
+        )
 
         return {
           async onOpen(_event, ws) {
@@ -153,7 +157,9 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   createdAt: insertedMessage.createdAt,
                   sender: {
                     ...sender,
-                    avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${sender.avatarUrl}`,
+                    avatarUrl: sender.avatarUrl
+                      ? `${storagePublicEndpoint}/${sender.avatarUrl}`
+                      : null,
                   },
                 }
 
@@ -200,6 +206,10 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
       upgradeWebSocket((c) => {
         const channelId = c.req.param('channelId')
         let connectedUserId: number | undefined
+
+        const storagePublicEndpoint = resolveStoragePublicEndpoint(
+          new Request(c.req.url, { headers: c.req.raw.headers }),
+        )
 
         return {
           async onOpen(_event, ws) {
@@ -358,7 +368,9 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   createdAt: insertedMessage.createdAt,
                   sender: {
                     ...sender,
-                    avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${sender.avatarUrl}`,
+                    avatarUrl: sender.avatarUrl
+                      ? `${storagePublicEndpoint}/${sender.avatarUrl}`
+                      : null,
                     roles: sender.roles.map((role) => ({
                       id: role.id,
                       name: role.name,
