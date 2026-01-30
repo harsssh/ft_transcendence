@@ -50,9 +50,9 @@ export function Message({
   )
   const { ref: hoverRef, hovered } = useHover()
   const params = useParams()
-  const channelId = params['channelId']
-    ? parseInt(params['channelId'])
-    : undefined
+  // biome-ignore lint/complexity/useLiteralKeys: TypeScript (TS4111) requires index access for params
+  const rawChannelId = params['channelId']
+  const channelId = rawChannelId ? parseInt(rawChannelId, 10) : undefined
   const roleColor = roles?.[0]?.color
 
   return (
@@ -123,7 +123,15 @@ export function Message({
           >
             <ThreeViewer
               modelUrl={asset3D.modelUrl}
-              status={asset3D.status as any}
+              status={
+                asset3D.status as
+                  | 'queued'
+                  | 'generating'
+                  | 'ready'
+                  | 'failed'
+                  | 'refined'
+                  | 'timeout'
+              }
               channelId={channelId}
               messageId={id} // Assuming 'id' is available in scope (props)
             />

@@ -1,10 +1,6 @@
-// Import directly from the build file to avoid circular dependency with the alias in vite.config.ts
+import * as THREE from 'three'
 
-import * as THREE from '../../node_modules/three/build/three.module.js'
-
-// Re-export everything from actual three
-
-export * from '../../node_modules/three/build/three.module.js'
+export * from 'three'
 
 // Manually export backward-compatibility aliases
 export const CylinderBufferGeometry = THREE.CylinderGeometry

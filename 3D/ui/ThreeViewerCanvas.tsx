@@ -17,7 +17,7 @@ class ErrorBoundary extends Component<
   static getDerivedStateFromError() {
     return { hasError: true }
   }
-  override componentDidCatch(error: any) {
+  override componentDidCatch(error: unknown) {
     console.error('ThreeViewer Error:', error)
   }
   override render() {
@@ -112,47 +112,45 @@ export default function ThreeViewerCanvas({
   const hdriFile = HDRI_PRESETS[hdriPreset as HdriPresetKey] || environment.hdri
 
   return (
-    <>
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 45 }}
-        gl={{ outputColorSpace: THREE.SRGBColorSpace }}
-      >
-        {/* Background Color (Validation: Only render if NOT in HDRI mode) */}
-        {!showHdriBackground && <color attach="background" args={[bgColor]} />}
+    <Canvas
+      camera={{ position: [0, 0, 5], fov: 45 }}
+      gl={{ outputColorSpace: THREE.SRGBColorSpace }}
+    >
+      {/* Background Color (Validation: Only render if NOT in HDRI mode) */}
+      {!showHdriBackground && <color attach="background" args={[bgColor]} />}
 
-        <ambientLight
-          intensity={ambientLight.intensity}
-          color={ambientLight.color}
+      <ambientLight
+        intensity={ambientLight.intensity}
+        color={ambientLight.color}
+      />
+      <directionalLight
+        position={directionalLight.position}
+        intensity={directionalLight.intensity}
+        color={directionalLight.color}
+        castShadow={directionalLight.castShadow}
+      />
+
+      {/* Environment Component Handling: explicitly pass files or handle unmounted if missing */}
+      {hdriFile ? (
+        <Environment
+          files={hdriFile}
+          background={showHdriBackground}
+          blur={showHdriBackground ? 0 : environment.blur}
         />
-        <directionalLight
-          position={directionalLight.position}
-          intensity={directionalLight.intensity}
-          color={directionalLight.color}
-          castShadow={directionalLight.castShadow}
+      ) : (
+        <Environment
+          preset="city" // Fallback preset if no file
+          background={showHdriBackground}
+          blur={showHdriBackground ? 0 : environment.blur}
         />
+      )}
 
-        {/* Environment Component Handling: explicitly pass files or handle unmounted if missing */}
-        {hdriFile ? (
-          <Environment
-            files={hdriFile}
-            background={showHdriBackground}
-            blur={showHdriBackground ? 0 : environment.blur}
-          />
-        ) : (
-          <Environment
-            preset="city" // Fallback preset if no file
-            background={showHdriBackground}
-            blur={showHdriBackground ? 0 : environment.blur}
-          />
-        )}
-
-        <ErrorBoundary fallback={<ErrorFallback />}>
-          <Suspense fallback={null}>
-            <Model url={proxiedUrl} />
-          </Suspense>
-        </ErrorBoundary>
-        <OrbitControls makeDefault />
-      </Canvas>
-    </>
+      <ErrorBoundary fallback={<ErrorFallback />}>
+        <Suspense fallback={null}>
+          <Model url={proxiedUrl} />
+        </Suspense>
+      </ErrorBoundary>
+      <OrbitControls makeDefault />
+    </Canvas>
   )
 }

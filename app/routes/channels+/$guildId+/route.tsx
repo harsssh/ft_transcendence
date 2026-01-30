@@ -101,6 +101,7 @@ export default function GuildRoute() {
     id: 'rename-server',
     defaultValue: { name: guild.name },
     lastResult:
+      // biome-ignore lint/complexity/useLiteralKeys: TypeScript (TS4111) requires index access
       actionData?.initialValue?.['intent'] === 'rename-server'
         ? actionData
         : undefined,
@@ -116,6 +117,7 @@ export default function GuildRoute() {
     id: 'invite-friend',
     defaultValue: { name: '' },
     lastResult:
+      // biome-ignore lint/complexity/useLiteralKeys: TypeScript (TS4111) requires index access
       actionData?.initialValue?.['intent'] === 'invite-friend'
         ? actionData
         : undefined,
@@ -131,6 +133,7 @@ export default function GuildRoute() {
     id: 'create-channel',
     defaultValue: { name: '' },
     lastResult:
+      // biome-ignore lint/complexity/useLiteralKeys: TypeScript (TS4111) requires index access
       actionData?.initialValue?.['intent'] === 'create-channel'
         ? actionData
         : undefined,
@@ -146,6 +149,7 @@ export default function GuildRoute() {
     id: 'rename-channel',
     defaultValue: { name: '' },
     lastResult:
+      // biome-ignore lint/complexity/useLiteralKeys: TypeScript (TS4111) requires index access
       actionData?.initialValue?.['intent'] === 'rename-channel'
         ? actionData
         : undefined,

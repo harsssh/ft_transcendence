@@ -264,7 +264,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
               })
 
               // Execute 3D Generation AFTER transaction commit
-              if (txResult && txResult.trigger3D) {
+              if (txResult?.trigger3D) {
                 const { prompt, messageId, assetId, channelId } =
                   txResult.trigger3D
 
@@ -601,7 +601,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
               })
 
               // Execute 3D Generation AFTER transaction commit
-              if (txResult && txResult.trigger3D) {
+              if (txResult?.trigger3D) {
                 const { prompt, messageId, assetId, channelId } =
                   txResult.trigger3D
 
@@ -670,8 +670,8 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
     // [3D Refine] Added Refine endpoint
     // [3D Refine] Added Refine endpoint
     .post('/:channelId/messages/:messageId/asset/refine', async (c) => {
-      const channelId = parseInt(c.req.param('channelId'))
-      const messageId = parseInt(c.req.param('messageId'))
+      const channelId = parseInt(c.req.param('channelId'), 10)
+      const messageId = parseInt(c.req.param('messageId'), 10)
       const apiKey = getMeshyApiKey()
 
       if (!apiKey) return c.json({ error: 'API Key not configured' }, 500)
@@ -722,15 +722,16 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           broadcastUpdate,
         )
         return c.json(result)
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('Refine error:', e)
-        return c.json({ error: e.message || 'Refine failed' }, 500)
+        const errorMessage = e instanceof Error ? e.message : 'Refine failed'
+        return c.json({ error: errorMessage }, 500)
       }
     })
     // [3D Refine] Added Revert endpoint for failure recovery
     .post('/:channelId/messages/:messageId/asset/revert', async (c) => {
-      const channelId = parseInt(c.req.param('channelId'))
-      const messageId = parseInt(c.req.param('messageId'))
+      const channelId = parseInt(c.req.param('channelId'), 10)
+      const messageId = parseInt(c.req.param('messageId'), 10)
 
       try {
         // [Security] Auth check
@@ -791,15 +792,16 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           modelUrl: asset.modelUrl,
         })
         return c.json({ success: true, status: 'ready' })
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('Revert error:', e)
-        return c.json({ error: e.message || 'Revert failed' }, 500)
+        const errorMessage = e instanceof Error ? e.message : 'Revert failed'
+        return c.json({ error: errorMessage }, 500)
       }
     })
     // [3D Refine] Added Resume endpoint for timeout recovery
     .post('/:channelId/messages/:messageId/asset/resume', async (c) => {
-      const channelId = parseInt(c.req.param('channelId'))
-      const messageId = parseInt(c.req.param('messageId'))
+      const channelId = parseInt(c.req.param('channelId'), 10)
+      const messageId = parseInt(c.req.param('messageId'), 10)
 
       try {
         // [Security] Auth check
@@ -874,8 +876,9 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         ).catch((e) => console.error('[Resume] Polling error:', e))
 
         return c.json({ success: true, status: 'generating' })
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('Resume error:', e)
-        return c.json({ error: e.message || 'Resume failed' }, 500)
+        const errorMessage = e instanceof Error ? e.message : 'Resume failed'
+        return c.json({ error: errorMessage }, 500)
       }
     })

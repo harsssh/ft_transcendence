@@ -191,10 +191,9 @@ export async function resume3DGeneration(
                   .set({ status: successStatus, modelUrl: finalUrl })
                   .where(eq(message3DAssets.id, assetId))
 
-                // biome-ignore lint/style/noNonNullAssertion: Guaranteed by success check
                 broadcastUpdate(channelId, messageId, {
                   status: successStatus,
-                  modelUrl: finalUrl!,
+                  modelUrl: finalUrl || '', // Fallback to empty string if somehow null
                 })
                 success = true
                 onComplete?.()
