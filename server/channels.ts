@@ -293,7 +293,11 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 const broadcastUpdate = (
                   cId: number,
                   mId: number,
-                  asset: { status: string; modelUrl: string | null; precedingTasks?: number },
+                  asset: {
+                    status: string
+                    modelUrl: string | null
+                    precedingTasks?: number
+                  },
                 ) => {
                   broadcastMessageUpdate(cId, mId, asset)
                 }
@@ -768,7 +772,6 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           modelUrl: asset.modelUrl,
         })
 
-
         return c.json({ success: true, status: 'ready' })
       } catch (e: unknown) {
         console.error('Revert error:', e)
@@ -850,7 +853,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           asset.id,
           asset.prompt,
           broadcastUpdate,
-          () => { },
+          () => {},
         ).catch((e) => console.error('[Resume] Polling error:', e))
 
         return c.json({ success: true, status: 'generating' })
