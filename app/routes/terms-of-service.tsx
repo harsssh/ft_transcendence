@@ -22,7 +22,9 @@ export default function TermsOfService() {
       </Text>
       <Space h="lg" />
       <Title order={2}>3. Account Management</Title>
-      <Text>Users shall be responsible for managing their own login information.</Text>
+      <Text>
+        Users shall be responsible for managing their own login information.
+      </Text>
       <ul>
         <li>
           <Text>
@@ -33,7 +35,9 @@ export default function TermsOfService() {
       </ul>
       <Space h="lg" />
       <Title order={2}>4. Prohibited Actions</Title>
-      <Text>Users are prohibited from engaging in the following activities:</Text>
+      <Text>
+        Users are prohibited from engaging in the following activities:
+      </Text>
       <ul>
         <li>
           <Text>
@@ -59,17 +63,16 @@ export default function TermsOfService() {
       <Space h="lg" />
       <Title order={2}>5. Modification or Suspension of Service</Title>
       <Text>
-        The Service provider reserves the right to modify, suspend, or
-        interrupt the Service at any time without prior notice. The Service
-        provider shall not be held liable for any damages incurred by users as a
-        result of such actions.
+        The Service provider reserves the right to modify, suspend, or interrupt
+        the Service at any time without prior notice. The Service provider shall
+        not be held liable for any damages incurred by users as a result of such
+        actions.
       </Text>
       <Space h="lg" />
       <Title order={2}>6. Disclaimer of Warranties</Title>
       <Text>
         The Service is provided on an "as-is" and "as-available" basis. We make
-        no warranties, express or implied, regarding its accuracy or
-        usefulness.
+        no warranties, express or implied, regarding its accuracy or usefulness.
       </Text>
       <ul>
         <li>

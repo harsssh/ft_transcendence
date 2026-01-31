@@ -7,8 +7,8 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useDrag } from '@use-gesture/react'
-import { Link } from 'react-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router'
 
 type Props = {
   navbar?: React.ReactNode

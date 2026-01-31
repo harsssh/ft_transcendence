@@ -1,8 +1,4 @@
-import {
-  getFormProps,
-  getInputProps,
-  useForm,
-} from '@conform-to/react'
+import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
 import {
   ActionIcon,
@@ -55,10 +51,6 @@ export { loader, action }
 export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
 const InviteFriendSchema = SignupFormSchema.pick({ name: true })
-
-
-
-
 
 export type GuildOutletContext = {
   guild: Awaited<ReturnType<typeof loader>>['guild']
