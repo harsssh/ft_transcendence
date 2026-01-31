@@ -64,6 +64,7 @@ export const loader = async ({
           with: {
             messages: {
               with: {
+                message3DAssets: true,
                 sender: {
                   with: {
                     roles: {
@@ -97,6 +98,7 @@ export const loader = async ({
           id: m.id,
           content: m.content,
           createdAt: m.createdAt,
+          asset3D: m.message3DAssets[0] ?? null, // Assuming one-to-one or taking first
           sender: {
             id: m.sender.id,
             name: m.sender.name,
