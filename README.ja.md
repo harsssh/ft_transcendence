@@ -135,6 +135,108 @@ GitHub IssuesとProjectsを使用してタスクを管理しました。具体�
 - **user_channels**: ユーザーとチャンネルの関連付け
 - **messages**: チャットメッセージ
 
+```mermaid
+erDiagram
+    %% ユーザーテーブル
+    users {
+        integer id PK
+        varchar name UK "Unique"
+        varchar display_name
+        varchar email UK "Unique"
+        varchar password
+        text avatar_url
+    }
+
+    %% ギルド（サーバー）テーブル
+    guilds {
+        integer id PK
+        varchar name
+        text icon
+        integer owner_id FK "Users.id"
+        timestamp created_at
+    }
+
+    %% チャンネルテーブル
+    channels {
+        integer id PK
+        text name
+        integer guild_id FK "Guilds.id"
+    }
+
+    %% メッセージテーブル
+    messages {
+        integer id PK
+        text content
+        timestamp created_at
+        integer channel_id FK "Channels.id"
+        integer sender_id FK "Users.id"
+    }
+
+    %% ロール（役職）テーブル
+    roles {
+        integer id PK
+        integer guild_id FK "Guilds.id"
+        varchar name
+        varchar color
+        integer permissions
+        timestamp created_at
+    }
+
+    %% 中間テーブル: ギルドメンバー (多対多 Users <-> Guilds)
+    guild_members {
+        integer user_id PK,FK "Users.id"
+        integer guild_id PK,FK "Guilds.id"
+        timestamp joined_at
+    }
+
+    %% 中間テーブル: ユーザーごとのチャンネル (多対多 Users <-> Channels)
+    user_channels {
+        integer user_id PK,FK "Users.id"
+        integer channel_id PK,FK "Channels.id"
+    }
+
+    %% 中間テーブル: ユーザーのロール (多対多 Users <-> Roles)
+    users_roles {
+        integer user_id PK,FK "Users.id"
+        integer role_id PK,FK "Roles.id"
+    }
+
+    %% フレンドシップ (多対多 Users <-> Users)
+    friendships {
+        integer user_id PK,FK "Users.id"
+        integer friend_id PK,FK "Users.id"
+        enum status "pending | accepted"
+        timestamp created_at
+    }
+
+    %% リレーション定義
+    users ||--o{ guilds : "owns (1:N)"
+    users ||--o{ messages : "sends (1:N)"
+    
+    %% Guilds リレーション
+    guilds ||--o{ channels : "contains (1:N)"
+    guilds ||--o{ roles : "defines (1:N)"
+
+    %% Channels リレーション
+    channels ||--o{ messages : "contains (1:N)"
+
+    %% メンバーシップ (Junction)
+    users ||--o{ guild_members : "joins"
+    guilds ||--o{ guild_members : "has members"
+
+    %% チャンネル参加 (Junction)
+    users ||--o{ user_channels : "participates"
+    channels ||--o{ user_channels : "has participants"
+
+    %% ロール付与 (Junction)
+    users ||--o{ users_roles : "has role"
+    roles ||--o{ users_roles : "assigned to"
+
+    %% フレンド (Self-referencing Junction)
+    users ||--o{ friendships : "requests"
+    users ||--o{ friendships : "accepts"
+```
+
 # Features List
 
 1. **User Profile (ユーザープロフィール)**

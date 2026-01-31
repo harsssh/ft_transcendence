@@ -135,6 +135,92 @@ The main table structure is as follows:
 - **user_channels**: Association between users and channels
 - **messages**: Chat messages
 
+```mermaid
+erDiagram
+    users {
+        integer id PK
+        varchar name UK "Unique"
+        varchar display_name
+        varchar email UK "Unique"
+        varchar password
+        text avatar_url
+    }
+
+    guilds {
+        integer id PK
+        varchar name
+        text icon
+        integer owner_id FK "Users.id"
+        timestamp created_at
+    }
+
+    channels {
+        integer id PK
+        text name
+        integer guild_id FK "Guilds.id"
+    }
+
+    messages {
+        integer id PK
+        text content
+        timestamp created_at
+        integer channel_id FK "Channels.id"
+        integer sender_id FK "Users.id"
+    }
+
+    roles {
+        integer id PK
+        integer guild_id FK "Guilds.id"
+        varchar name
+        varchar color
+        integer permissions
+        timestamp created_at
+    }
+
+    guild_members {
+        integer user_id PK,FK "Users.id"
+        integer guild_id PK,FK "Guilds.id"
+        timestamp joined_at
+    }
+
+    user_channels {
+        integer user_id PK,FK "Users.id"
+        integer channel_id PK,FK "Channels.id"
+    }
+
+    users_roles {
+        integer user_id PK,FK "Users.id"
+        integer role_id PK,FK "Roles.id"
+    }
+
+    friendships {
+        integer user_id PK,FK "Users.id"
+        integer friend_id PK,FK "Users.id"
+        enum status "pending | accepted"
+        timestamp created_at
+    }
+
+    users ||--o{ guilds : "owns (1:N)"
+    users ||--o{ messages : "sends (1:N)"
+    
+    guilds ||--o{ channels : "contains (1:N)"
+    guilds ||--o{ roles : "defines (1:N)"
+
+    channels ||--o{ messages : "contains (1:N)"
+
+    users ||--o{ guild_members : "joins"
+    guilds ||--o{ guild_members : "has members"
+
+    users ||--o{ user_channels : "participates"
+    channels ||--o{ user_channels : "has participants"
+
+    users ||--o{ users_roles : "has role"
+    roles ||--o{ users_roles : "assigned to"
+
+    users ||--o{ friendships : "requests"
+    users ||--o{ friendships : "accepts"
+```
+
 # Features List
 
 1. **User Profile**
