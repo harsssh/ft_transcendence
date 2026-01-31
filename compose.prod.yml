@@ -95,7 +95,6 @@ services:
       - .secrets/ssl_certs:/etc/nginx/ssl/
       - proxy-logs:/var/log/proxy
     ports:
-      - "80:80"
       - "${WEBAPP_PORT:?}:${WEBAPP_PORT:?}"
       - "${STORAGE_PORT:?}:${STORAGE_PORT:?}"
       - "${KIBANA_PORT:?}:${KIBANA_PORT:?}"
@@ -234,9 +233,9 @@ services:
     environment:
       - node.name=es01
       - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - bootstrap.memory_lock=false
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=true
       - xpack.security.http.ssl.key=certs/es01/es01.key
@@ -250,10 +249,6 @@ services:
       - xpack.license.self_generated.type=basic
       - xpack.ml.use_auto_machine_memory_percent=true
     mem_limit: ${MEM_LIMIT}
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
     healthcheck:
       test:
         [
