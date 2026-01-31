@@ -1,5 +1,5 @@
-import { ActionIcon, Group, Text } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { ActionIcon, Box, Group, Text, useMantineTheme } from '@mantine/core'
+import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import { IconChevronLeft, IconUserCircle } from '@tabler/icons-react'
 import { useOutletContext } from 'react-router'
 import { IconButton } from '../../../_shared/ui/IconButton'
@@ -20,9 +20,12 @@ export default function DMChannel({
   const { messages, partner, locale } = loaderData
   const channelId = params.channelId
 
+  const theme = useMantineTheme()
+  const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`)
+
   const { openNavbar } = useOutletContext<ChannelsOutletContext>()
 
-  const [profileSidebarOpened, { toggle: toggleProfileSidebar }] =
+  const [profileSidebarOpened, { toggle: toggleProfileSidebar, close }] =
     useDisclosure(false)
 
   return (
@@ -33,12 +36,37 @@ export default function DMChannel({
       websocketUrl={`/api/channels/${channelId}/ws`}
       headerContent={
         <>
-          <Group gap="xs">
+          <Group
+            gap="xs"
+            // onClick={
+            //   isMobile
+            //     ? () => {
+            //         toggleProfileSidebar()
+            //       }
+            //     : undefined
+            // }
+            // style={isMobile ? { cursor: 'pointer' } : undefined}
+            // role={isMobile ? 'button' : undefined}
+            // tabIndex={isMobile ? 0 : undefined}
+            // onKeyDown={
+            //   isMobile
+            //     ? (event) => {
+            //         if (event.key === 'Enter' || event.key === ' ') {
+            //           event.preventDefault()
+            //           toggleProfileSidebar()
+            //         }
+            //       }
+            //     : undefined
+            // }
+          >
             <ActionIcon
               variant="subtle"
               color="gray"
               aria-label="Open navbar"
-              onClick={openNavbar}
+              onClick={(event) => {
+                event.stopPropagation()
+                openNavbar()
+              }}
               hiddenFrom="sm"
             >
               <IconChevronLeft size={18} />
@@ -52,23 +80,35 @@ export default function DMChannel({
               {partner?.name ?? 'Unknown User'}
             </Text>
           </Group>
-          <ActionIcon.Group>
-            <IconButton
-              label={
-                profileSidebarOpened ? 'Hide User Profile' : 'Show User Profile'
-              }
-              onClick={toggleProfileSidebar}
-              strong={profileSidebarOpened}
-            >
-              <IconUserCircle />
-            </IconButton>
-          </ActionIcon.Group>
+          {/* <Box visibleFrom="sm">
+            <ActionIcon.Group>
+              <IconButton
+                label={
+                  profileSidebarOpened
+                    ? 'Hide User Profile'
+                    : 'Show User Profile'
+                }
+                onClick={toggleProfileSidebar}
+                strong={profileSidebarOpened}
+              >
+                <IconUserCircle />
+              </IconButton>
+            </ActionIcon.Group>
+          </Box> */}
         </>
       }
       inputPlaceholder={`Message @${partner?.name ?? 'user'}`}
       asideContent={
-        profileSidebarOpened ? <UserProfileSidebar profile={partner} /> : null
+        profileSidebarOpened ? (
+          <UserProfileSidebar
+            profile={partner}
+            variant={isMobile ? 'drawer' : 'sidebar'}
+          />
+        ) : null
       }
+      asideDrawerTitle={partner?.name ?? 'User Profile'}
+      asideDrawerOpened={profileSidebarOpened}
+      onAsideDrawerClose={close}
       actionData={actionData ?? null}
       loggedInUser={loaderData.loggedInUser}
     />
