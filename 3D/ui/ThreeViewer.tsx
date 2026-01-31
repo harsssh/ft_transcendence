@@ -95,8 +95,6 @@ export function ThreeViewer({
   const handleRefine = async () => {
     if (!channelId || !messageId) return
 
-
-
     setIsRefining(true)
     try {
       const res = await fetch(
