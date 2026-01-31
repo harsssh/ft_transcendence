@@ -90,7 +90,7 @@ export function resolveStoragePublicEndpoint(request: Request): string {
   const requestHost = getRequestHost(request)
   const webappHost = process.env.WEBAPP_HOST
   const storageHost = process.env.STORAGE_HOST
-  const storagePort = process.env.STORAGE_HOST
+  const storagePort = process.env.STORAGE_PORT
   const hostIp = process.env.HOST
 
   const isDomainRequest =
