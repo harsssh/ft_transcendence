@@ -2,10 +2,7 @@ import { eq } from 'drizzle-orm'
 import { type MiddlewareFunction, redirect } from 'react-router'
 import { users } from '../../db/schema'
 import { dbContext } from '../contexts/db'
-import {
-  resolveStoragePublicEndpoint,
-  STORAGE_PUBLIC_ENDPOINT,
-} from '../contexts/storage'
+import { resolveStoragePublicEndpoint } from '../contexts/storage'
 import { loggedInUserContext } from '../contexts/user.server'
 import {
   destroySession,
