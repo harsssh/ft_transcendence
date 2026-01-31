@@ -1,7 +1,7 @@
 import { AppShell, type AppShellProps, Center, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDrag } from '@use-gesture/react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type Props = {
   navbar?: React.ReactNode
@@ -37,7 +37,14 @@ export function Scaffold({
   )
 
   const bindNavbarSwipe = useDrag(
-    ({ down, last, movement: [mx], velocity: [vx], direction: [dx], event }) => {
+    ({
+      down,
+      last,
+      movement: [mx],
+      velocity: [vx],
+      direction: [dx],
+      event,
+    }) => {
       if (!opened) return
 
       if (

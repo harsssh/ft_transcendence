@@ -17,8 +17,8 @@ import { openConfirmModal } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 import {
   IconCheck,
-  IconCookieMan,
   IconChevronLeft,
+  IconCookieMan,
   IconMessageCircleFilled,
   IconX,
 } from '@tabler/icons-react'

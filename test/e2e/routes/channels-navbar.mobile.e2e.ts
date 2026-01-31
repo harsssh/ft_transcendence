@@ -1,7 +1,7 @@
 import { expect, type Locator } from '@playwright/test'
-import { test } from '../fixtures'
 import { db } from '../../../app/contexts/db'
 import { channels, users, usersToChannels } from '../../../db/schema'
+import { test } from '../fixtures'
 
 async function expectNavbarCollapsed(navbar: Locator) {
   if (await navbar.isHidden()) return
