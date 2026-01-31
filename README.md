@@ -30,20 +30,17 @@ git submodule update --init --recursive
 
 3. Copy `.env.example` and set the required environment variables in `.env`.
 
-    <details>
-    <summary>3D機能 (Meshy) の設定（オプション）</summary>
+4. Setup Meshy
+    1. Create a [Meshy](https://app.meshy.ai/) account and issue an API Key from the settings.
+    2. Set `MESHY_API_KEY` in `.env` (or use Docker secrets `meshy_api_key`).
+    3. Set `TEXT3D_PROVIDER` to `meshy` in `.env`.
 
-    1. [Meshy](https://app.meshy.ai/) のアカウントを作成し、設定から API Key を発行する
-    2. `.env` に `MESHY_API_KEY` を設定する（または Docker secrets `meshy_api_key` を使用）
-    3. `.env` の `TEXT3D_PROVIDER` を `meshy` に設定する
-    </details>
-
-4. (optional) Rewrite `/etc/hosts` to bind `127.0.0.1` with the domains specified in `WEBAPP_HOST`, `STORAGE_HOST`, and `KIBANA_HOST`:
+5. (optional) Rewrite `/etc/hosts` to bind `127.0.0.1` with the domains specified in `WEBAPP_HOST`, `STORAGE_HOST`, and `KIBANA_HOST`:
 ```bash
 127.0.0.1   <hostname specified in WEBAPP_HOST> <hostname specified in STORAGE_HOST> <hostname specified in KIBANA_HOST>
 ```
 
-5. Run the application:
+6. Run the application:
 
 For Development:
 ```bash
@@ -55,7 +52,7 @@ For Production:
 docker compose -f compose.prod.yml up
 ```
 
-6. Accessing Services:
+7. Accessing Services:
 
 | Service | Development URL | Production URL |
 | --- | --- | --- |
