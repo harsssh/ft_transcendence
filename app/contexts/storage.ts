@@ -64,7 +64,7 @@ export async function initializeStorage() {
       )
       console.log(`Public policy set for bucket "${AVATAR_BUCKET}"`)
     } else {
-      console.error('Error checking bucket:', error)
+      console.log('Error checking bucket:', error)
     }
   }
 }

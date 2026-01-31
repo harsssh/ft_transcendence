@@ -43,7 +43,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     })
     .catch((error) => {
       if (error instanceof Response) throw error
-      console.error('Error handling guild action:', error)
+      console.log('Error handling guild action:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -148,7 +148,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
         })
       })
     } catch (error) {
-      console.error('Error inviting user:', error)
+      console.log('Error inviting user:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -170,7 +170,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     try {
       await db.update(guilds).set({ name }).where(eq(guilds.id, guildId))
     } catch (error) {
-      console.error('Error renaming guild:', error)
+      console.log('Error renaming guild:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -201,7 +201,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       // throw redirect(`/channels/${guildId}/${newChannel?.id}`)
     } catch (error) {
       if (error instanceof Response) throw error
-      console.error('Error creating channel in guild:', error)
+      console.log('Error creating channel in guild:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -227,7 +227,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     try {
       await db.update(channels).set({ name }).where(eq(channels.id, channelId))
     } catch (error) {
-      console.error('Error renaming channel:', error)
+      console.log('Error renaming channel:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -247,7 +247,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     try {
       await db.delete(channels).where(eq(channels.id, channelId))
     } catch (error) {
-      console.error('Error deleting channel:', error)
+      console.log('Error deleting channel:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -296,7 +296,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
           )
       })
     } catch (error) {
-      console.error('Error leaving guild:', error)
+      console.log('Error leaving guild:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -316,7 +316,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     try {
       await db.delete(guilds).where(eq(guilds.id, guildId))
     } catch (error) {
-      console.error('Error deleting guild:', error)
+      console.log('Error deleting guild:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -392,7 +392,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
           )
       })
     } catch (error) {
-      console.error('Error kicking member:', error)
+      console.log('Error kicking member:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -466,7 +466,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
         })
         .onConflictDoNothing()
     } catch (error) {
-      console.error('Error assigning role:', error)
+      console.log('Error assigning role:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },
@@ -541,7 +541,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
           ),
         )
     } catch (error) {
-      console.error('Error removing role:', error)
+      console.log('Error removing role:', error)
       throw new Response(
         'An unexpected error occurred while processing your request.',
         { status: 500 },

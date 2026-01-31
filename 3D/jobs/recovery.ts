@@ -118,11 +118,11 @@ export async function recover3DJobs() {
           undefined,
           successStatus,
         ).catch((e) =>
-          console.error(`[3D-Recovery] Error resuming job ${asset.id}:`, e),
+          console.log(`[3D-Recovery] Error resuming job ${asset.id}:`, e),
         )
       }
     } catch (e) {
-      console.error(`[3D-Recovery] Error checking job ${asset.id}:`, e)
+      console.log(`[3D-Recovery] Error checking job ${asset.id}:`, e)
     }
   }
   console.log('[3D-Recovery] Recovery complete.')

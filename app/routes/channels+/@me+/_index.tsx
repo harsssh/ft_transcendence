@@ -179,7 +179,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
     return null
   } catch (error) {
-    console.error('Error handling friendship action:', error)
+    console.log('Error handling friendship action:', error)
     return {
       error: 'An unexpected error occurred while processing your request.',
     }
@@ -268,7 +268,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
       })
     })
     .match(R.identity(), (e) => {
-      console.error(e)
+      console.log(e)
       throw new Response('Internal Server Error', { status: 500 })
     })
 }

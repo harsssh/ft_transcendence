@@ -26,7 +26,7 @@ export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
             try {
               await presenceClient.set(`user:${userId}`, 'online')
             } catch (e) {
-              console.error('Failed to set presence status:', e)
+              console.log('Failed to set presence status:', e)
             }
           },
 
@@ -37,7 +37,7 @@ export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
                 expiration: { type: 'EX', value: PRESENCE_EXPIRATION_SECONDS },
               })
             } catch (e) {
-              console.error('Failed to set presence status:', e)
+              console.log('Failed to set presence status:', e)
             }
           },
         }
@@ -57,7 +57,7 @@ export const presence = (upgradeWebSocket: UpgradeWebSocket) =>
       const status = await ResultAsync.fromPromise(
         presenceClient.get(`user:${targetUserId}`),
         (e) => {
-          console.error('Failed to get presence status:', e)
+          console.log('Failed to get presence status:', e)
         },
       ).match(
         (status) => status,

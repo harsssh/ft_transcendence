@@ -116,7 +116,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 SendMessageSchema.safeParse(data)
 
               if (!success) {
-                console.error('Invalid message format')
+                console.log('Invalid message format')
                 ws.send(
                   JSON.stringify({
                     type: 'error',
@@ -127,7 +127,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
               }
 
               if (!userId) {
-                console.error('User ID not found')
+                console.log('User ID not found')
                 return
               }
 
@@ -169,7 +169,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   .returning()
 
                 if (!insertedMessage) {
-                  console.error('Failed to insert message')
+                  console.log('Failed to insert message')
                   ws.send(
                     JSON.stringify({
                       type: 'error',
@@ -191,7 +191,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   .where(eq(users.id, userId))
 
                 if (!sender) {
-                  console.error('Sender not found')
+                  console.log('Sender not found')
                   return tx.rollback()
                 }
 
@@ -315,10 +315,10 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   assetId,
                   prompt,
                   broadcastUpdate,
-                ).catch((e) => console.error(e))
+                ).catch((e) => console.log(e))
               }
             } catch (error) {
-              console.error('Error handling message:', error)
+              console.log('Error handling message:', error)
               ws.send(
                 JSON.stringify({
                   type: 'error',
@@ -340,7 +340,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           },
 
           onError(event) {
-            console.error(`WebSocket error:`, event)
+            console.log(`WebSocket error:`, event)
           },
         }
       }),
@@ -424,7 +424,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 SendMessageSchema.safeParse(data)
 
               if (!success) {
-                console.error('Invalid message format')
+                console.log('Invalid message format')
                 ws.send(
                   JSON.stringify({
                     type: 'error',
@@ -435,7 +435,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
               }
 
               if (!userId) {
-                console.error('User ID not found')
+                console.log('User ID not found')
                 return
               }
 
@@ -482,7 +482,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   .returning()
 
                 if (!insertedMessage) {
-                  console.error('Failed to insert message')
+                  console.log('Failed to insert message')
                   ws.send(
                     JSON.stringify({
                       type: 'error',
@@ -493,7 +493,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 }
 
                 if (!channel?.guild?.id) {
-                  console.error('Unexpected error: Guild ID missing')
+                  console.log('Unexpected error: Guild ID missing')
                   return tx.rollback()
                 }
 
@@ -521,7 +521,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 })
 
                 if (!sender) {
-                  console.error('Sender not found')
+                  console.log('Sender not found')
                   return tx.rollback()
                 }
 
@@ -660,12 +660,12 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   broadcastUpdate,
                   () => releaseJobLock(userId),
                 ).catch((e) => {
-                  console.error(e)
+                  console.log(e)
                   releaseJobLock(userId)
                 })
               }
             } catch (error) {
-              console.error('Error handling message:', error)
+              console.log('Error handling message:', error)
               ws.send(
                 JSON.stringify({
                   type: 'error',
@@ -687,7 +687,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           },
 
           onError(event) {
-            console.error(`WebSocket error:`, event)
+            console.log(`WebSocket error:`, event)
           },
         }
       }),
@@ -735,7 +735,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         )
         return c.json(result)
       } catch (e: unknown) {
-        console.error('Refine error:', e)
+        console.log('Refine error:', e)
         const errorMessage = e instanceof Error ? e.message : 'Refine failed'
         return c.json({ error: errorMessage }, 500)
       }
@@ -786,7 +786,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
         return c.json({ success: true, status: 'ready' })
       } catch (e: unknown) {
-        console.error('Revert error:', e)
+        console.log('Revert error:', e)
         const errorMessage = e instanceof Error ? e.message : 'Revert failed'
         return c.json({ error: errorMessage }, 500)
       }
@@ -866,11 +866,11 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
           asset.prompt,
           broadcastUpdate,
           () => {},
-        ).catch((e) => console.error('[Resume] Polling error:', e))
+        ).catch((e) => console.log('[Resume] Polling error:', e))
 
         return c.json({ success: true, status: 'generating' })
       } catch (e: unknown) {
-        console.error('Resume error:', e)
+        console.log('Resume error:', e)
         const errorMessage = e instanceof Error ? e.message : 'Resume failed'
         return c.json({ error: errorMessage }, 500)
       }

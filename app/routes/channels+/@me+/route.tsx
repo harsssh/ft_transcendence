@@ -49,7 +49,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
       })
     })
     .match(R.identity(), (e) => {
-      console.error(e)
+      console.log(e)
       throw new Response('Internal Server Error', { status: 500 })
     })
 }
