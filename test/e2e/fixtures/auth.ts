@@ -3,6 +3,10 @@ import path from 'node:path'
 import { expect } from '@playwright/test'
 import { db } from '../../../app/contexts/db'
 import { hashPassword } from '../../../app/routes/_auth+/_shared/password.server'
+import {
+  commitSession,
+  getSession,
+} from '../../../app/routes/_auth+/_shared/session.server'
 import { users } from '../../../db/schema'
 import { test } from '.'
 import type { FixturesExtension } from './types'
@@ -31,14 +35,17 @@ export const authTestFixtures: FixturesExtension<{
         return
       }
 
+      // fixtureではconfigで指定したbaseURLが使えないため明示的に指定
+      // see: https://github.com/microsoft/playwright/issues/27558
+      const host =
+        // biome-ignore lint/complexity/useLiteralKeys: うるさい
+        process.env['WEBAPP_HOST'] ?? process.env.HOST ?? 'localhost:5173'
+
+      const baseURL = process.env.E2E_BASE_URL ?? `http://${host}`
+
       const page = await browser.newPage({
         storageState: { cookies: [], origins: [] },
-        // fixtureではconfigで指定したbaseURLが使えないため明示的に指定
-        // see: https://github.com/microsoft/playwright/issues/27558
-        baseURL:
-          process.env.E2E_BASE_URL ??
-          // biome-ignore lint/complexity/useLiteralKeys: うるさい
-          `https://${process.env['WEBAPP_HOST'] ?? process.env.HOST ?? 'localhost'}`,
+        baseURL,
         ignoreHTTPSErrors: true,
       })
 
@@ -46,21 +53,37 @@ export const authTestFixtures: FixturesExtension<{
 
       if (!account) throw new Error(`Failed to acquire user: ${id}`)
 
-      await page.goto(`/signin`)
-      await page.getByLabel('Email').fill(account.email)
-      await page.getByLabel('Password').fill(AUTH_PASSWORD)
-      await page.getByRole('button', { name: 'Sign in' }).click()
+      // UIログインはモバイル環境でフレークしやすいので、cookie sessionを直接作る
+      const session = await getSession(
+        new Request('http://e2e.local', { headers: { Cookie: '' } }),
+      )
+      session.set('userId', account.id)
+      const setCookieHeader = await commitSession(session)
+      const cookiePair = setCookieHeader.split(';', 1)[0] ?? ''
+      const eqIndex = cookiePair.indexOf('=')
+      if (eqIndex < 0) throw new Error('Invalid Set-Cookie header')
+      const cookieName = cookiePair.slice(0, eqIndex)
+      const cookieValue = cookiePair.slice(eqIndex + 1)
 
-      // React Router v7のデータロードやハイドレーションを待つ. 'networkidle' はネットワーク通信がなくなるまで待機
+      const cookieUrl = new URL(baseURL)
+      cookieUrl.pathname = '/'
+      await page.context().addCookies([
+        {
+          name: cookieName,
+          value: cookieValue,
+          url: cookieUrl.toString(),
+        },
+      ])
+
+      await page.goto('/channels/@me')
       await page.waitForLoadState('networkidle')
-
       expect(page).toHaveURL('/channels/@me')
 
       await page.context().storageState({ path: fileName })
       await page.close()
       await use(fileName)
     },
-    { scope: 'worker' },
+    { scope: 'worker', timeout: 120_000 },
   ],
 }
 

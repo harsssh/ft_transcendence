@@ -12,3 +12,27 @@ body {
 * {
   border-color: var(--ft-border-color);
 }
+
+.app-navbar-swipe {
+  touch-action: pan-y;
+}
+
+.app-navbar {
+  will-change: transform;
+  transition: transform 150ms ease-out;
+}
+
+/* Mantineの`breakpoint: 'sm'`(48em)に合わせてmobile扱いでスライドさせる */
+@media (max-width: 47.99em) {
+  .app-navbar {
+    width: 100%;
+  }
+
+  .app-navbar[data-opened="false"] {
+    transform: translateX(-100%);
+  }
+
+  .app-navbar[data-opened="true"] {
+    transform: translateX(0);
+  }
+}

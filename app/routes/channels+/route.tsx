@@ -66,6 +66,9 @@ export { action } from './api/action.server'
 
 export type ChannelsOutletContext = {
   setSecondaryNavbar: (node: React.ReactNode) => void
+  navbarOpened: boolean
+  openNavbar: () => void
+  closeNavbar: () => void
 }
 
 export default function Channels({
@@ -74,6 +77,7 @@ export default function Channels({
 }: Route.ComponentProps) {
   const [secondaryNavbar, setSecondaryNavbar] =
     useState<React.ReactNode | null>(null)
+  const [navbarOpened, setNavbarOpened] = useState(false)
   const [status, setStatus] = useState<OnlineStatus>('offline')
   const wsRef = useRef<WebSocket | null>(null)
 
@@ -117,11 +121,16 @@ export default function Channels({
             </Navbar>
           }
           navbarWidth={372}
+          navbarOpened={navbarOpened}
+          onNavbarOpenedChange={setNavbarOpened}
         >
           <Outlet
             context={
               {
                 setSecondaryNavbar,
+                navbarOpened,
+                openNavbar: () => setNavbarOpened(true),
+                closeNavbar: () => setNavbarOpened(false),
               } satisfies ChannelsOutletContext
             }
           />

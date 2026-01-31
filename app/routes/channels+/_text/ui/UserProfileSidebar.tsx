@@ -9,13 +9,20 @@ type Props = {
     displayName: string | null
     avatarUrl: string | null
   }
+  variant?: 'sidebar' | 'drawer'
 }
 
-export function UserProfileSidebar({ profile }: Props) {
+export function UserProfileSidebar({ profile, variant = 'sidebar' }: Props) {
   const maskId = useId()
+  const width = variant === 'drawer' ? '100%' : 340
 
   return (
-    <Stack w={340} h="100%" bg="oklab(0.262384 0.00252247 -0.00889932)" gap={8}>
+    <Stack
+      w={width}
+      h="100%"
+      bg="oklab(0.262384 0.00252247 -0.00889932)"
+      gap={8}
+    >
       <Box mih={159} pos="relative">
         <svg
           viewBox="0 0 340 120"

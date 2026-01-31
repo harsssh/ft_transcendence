@@ -17,6 +17,7 @@ import { openConfirmModal } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 import {
   IconCheck,
+  IconChevronLeft,
   IconCookieMan,
   IconMessageCircleFilled,
   IconX,
@@ -24,11 +25,12 @@ import {
 import { and, eq, or } from 'drizzle-orm'
 import { ok, ResultAsync } from 'neverthrow'
 import { useEffect, useState } from 'react'
-import { Form, useSubmit } from 'react-router'
+import { Form, useOutletContext, useSubmit } from 'react-router'
 import * as R from 'remeda'
 import { friendships } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { loggedInUserContext } from '../../../contexts/user.server'
+import type { ChannelsOutletContext } from '../route'
 import type { Route } from './+types/_index'
 
 const PAGE_SIZE = 10
@@ -272,6 +274,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 }
 
 export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
+  const { openNavbar } = useOutletContext<ChannelsOutletContext>()
   const submit = useSubmit()
 
   const openRemoveModal = (friendName: string, friendId: number) =>
@@ -350,6 +353,15 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
           flexShrink: 0,
         }}
       >
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          aria-label="Open navbar"
+          onClick={openNavbar}
+          hiddenFrom="sm"
+        >
+          <IconChevronLeft size={18} />
+        </ActionIcon>
         <IconCookieMan size={25} />
         <Title order={4}>Friends</Title>
       </Group>

@@ -1,5 +1,5 @@
-import { Group, Text } from '@mantine/core'
-import { IconHash } from '@tabler/icons-react'
+import { ActionIcon, Group, Text } from '@mantine/core'
+import { IconChevronLeft, IconHash } from '@tabler/icons-react'
 import { useOutletContext } from 'react-router'
 import { TextChannelView } from '../../_text/TextChannelView'
 import type { GuildOutletContext } from '../route'
@@ -14,7 +14,8 @@ export default function ChannelRoute({
   actionData,
 }: Route.ComponentProps) {
   const { messages, channel, locale } = loaderData
-  const { guild, loggedInUser } = useOutletContext<GuildOutletContext>()
+  const { guild, loggedInUser, openNavbar } =
+    useOutletContext<GuildOutletContext>()
   const channelId = params.channelId
 
   return (
@@ -24,7 +25,16 @@ export default function ChannelRoute({
       locale={locale}
       websocketUrl={`/api/channels/guild/${channelId}/ws`}
       headerContent={
-        <Group>
+        <Group gap="xs">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            aria-label="Open navbar"
+            onClick={openNavbar}
+            hiddenFrom="sm"
+          >
+            <IconChevronLeft size={18} />
+          </ActionIcon>
           <IconHash size={20} />
           <Text fw="bold" size="lg" maw="40rem" truncate="end">
             {channel?.name ?? 'unknown-channel'}
