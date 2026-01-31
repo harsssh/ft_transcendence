@@ -1,7 +1,6 @@
 import {
   getFormProps,
   getInputProps,
-  type SubmissionResult,
   useForm,
 } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod/v4'
@@ -57,17 +56,9 @@ export const middleware: Route.MiddlewareFunction[] = [authMiddleware]
 
 const InviteFriendSchema = SignupFormSchema.pick({ name: true })
 
-type ActionIntents =
-  | 'rename-server'
-  | 'invite-friend'
-  | 'create-channel'
-  | 'rename-channel'
 
-type ConformActionData = SubmissionResult<string[]> & {
-  initialValue?: {
-    intent: ActionIntents
-  } & Record<string, unknown>
-}
+
+
 
 export type GuildOutletContext = {
   guild: Awaited<ReturnType<typeof loader>>['guild']
@@ -240,7 +231,7 @@ export default function GuildRoute() {
         ),
         centered: true,
         labels: { confirm: 'Delete Channel', cancel: 'Cancel' },
-        confirmProps: { color:.red' },
+        confirmProps: { color: 'red' },
         onConfirm: () => {
           const formData = new FormData()
           formData.append('intent', 'delete-channel')
