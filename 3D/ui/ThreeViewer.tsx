@@ -95,7 +95,7 @@ export function ThreeViewer({
   const handleRefine = async () => {
     if (!channelId || !messageId) return
 
-    if (!confirm('Generating texture will cost 10 credits. Continue?')) return
+
 
     setIsRefining(true)
     try {
