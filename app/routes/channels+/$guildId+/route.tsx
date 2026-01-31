@@ -78,7 +78,8 @@ export default function GuildRoute() {
     Permissions.CREATE_INVITE,
   )
 
-  const { setSecondaryNavbar } = useOutletContext<ChannelsOutletContext>()
+  const channelsContext = useOutletContext<ChannelsOutletContext>()
+  const { setSecondaryNavbar } = channelsContext
 
   const submit = useSubmit()
   const [
