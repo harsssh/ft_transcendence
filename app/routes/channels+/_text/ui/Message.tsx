@@ -2,10 +2,13 @@ import { Box, Group, Text } from '@mantine/core'
 import { TimeValue } from '@mantine/dates'
 import { useHover } from '@mantine/hooks'
 import { useSyncExternalStore } from 'react'
+import { useParams } from 'react-router'
+import { ThreeViewer } from '../../../../../3D/ui/ThreeViewer'
 import type { GuildOutletContext } from '../../$guildId+/route'
 import { type Role, UserAvatarPopover } from './UserAvatarPopover'
 
 type Props = {
+  id: number
   createdAt: Date
   senderId: number
   senderName: string
@@ -13,12 +16,21 @@ type Props = {
   content: string
   avatarSrc?: string | undefined | null
   withProfile?: boolean
+  asset3D?:
+    | {
+        status: string
+        modelUrl: string | null
+        precedingTasks?: number | undefined
+      }
+    | undefined
+    | null
   roles?: Role[] | undefined
   guild?: GuildOutletContext['guild'] | undefined
   loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
 }
 
 export function Message({
+  id,
   createdAt,
   senderId,
   senderName,
@@ -26,6 +38,7 @@ export function Message({
   content,
   avatarSrc = null,
   withProfile = false,
+  asset3D,
   roles,
   guild,
   loggedInUser,
@@ -37,6 +50,10 @@ export function Message({
     () => createdAt.toISOString(),
   )
   const { ref: hoverRef, hovered } = useHover()
+  const params = useParams()
+  // biome-ignore lint/complexity/useLiteralKeys: TypeScript (TS4111) requires index access for params
+  const rawChannelId = params['channelId']
+  const channelId = rawChannelId ? parseInt(rawChannelId, 10) : undefined
   const roleColor = roles?.[0]?.color
 
   return (
@@ -94,6 +111,34 @@ export function Message({
         <Group>
           <Text style={{ wordBreak: 'break-word' }}>{content}</Text>
         </Group>
+        {asset3D && (
+          <Box
+            mt="sm"
+            style={{
+              width: 300,
+              height: 300,
+              border: '1px solid #333',
+              borderRadius: 8,
+              overflow: 'hidden',
+            }}
+          >
+            <ThreeViewer
+              modelUrl={asset3D.modelUrl}
+              status={
+                asset3D.status as
+                  | 'queued'
+                  | 'generating'
+                  | 'ready'
+                  | 'failed'
+                  | 'refined'
+                  | 'timeout'
+              }
+              channelId={channelId}
+              messageId={id} // Assuming 'id' is available in scope (props)
+              precedingTasks={asset3D.precedingTasks}
+            />
+          </Box>
+        )}
       </Box>
     </Box>
   )

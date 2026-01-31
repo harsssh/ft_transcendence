@@ -79,6 +79,20 @@ export const messages = p.pgTable('messages', {
     .notNull(),
 })
 
+export const message3DAssets = p.pgTable('message_3d_assets', {
+  id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+  messageId: p
+    .integer('message_id')
+    .references(() => messages.id, { onDelete: 'cascade' })
+    .notNull(),
+  externalId: p.text('external_id'),
+  status: p.text().notNull(), // 'queued' | 'generating' | 'ready' | 'failed' | 'timeout' | 'refined'
+  modelUrl: p.text('model_url'),
+  prompt: p.text().notNull(),
+  createdAt: p.timestamp('created_at').defaultNow().notNull(),
+  updatedAt: p.timestamp('updated_at').defaultNow().notNull(),
+})
+
 export const friendStatusEnum = p.pgEnum('friend_status', [
   'pending',
   'accepted',
@@ -141,6 +155,7 @@ export const relations = defineRelations(
     usersToChannels,
     messages,
     friendships,
+    message3DAssets,
     roles,
     usersToRoles,
   },
@@ -218,6 +233,7 @@ export const relations = defineRelations(
         to: r.channels.id,
         optional: false,
       }),
+      message3DAssets: r.many.message3DAssets(),
     },
     friendships: {
       user: r.one.users({
@@ -229,6 +245,12 @@ export const relations = defineRelations(
         from: r.friendships.friendId,
         to: r.users.id,
         alias: 'friendship_friend',
+      }),
+    },
+    message3DAssets: {
+      message: r.one.messages({
+        from: r.message3DAssets.messageId,
+        to: r.messages.id,
       }),
     },
     roles: {

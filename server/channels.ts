@@ -1,6 +1,9 @@
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import type { UpgradeWebSocket, WSContext } from 'hono/ws'
+import { processRefineRequest } from '../3D/api/refine'
+import { resume3DGeneration } from '../3D/jobs/processor'
+import { checkRateLimit, releaseJobLock } from '../3D/ratelimit'
 import { db } from '../app/contexts/db'
 import { resolveStoragePublicEndpoint } from '../app/contexts/storage'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
@@ -8,10 +11,32 @@ import {
   type MessageType,
   SendMessageSchema,
 } from '../app/routes/channels+/_text/model/message'
-import { messages, users } from '../db/schema'
+import { message3DAssets, messages, users } from '../db/schema'
+import { getMeshyApiKey } from './utils/env'
 
 // Store WebSocket connections per channel
 const channelConnections = new Map<string, Set<WSContext>>()
+
+// Helper for broadcasting updates (Shared across WebSocket and HTTP endpoints)
+const broadcastMessageUpdate = (
+  channelId: number | string,
+  messageId: number,
+  data: { status: string; modelUrl: string | null; precedingTasks?: number },
+) => {
+  const cons = channelConnections.get(String(channelId))
+  if (cons) {
+    const updateMsg = JSON.stringify({
+      type: 'message_update',
+      data: {
+        id: messageId, // Frontend expects 'id' at root of data object
+        ...data,
+      },
+    })
+    for (const client of cons) {
+      client.send(updateMsg)
+    }
+  }
+}
 
 export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
   new Hono()
@@ -20,6 +45,8 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
       upgradeWebSocket((c) => {
         const channelId = c.req.param('channelId')
         let connectedUserId: number | undefined
+        // Fix: Use a promise to track authentication state
+        let authPromise: Promise<number | undefined>
 
         const storagePublicEndpoint = resolveStoragePublicEndpoint(
           new Request(c.req.url, { headers: c.req.raw.headers }),
@@ -28,11 +55,16 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         return {
           async onOpen(_event, ws) {
             // Authenticate user
-            const session = await getSession(
-              new Request(c.req.url, { headers: c.req.raw.headers }),
-            )
+            authPromise = (async () => {
+              const session = await getSession(
+                new Request(c.req.url, { headers: c.req.raw.headers }),
+              )
+              const userId = session.get('userId')
+              connectedUserId = userId
+              return userId
+            })()
 
-            connectedUserId = session.get('userId')
+            await authPromise
 
             if (!connectedUserId) {
               console.log('WebSocket rejected: not authenticated')
@@ -70,6 +102,12 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
           async onMessage(event, ws) {
             console.log(`Message received: ${event.data}`)
+
+            // Wait for authentication to complete
+            if (authPromise) {
+              await authPromise
+            }
+
             const userId = connectedUserId
 
             try {
@@ -93,7 +131,14 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 return
               }
 
-              await db.transaction(async (tx) => {
+              const txResult = await db.transaction(async (tx) => {
+                let trigger3D: {
+                  prompt: string
+                  messageId: number
+                  assetId: number
+                  channelId: number
+                } | null = null
+
                 const channel = await db.query.channels.findFirst({
                   where: {
                     id: Number(channelId),
@@ -111,7 +156,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                     'WebSocket rejected: user not a participant of channel',
                   )
                   ws.close()
-                  return
+                  return { trigger3D: null }
                 }
 
                 const [insertedMessage] = await tx
@@ -172,7 +217,106 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   }
                   console.log(`Broadcast to ${connections.size} clients`)
                 }
+
+                // 3D Generation Trigger Logic captured here but executed AFTER transaction
+                if (msgContent.content.startsWith('/3D -URL ')) {
+                  const url = msgContent.content.slice(9).trim()
+                  // Basic URL validation
+                  if (
+                    url &&
+                    (url.startsWith('http://') || url.startsWith('https://'))
+                  ) {
+                    const [asset] = await tx
+                      .insert(message3DAssets)
+                      .values({
+                        messageId: insertedMessage.id,
+                        prompt: 'Imported from URL',
+                        status: 'refined', // Disables Refine button
+                        modelUrl: url,
+                      })
+                      .returning()
+
+                    if (asset) {
+                      // Immediate broadcast of the 'refined' asset
+                      const cons = channelConnections.get(channelId)
+                      if (cons) {
+                        const updateMsg = JSON.stringify({
+                          type: 'message_update',
+                          data: {
+                            id: insertedMessage.id,
+                            status: 'refined',
+                            modelUrl: url,
+                          },
+                        })
+                        for (const client of cons) {
+                          client.send(updateMsg)
+                        }
+                      }
+                    }
+                  }
+                } else if (msgContent.content.startsWith('/3D ')) {
+                  const limitResult = await checkRateLimit(userId)
+                  if (!limitResult.allowed) {
+                    ws.send(
+                      JSON.stringify({
+                        type: 'error',
+                        error: `Rate limit exceeded. Please wait ${limitResult.remaining} seconds.`,
+                      }),
+                    )
+                    return { trigger3D: null }
+                  }
+                  const prompt = msgContent.content.slice(4).trim()
+                  if (prompt) {
+                    const [asset] = await tx
+                      .insert(message3DAssets)
+                      .values({
+                        messageId: insertedMessage.id,
+                        prompt,
+                        status: 'queued',
+                      })
+                      .returning()
+
+                    if (asset) {
+                      trigger3D = {
+                        prompt,
+                        messageId: insertedMessage.id,
+                        assetId: asset.id,
+                        channelId: Number(channelId),
+                      }
+                    }
+                  }
+                }
+
+                return { trigger3D }
               })
+
+              // Execute 3D Generation AFTER transaction commit
+              if (txResult?.trigger3D) {
+                const { prompt, messageId, assetId, channelId } =
+                  txResult.trigger3D
+
+                // Helper for broadcasting updates from processor
+                const broadcastUpdate = (
+                  cId: number,
+                  mId: number,
+                  asset: {
+                    status: string
+                    modelUrl: string | null
+                    precedingTasks?: number
+                  },
+                ) => {
+                  broadcastMessageUpdate(cId, mId, asset)
+                }
+
+                resume3DGeneration(
+                  db,
+                  channelId,
+                  messageId,
+                  assetId,
+                  prompt,
+                  broadcastUpdate,
+                ).catch((e) => console.error(e))
+              }
             } catch (error) {
               console.error('Error handling message:', error)
               ws.send(
@@ -206,6 +350,8 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
       upgradeWebSocket((c) => {
         const channelId = c.req.param('channelId')
         let connectedUserId: number | undefined
+        // Fix: Use a promise to track authentication state
+        let authPromise: Promise<number | undefined>
 
         const storagePublicEndpoint = resolveStoragePublicEndpoint(
           new Request(c.req.url, { headers: c.req.raw.headers }),
@@ -214,11 +360,16 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         return {
           async onOpen(_event, ws) {
             // Authenticate user
-            const session = await getSession(
-              new Request(c.req.url, { headers: c.req.raw.headers }),
-            )
+            authPromise = (async () => {
+              const session = await getSession(
+                new Request(c.req.url, { headers: c.req.raw.headers }),
+              )
+              const userId = session.get('userId')
+              connectedUserId = userId
+              return userId
+            })()
 
-            connectedUserId = session.get('userId')
+            await authPromise
 
             if (!connectedUserId) {
               console.log('WebSocket rejected: not authenticated')
@@ -259,6 +410,12 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
 
           async onMessage(event, ws) {
             console.log(`Message received: ${event.data}`)
+
+            // Wait for authentication to complete
+            if (authPromise) {
+              await authPromise
+            }
+
             const userId = connectedUserId
 
             try {
@@ -282,7 +439,14 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                 return
               }
 
-              await db.transaction(async (tx) => {
+              const txResult = await db.transaction(async (tx) => {
+                let trigger3D: {
+                  prompt: string
+                  messageId: number
+                  assetId: number
+                  channelId: number
+                } | null = null
+
                 const channel = await db.query.channels.findFirst({
                   where: {
                     id: Number(channelId),
@@ -305,7 +469,7 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                     'WebSocket rejected: user not a member of the guild',
                   )
                   ws.close()
-                  return
+                  return { trigger3D: null }
                 }
 
                 const [insertedMessage] = await tx
@@ -388,7 +552,118 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   }
                   console.log(`Broadcast to ${connections.size} clients`)
                 }
+
+                // 3D Generation Trigger Logic captured here but executed AFTER transaction
+                if (msgContent.content.startsWith('/3D -URL ')) {
+                  const url = msgContent.content.slice(9).trim()
+                  // Basic URL validation
+                  if (
+                    url &&
+                    (url.startsWith('http://') || url.startsWith('https://'))
+                  ) {
+                    const [asset] = await tx
+                      .insert(message3DAssets)
+                      .values({
+                        messageId: insertedMessage.id,
+                        prompt: 'Imported from URL',
+                        status: 'refined', // Disables Refine button
+                        modelUrl: url,
+                      })
+                      .returning()
+
+                    if (asset) {
+                      // Immediate broadcast of the 'refined' asset
+                      const cons = channelConnections.get(channelId)
+                      if (cons) {
+                        const updateMsg = JSON.stringify({
+                          type: 'message_update',
+                          data: {
+                            id: insertedMessage.id,
+                            status: 'refined',
+                            modelUrl: url,
+                          },
+                        })
+                        for (const client of cons) {
+                          client.send(updateMsg)
+                        }
+                      }
+                    }
+                  }
+                } else if (msgContent.content.startsWith('/3D ')) {
+                  const limitResult = await checkRateLimit(userId)
+                  if (!limitResult.allowed) {
+                    ws.send(
+                      JSON.stringify({
+                        type: 'error',
+                        error: `Rate limit exceeded. Please wait ${limitResult.remaining} seconds.`,
+                      }),
+                    )
+                    return { trigger3D: null }
+                  }
+                  const prompt = msgContent.content.slice(4).trim()
+                  if (prompt) {
+                    const [asset] = await tx
+                      .insert(message3DAssets)
+                      .values({
+                        messageId: insertedMessage.id,
+                        prompt,
+                        status: 'queued',
+                      })
+                      .returning()
+
+                    if (asset) {
+                      trigger3D = {
+                        prompt,
+                        messageId: insertedMessage.id,
+                        assetId: asset.id,
+                        channelId: Number(channelId),
+                      }
+                    }
+                  }
+                }
+
+                return { trigger3D }
               })
+
+              // Execute 3D Generation AFTER transaction commit
+              if (txResult?.trigger3D) {
+                const { prompt, messageId, assetId, channelId } =
+                  txResult.trigger3D
+
+                // Helper for broadcasting updates from processor
+                const broadcastUpdate = (
+                  cId: number,
+                  mId: number,
+                  asset: { status: string; modelUrl: string | null },
+                ) => {
+                  const cons = channelConnections.get(String(cId))
+                  if (cons) {
+                    const updateMsg = JSON.stringify({
+                      type: 'message_update',
+                      data: {
+                        id: mId,
+                        ...asset,
+                      },
+                    })
+                    for (const client of cons) {
+                      client.send(updateMsg)
+                    }
+                  }
+                }
+
+                resume3DGeneration(
+                  db,
+                  channelId,
+                  messageId,
+                  assetId,
+                  prompt,
+                  broadcastUpdate,
+                  () => releaseJobLock(userId),
+                ).catch((e) => {
+                  console.error(e)
+                  releaseJobLock(userId)
+                })
+              }
             } catch (error) {
               console.error('Error handling message:', error)
               ws.send(
@@ -417,3 +692,186 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         }
       }),
     )
+    // [3D Refine] Added Refine endpoint
+    .post('/:channelId/messages/:messageId/asset/refine', async (c) => {
+      const channelId = parseInt(c.req.param('channelId'), 10)
+      const messageId = parseInt(c.req.param('messageId'), 10)
+      const apiKey = getMeshyApiKey()
+
+      if (!apiKey) return c.json({ error: 'API Key not configured' }, 500)
+
+      try {
+        // [Security] Auth check
+        const session = await getSession(c.req.raw)
+        const userId = session.get('userId')
+        if (!userId) return c.json({ error: 'Unauthorized' }, 401)
+
+        // [Security] Ownership check
+        const [message] = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.id, messageId))
+          .limit(1)
+        if (!message) return c.json({ error: 'Message not found' }, 404)
+        if (message.senderId !== userId)
+          return c.json({ error: 'Forbidden' }, 403)
+        if (message.channelId !== channelId)
+          return c.json({ error: 'Invalid channel' }, 400)
+
+        // Reuse broadcast logic
+        const broadcastUpdate = (
+          cId: number,
+          mId: number,
+          update: { status: string; modelUrl: string | null },
+        ) => {
+          broadcastMessageUpdate(cId, mId, update)
+        }
+
+        const result = await processRefineRequest(
+          messageId,
+          channelId,
+          apiKey,
+          broadcastUpdate,
+        )
+        return c.json(result)
+      } catch (e: unknown) {
+        console.error('Refine error:', e)
+        const errorMessage = e instanceof Error ? e.message : 'Refine failed'
+        return c.json({ error: errorMessage }, 500)
+      }
+    })
+    // [3D Refine] Added Revert endpoint for failure recovery
+    .post('/:channelId/messages/:messageId/asset/revert', async (c) => {
+      const channelId = parseInt(c.req.param('channelId'), 10)
+      const messageId = parseInt(c.req.param('messageId'), 10)
+
+      try {
+        // [Security] Auth check
+        const session = await getSession(c.req.raw)
+        const userId = session.get('userId')
+        if (!userId) return c.json({ error: 'Unauthorized' }, 401)
+
+        // [Security] Ownership check
+        const [message] = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.id, messageId))
+          .limit(1)
+        if (!message) return c.json({ error: 'Message not found' }, 404)
+        if (message.senderId !== userId)
+          return c.json({ error: 'Forbidden' }, 403)
+        if (message.channelId !== channelId)
+          return c.json({ error: 'Invalid channel' }, 400)
+
+        // 1. Get Asset
+        const [asset] = await db
+          .select()
+          .from(message3DAssets)
+          .where(eq(message3DAssets.messageId, messageId))
+          .limit(1)
+
+        if (!asset) return c.json({ error: 'Asset not found' }, 404)
+
+        // 2. Reset Status to 'ready' (keep URL)
+        await db
+          .update(message3DAssets)
+          .set({ status: 'ready', updatedAt: new Date() })
+          .where(eq(message3DAssets.id, asset.id))
+
+        // 3. Broadcast
+        broadcastMessageUpdate(channelId, messageId, {
+          status: 'ready',
+          modelUrl: asset.modelUrl,
+        })
+
+        return c.json({ success: true, status: 'ready' })
+      } catch (e: unknown) {
+        console.error('Revert error:', e)
+        const errorMessage = e instanceof Error ? e.message : 'Revert failed'
+        return c.json({ error: errorMessage }, 500)
+      }
+    })
+    // [3D Refine] Added Resume endpoint for timeout recovery
+    .post('/:channelId/messages/:messageId/asset/resume', async (c) => {
+      const channelId = parseInt(c.req.param('channelId'), 10)
+      const messageId = parseInt(c.req.param('messageId'), 10)
+
+      try {
+        // [Security] Auth check
+        const session = await getSession(c.req.raw)
+        const userId = session.get('userId')
+        if (!userId) return c.json({ error: 'Unauthorized' }, 401)
+
+        // [Security] Ownership check
+        const [message] = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.id, messageId))
+          .limit(1)
+        if (!message) return c.json({ error: 'Message not found' }, 404)
+        if (message.senderId !== userId)
+          return c.json({ error: 'Forbidden' }, 403)
+        if (message.channelId !== channelId)
+          return c.json({ error: 'Invalid channel' }, 400)
+
+        // 1. Get Asset
+        const [asset] = await db
+          .select()
+          .from(message3DAssets)
+          .where(eq(message3DAssets.messageId, messageId))
+          .limit(1)
+
+        if (!asset) return c.json({ error: 'Asset not found' }, 404)
+
+        // 2. Resume Generation (Polling)
+        // Reuse broadcast logic
+        const broadcastUpdate = (
+          cId: number,
+          mId: number,
+          update: { status: string; modelUrl: string | null },
+        ) => {
+          const cons = channelConnections.get(String(cId))
+          if (cons) {
+            const updateMsg = JSON.stringify({
+              type: 'message_update',
+              data: {
+                id: mId,
+                ...update,
+              },
+            })
+            for (const client of cons) {
+              client.send(updateMsg)
+            }
+          }
+        }
+
+        // Set status to generating immediately to show UI feedback
+        // But only if it's not already ready/refined?
+        // Actually typical resume usage is from 'timeout' or 'generating' state.
+        await db
+          .update(message3DAssets)
+          .set({ status: 'generating', updatedAt: new Date() })
+          .where(eq(message3DAssets.id, asset.id))
+        broadcastUpdate(channelId, messageId, {
+          status: 'generating',
+          modelUrl: asset.modelUrl,
+        })
+
+        // 3. Call Processor
+        resume3DGeneration(
+          db,
+          channelId,
+          messageId,
+          asset.id,
+          asset.prompt,
+          broadcastUpdate,
+          () => {},
+        ).catch((e) => console.error('[Resume] Polling error:', e))
+
+        return c.json({ success: true, status: 'generating' })
+      } catch (e: unknown) {
+        console.error('Resume error:', e)
+        const errorMessage = e instanceof Error ? e.message : 'Resume failed'
+        return c.json({ error: errorMessage }, 500)
+      }
+    })

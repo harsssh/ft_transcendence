@@ -11,6 +11,10 @@ CLAUDE.md
 
 .secrets
 
+# 3D Assets (Large binaries)
+*.hdr
+*.exr
+
 # Playwright
 node_modules/
 /test-results/

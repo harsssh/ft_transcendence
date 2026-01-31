@@ -30,12 +30,17 @@ git submodule update --init --recursive
 
 3. `.env.example`をコピーして、`.env`に必須の環境変数を設定します。
 
-4. (optional) `/etc/hosts`を書き換えて、`WEBAPP_HOST`, `STORAGE_HOST`, `KIBANA_HOST` で指定したドメインと `127.0.0.1` をバインドします:
+4. Meshyの設定
+    1. [Meshy](https://app.meshy.ai/) のアカウントを作成し、設定から API Key を発行する
+    2. `.env` に `MESHY_API_KEY` を設定する（または Docker secrets `meshy_api_key` を使用）
+    3. `.env` の `TEXT3D_PROVIDER` を `meshy` に設定する
+
+5. (optional) `/etc/hosts`を書き換えて、`WEBAPP_HOST`, `STORAGE_HOST`, `KIBANA_HOST` で指定したドメインと `127.0.0.1` をバインドします:
 ```bash
 127.0.0.1   <WEBAPP_HOSTで指定したhostname> <STORAGE_HOSTで指定したhostname> <KIBANA_HOSTで指定したhostname>
 ```
 
-5. アプリケーションを実行します:
+6. アプリケーションを実行します:
 
 開発用:
 ```bash
@@ -47,7 +52,7 @@ docker compose up
 docker compose -f compose.prod.yml up
 ```
 
-6. サービスへのアクセス:
+7. サービスへのアクセス:
 
 | サービス | 開発環境URL | 本番環境URL |
 | --- | --- | --- |

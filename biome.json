@@ -11,7 +11,8 @@
       "**/*",
       "!node_modules/**/*",
       "!.react-router/**/*",
-      "!submodules/**/*"
+      "!submodules/**/*",
+      "!3D/assets/hdri/drei-assets/**/*"
     ]
   },
   "formatter": {

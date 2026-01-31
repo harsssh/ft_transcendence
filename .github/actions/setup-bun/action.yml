@@ -8,8 +8,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    # Checkout is handled by the caller workflow
+
 
     - name: Setup Bun
       uses: oven-sh/setup-bun@v2

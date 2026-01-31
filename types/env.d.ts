@@ -10,5 +10,7 @@ declare module 'bun' {
     PRESENCE_DB_URL?: string
     CI?: unknown
     E2E_BASE_URL?: string
+    MESHY_API_KEY?: string
+    TEXT3D_PROVIDER?: string
   }
 }

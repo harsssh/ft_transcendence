@@ -19,6 +19,15 @@ export const MessageSchema = z.object({
       )
       .optional(),
   }),
+  asset3D: z
+    .object({
+      status: z.string(),
+      modelUrl: z.string().nullable(),
+      // [3D Refine] Added mode property to schema
+      mode: z.string().optional(),
+    })
+    .nullable()
+    .optional(),
 })
 
 export type MessageType = z.infer<typeof MessageSchema>

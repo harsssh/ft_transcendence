@@ -169,11 +169,42 @@ export function TextChannelView({
           ws.onmessage = (event) => {
             if (!mounted) return
             try {
+              const parsedData = JSON.parse(event.data)
+
+              // [3D Refine] Handle 3D Asset Updates (including refine/revert status)
+              if (parsedData.type === 'message_update' && parsedData.data) {
+                const update = parsedData.data
+                setMessages((prev) =>
+                  prev.map((m) => {
+                    if (m.id === update.id) {
+                      return {
+                        ...m,
+                        asset3D: {
+                          ...m.asset3D,
+                          status: update.status,
+                          modelUrl: update.modelUrl,
+                          // Include other fields like precedingTasks
+                          ...update,
+                        },
+                      }
+                    }
+                    return m
+                  }),
+                )
+                return
+              }
+
+              if (parsedData.type === 'error') {
+                console.error('Server error:', parsedData.error)
+                alert(parsedData.error) // Simple alert for now, matching "Make it appear" requirement
+                return
+              }
+
               const {
                 success,
                 data: newMessage,
                 error,
-              } = MessageSchema.safeParse(JSON.parse(event.data))
+              } = MessageSchema.safeParse(parsedData)
 
               if (!success) {
                 console.log('Invalid message format:', error)
@@ -415,6 +446,7 @@ export function TextChannelView({
                     : {})}
                 >
                   <Message
+                    id={entry.message.id}
                     senderId={entry.message.sender.id}
                     senderName={entry.message.sender.name}
                     senderDisplayName={entry.message.sender.displayName}
@@ -422,6 +454,7 @@ export function TextChannelView({
                     content={entry.message.content}
                     createdAt={entry.message.createdAt}
                     withProfile={entry.message.withProfile}
+                    asset3D={entry.message.asset3D}
                     roles={entry.message.sender.roles}
                     guild={guild}
                     loggedInUser={loggedInUser}
