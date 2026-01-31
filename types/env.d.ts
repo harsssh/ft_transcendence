@@ -1,6 +1,7 @@
 declare module 'bun' {
   interface Env {
     HOST: string
+    WEBAPP_HOST: string
     DATABASE_URL: string
     MINIO_ACCESS_KEY: string
     MINIO_SECRET_KEY: string

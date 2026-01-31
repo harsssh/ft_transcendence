@@ -9,12 +9,12 @@ import { createContext } from 'react-router'
 export const AVATAR_BUCKET = 'avatars'
 
 export const STORAGE_PUBLIC_ENDPOINT =
-  process.env['NODE_ENV'] === 'production'
+  process.env.NODE_ENV === 'production'
     ? buildHttpsUrl(
-        process.env['STORAGE_HOST'] && process.env['STORAGE_HOST'] !== '_'
-          ? process.env['STORAGE_HOST']
-          : (process.env['HOST'] ?? 'localhost'),
-        process.env['STORAGE_PORT'],
+        process.env.STORAGE_HOST && process.env.STORAGE_HOST !== '_'
+          ? process.env.STORAGE_HOST
+          : (process.env.HOST ?? 'localhost'),
+        process.env.STORAGE_PORT,
       )
     : 'http://localhost:9000'
 
@@ -72,7 +72,7 @@ export async function initializeStorage() {
 export const storageContext = createContext(s3Client)
 
 export function resolveStoragePublicEndpoint(request: Request): string {
-  if (process.env['NODE_ENV'] !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     return STORAGE_PUBLIC_ENDPOINT
   }
 
@@ -88,10 +88,10 @@ export function resolveStoragePublicEndpoint(request: Request): string {
   }
 
   const requestHost = getRequestHost(request)
-  const webappHost = process.env['WEBAPP_HOST']
-  const storageHost = process.env['STORAGE_HOST']
-  const storagePort = process.env['STORAGE_PORT']
-  const hostIp = process.env['HOST']
+  const webappHost = process.env.WEBAPP_HOST
+  const storageHost = process.env.STORAGE_HOST
+  const storagePort = process.env.STORAGE_HOST
+  const hostIp = process.env.HOST
 
   const isDomainRequest =
     !!webappHost && webappHost !== '_' && requestHost === webappHost

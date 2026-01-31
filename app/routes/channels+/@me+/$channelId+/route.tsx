@@ -1,8 +1,7 @@
-import { ActionIcon, Box, Group, Text, useMantineTheme } from '@mantine/core'
+import { ActionIcon, Group, Text, useMantineTheme } from '@mantine/core'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
-import { IconChevronLeft, IconUserCircle } from '@tabler/icons-react'
+import { IconChevronLeft } from '@tabler/icons-react'
 import { useOutletContext } from 'react-router'
-import { IconButton } from '../../../_shared/ui/IconButton'
 import { TextChannelView } from '../../_text/TextChannelView'
 import { UserAvatar } from '../../_text/ui/UserAvatar'
 import { UserProfileSidebar } from '../../_text/ui/UserProfileSidebar'
@@ -25,8 +24,7 @@ export default function DMChannel({
 
   const { openNavbar } = useOutletContext<ChannelsOutletContext>()
 
-  const [profileSidebarOpened, { toggle: toggleProfileSidebar, close }] =
-    useDisclosure(false)
+  const [profileSidebarOpened, { close }] = useDisclosure(false)
 
   return (
     <TextChannelView
