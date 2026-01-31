@@ -37,7 +37,7 @@ export const authMiddleware: MiddlewareFunction<Response> = async ({
         : null,
     })
   } catch (e) {
-    console.error(e)
+    console.log(e)
     return redirect('/signin', {
       headers: {
         'Set-Cookie': await destroySession(session),

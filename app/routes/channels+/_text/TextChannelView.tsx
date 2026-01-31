@@ -195,7 +195,7 @@ export function TextChannelView({
               }
 
               if (parsedData.type === 'error') {
-                console.error('Server error:', parsedData.error)
+                console.log('Server error:', parsedData.error)
                 alert(parsedData.error) // Simple alert for now, matching "Make it appear" requirement
                 return
               }
@@ -226,12 +226,12 @@ export function TextChannelView({
                 setTimeout(() => scrollToBottom(), 0)
               }
             } catch (error) {
-              console.error('Error parsing message:', error)
+              console.log('Error parsing message:', error)
             }
           }
 
           ws.onerror = (error) => {
-            console.error('WebSocket error:', error)
+            console.log('WebSocket error:', error)
           }
 
           ws.onclose = () => {

@@ -18,7 +18,7 @@ class ErrorBoundary extends Component<
     return { hasError: true }
   }
   override componentDidCatch(error: unknown) {
-    console.error('ThreeViewer Error:', error)
+    console.log('ThreeViewer Error:', error)
   }
   override render() {
     if (this.state.hasError) return this.props.fallback

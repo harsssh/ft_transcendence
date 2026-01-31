@@ -61,7 +61,7 @@ export async function processRefineRequest(
     broadcastUpdate,
     () => {},
     'refined',
-  ).catch((e) => console.error('[Refine] Resume polling error:', e))
+  ).catch((e) => console.log('[Refine] Resume polling error:', e))
 
   return { success: true, status: 'generating' }
 }

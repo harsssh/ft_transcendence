@@ -45,7 +45,7 @@ export const proxy = new Hono().get('/model', async (c) => {
       'Content-Type': contentType,
     })
   } catch (error) {
-    console.error('Proxy error:', error)
+    console.log('Proxy error:', error)
     return c.text('Internal Server Error', 500)
   }
 })

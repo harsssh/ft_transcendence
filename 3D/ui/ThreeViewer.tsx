@@ -108,7 +108,7 @@ export function ThreeViewer({
         throw new Error(err.error || 'Refine request failed')
       }
     } catch (e: unknown) {
-      console.error(e)
+      console.log(e)
       const message = e instanceof Error ? e.message : 'Refine failed'
       alert(`Error: ${message}`)
       setIsRefining(false)

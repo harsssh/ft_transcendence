@@ -13,7 +13,7 @@ import { presence } from './users'
 // Run storage initialization
 await initializeStorage()
 // [3D Refine] Run 3D job recovery on startup
-recover3DJobs().catch((e) => console.error(e))
+recover3DJobs().catch((e) => console.log(e))
 
 const createApp = (upgradeWebSocket: UpgradeWebSocket) =>
   new Hono()

@@ -15,7 +15,7 @@ export function getSecret(
     try {
       return readFileSync(secretPath, 'utf8').trim()
     } catch (e) {
-      console.error(`Failed to read secret ${secretName}:`, e)
+      console.log(`Failed to read secret ${secretName}:`, e)
     }
   }
 

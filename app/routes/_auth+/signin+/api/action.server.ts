@@ -31,7 +31,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
     session.set('userId', user.id)
   } catch (e) {
-    console.error(e)
+    console.log(e)
     return submission.reply({
       formErrors: ['Failed to sign in. Try again later.'],
     })

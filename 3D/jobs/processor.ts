@@ -128,7 +128,7 @@ export async function resume3DGeneration(
             attempts++
             if (attempts > maxAttempts) {
               clearInterval(pollInterval)
-              console.error(`[3D-Job] Timeout polling ${taskId}`)
+              console.log(`[3D-Job] Timeout polling ${taskId}`)
 
               // Timeout behavior:
               // If we have a modelUrl (Refine), we keep it (so user can see old model or try again).
@@ -216,7 +216,7 @@ export async function resume3DGeneration(
                 resolve()
               }
             } catch (e) {
-              console.error('[3D-Job] Polling Error:', e)
+              console.log('[3D-Job] Polling Error:', e)
             }
           }, 5000)
         })
@@ -225,7 +225,7 @@ export async function resume3DGeneration(
 
         // biome-ignore lint/suspicious/noExplicitAny: Error handling
       } catch (e: any) {
-        console.error(`[3D-Job] Attempt ${retryCount + 1} Error:`, e)
+        console.log(`[3D-Job] Attempt ${retryCount + 1} Error:`, e)
         if (e.message?.toLowerCase().includes('busy') || e.status === 429) {
           // Continue to retry
         } else {
