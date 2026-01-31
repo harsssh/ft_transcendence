@@ -17,6 +17,7 @@ import { openConfirmModal } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
 import {
   IconCheck,
+  IconChevronLeft,
   IconCookieMan,
   IconMessageCircleFilled,
   IconX,
@@ -24,11 +25,12 @@ import {
 import { and, eq, or } from 'drizzle-orm'
 import { ok, ResultAsync } from 'neverthrow'
 import { useEffect, useState } from 'react'
-import { Form, useSubmit } from 'react-router'
+import { Form, useOutletContext, useSubmit } from 'react-router'
 import * as R from 'remeda'
 import { friendships } from '../../../../db/schema'
 import { dbContext } from '../../../contexts/db'
 import { loggedInUserContext } from '../../../contexts/user.server'
+import type { ChannelsOutletContext } from '../route'
 import type { Route } from './+types/_index'
 
 const PAGE_SIZE = 10
@@ -272,6 +274,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 }
 
 export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
+  const { openNavbar } = useOutletContext<ChannelsOutletContext>()
   const submit = useSubmit()
 
   const openRemoveModal = (friendName: string, friendId: number) =>
@@ -311,6 +314,7 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
   const sentRequests = loaderData?.sentRequests ?? []
 
   const [page, setPage] = useState(1)
+  const [activeTab, setActiveTab] = useState<string | null>('all')
   const paginatedFriends = friends.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE,
@@ -323,36 +327,79 @@ export default function FriendsIndex({ loaderData }: Route.ComponentProps) {
     }
   }, [page, totalPages])
 
+  const headerHeight = 48
+
   return (
-    <Stack h="100%" gap={0} mih="0">
+    <Stack
+      gap={5}
+      h="calc(100dvh - var(--app-shell-header-offset, 0rem))"
+      style={{
+        borderTop: '1px solid var(--ft-border-color)',
+        overscrollBehavior: 'contain',
+        position: 'relative',
+      }}
+    >
       <Group
-        p="md"
-        bg="var(--mantine-color-body)"
+        h={headerHeight}
+        align="center"
+        pl="md"
+        pr="md"
+        gap="xs"
         style={{
-          borderBottom: '1px solid var(--mantine-color-default-border)',
+          borderBottom: '1px solid var(--ft-border-color)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          flexShrink: 0,
         }}
       >
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          aria-label="Open navbar"
+          onClick={openNavbar}
+          hiddenFrom="sm"
+        >
+          <IconChevronLeft size={18} />
+        </ActionIcon>
         <IconCookieMan size={25} />
         <Title order={4}>Friends</Title>
       </Group>
 
       <Tabs
-        defaultValue="all"
+        value={activeTab}
+        onChange={setActiveTab}
         mih="0"
         display="flex"
         style={{ flexDirection: 'column' }}
+        variant="pills"
       >
         <Tabs.List px="md" style={{ flexShrink: 0 }}>
-          <Tabs.Tab value="all">All</Tabs.Tab>
-          <Tabs.Tab value="pending">
-            Pending
-            {pendingRequests.length > 0 && (
-              <Badge size="xs" circle ml={5}>
-                {pendingRequests.length}
-              </Badge>
-            )}
+          <Tabs.Tab value="all" color="gray">
+            All
           </Tabs.Tab>
-          <Tabs.Tab value="add" c="green">
+          <Tabs.Tab value="pending" color="gray">
+            <Group gap={5} align="center" wrap="nowrap">
+              Pending
+              {pendingRequests.length > 0 && (
+                <Badge size="xs" circle>
+                  {pendingRequests.length}
+                </Badge>
+              )}
+            </Group>
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="add"
+            c="white"
+            color="gray"
+            style={
+              activeTab !== 'add'
+                ? {
+                    backgroundColor: 'var(--mantine-color-indigo-filled)',
+                  }
+                : undefined
+            }
+          >
             Add Friend
           </Tabs.Tab>
         </Tabs.List>

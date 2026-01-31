@@ -38,6 +38,7 @@ import { authMiddleware } from '../../../middlewares/auth'
 import { SignupFormSchema } from '../../_auth+/signup+/model/signupForm'
 import { SecondaryNavbar } from '../../_shared/ui/SecondaryNavbar'
 import { hasPermission, Permissions } from '../_shared/permissions'
+import { UserPanel } from '../_shared/UserPanel'
 import { NewGuildFormSchema } from '../model/newGuildForm'
 import type { ChannelsOutletContext } from '../route'
 import type { Route } from './+types/route'
@@ -54,7 +55,7 @@ const InviteFriendSchema = SignupFormSchema.pick({ name: true })
 export type GuildOutletContext = {
   guild: Awaited<ReturnType<typeof loader>>['guild']
   loggedInUser: Awaited<ReturnType<typeof loader>>['loggedInUser']
-}
+} & Pick<ChannelsOutletContext, 'navbarOpened' | 'openNavbar' | 'closeNavbar'>
 
 export default function GuildRoute() {
   const { guild, loggedInUser } = useLoaderData<typeof loader>()
@@ -78,7 +79,8 @@ export default function GuildRoute() {
     Permissions.CREATE_INVITE,
   )
 
-  const { setSecondaryNavbar } = useOutletContext<ChannelsOutletContext>()
+  const channelsContext = useOutletContext<ChannelsOutletContext>()
+  const { setSecondaryNavbar } = channelsContext
 
   const submit = useSubmit()
   const [
@@ -413,6 +415,7 @@ export default function GuildRoute() {
               />
             ))}
           </Flex>
+          <UserPanel />
         </Flex>
       </SecondaryNavbar>,
     )
@@ -438,7 +441,17 @@ export default function GuildRoute() {
 
   return (
     <>
-      <Outlet context={{ guild, loggedInUser } satisfies GuildOutletContext} />
+      <Outlet
+        context={
+          {
+            guild,
+            loggedInUser,
+            navbarOpened: channelsContext.navbarOpened,
+            openNavbar: channelsContext.openNavbar,
+            closeNavbar: channelsContext.closeNavbar,
+          } satisfies GuildOutletContext
+        }
+      />
 
       <Modal
         opened={renameServerOpened}

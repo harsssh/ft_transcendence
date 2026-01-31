@@ -22,6 +22,7 @@ import { IconPlus } from '@tabler/icons-react'
 import { useEffect } from 'react'
 import { Form, Link, useNavigate, useNavigation } from 'react-router'
 import { SecondaryNavbar } from '../../../_shared/ui/SecondaryNavbar'
+import { UserPanel } from '../../_shared/UserPanel'
 import type { Channel } from '../model/channel'
 import { NewChannelFormSchema } from '../model/newChannelForm'
 
@@ -76,7 +77,7 @@ export function Navbar({ channels, lastResult }: Props) {
           </ActionIcon>
         </Group>
 
-        <ScrollArea type="hover" scrollHideDelay={0}>
+        <ScrollArea type="hover" scrollHideDelay={0} style={{ flex: 1 }}>
           <Stack gap="sm" h="100%">
             {channels.map((ch) => (
               <Box key={ch.id} pl="sm" pr="sm" w="100%">
@@ -89,6 +90,7 @@ export function Navbar({ channels, lastResult }: Props) {
             ))}
           </Stack>
         </ScrollArea>
+        <UserPanel />
       </SecondaryNavbar>
 
       <Modal opened={opened} onClose={close} title="Create DM Channel" centered>

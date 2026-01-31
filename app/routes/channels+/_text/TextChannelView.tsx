@@ -5,11 +5,14 @@ import {
   Affix,
   Box,
   Button,
+  Drawer,
   Group,
   ScrollArea,
   Stack,
   TextInput,
+  useMantineTheme,
 } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import { IconSend } from '@tabler/icons-react'
 import { differenceInMinutes } from 'date-fns'
 import {
@@ -39,6 +42,9 @@ export type TextChannelViewProps = {
   headerContent: React.ReactNode
   inputPlaceholder: string
   asideContent?: React.ReactNode
+  asideDrawerTitle?: React.ReactNode
+  asideDrawerOpened?: boolean
+  onAsideDrawerClose?: () => void
   actionData: SubmissionResult<string[]> | null
   guild?: GuildOutletContext['guild'] | undefined
   loggedInUser?: GuildOutletContext['loggedInUser'] | undefined
@@ -52,10 +58,16 @@ export function TextChannelView({
   headerContent,
   inputPlaceholder,
   asideContent,
+  asideDrawerTitle,
+  asideDrawerOpened,
+  onAsideDrawerClose,
   actionData,
   guild,
   loggedInUser,
 }: TextChannelViewProps) {
+  const theme = useMantineTheme()
+  const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`)
+
   const [messages, setMessages] = useState<MessageType[]>(initialMessages)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAtBottom, setIsAtBottom] = useState(true)
@@ -68,6 +80,27 @@ export function TextChannelView({
   const reconnectTimeoutRef = useRef<number>(0)
   const reconnectAttemptsRef = useRef<number>(0)
   const MAX_RECONNECT_ATTEMPTS = 5
+
+  const isAsideDrawerControlled = asideDrawerOpened !== undefined
+  const [uncontrolledAsideDrawerOpened, setUncontrolledAsideDrawerOpened] =
+    useState(false)
+
+  const effectiveAsideDrawerOpened = isAsideDrawerControlled
+    ? asideDrawerOpened
+    : uncontrolledAsideDrawerOpened
+
+  useEffect(() => {
+    if (isAsideDrawerControlled) return
+    if (!isMobile) return
+    setUncontrolledAsideDrawerOpened(Boolean(asideContent))
+  }, [asideContent, isAsideDrawerControlled, isMobile])
+
+  const handleAsideDrawerClose = useCallback(() => {
+    onAsideDrawerClose?.()
+    if (!isAsideDrawerControlled) {
+      setUncontrolledAsideDrawerOpened(false)
+    }
+  }, [isAsideDrawerControlled, onAsideDrawerClose])
 
   const timeZone = useSyncExternalStore(
     () => () => {},
@@ -457,8 +490,29 @@ export function TextChannelView({
             </form>
           </Box>
         </Stack>
-        {asideContent}
+        {!isMobile ? asideContent : null}
       </Group>
+
+      {isMobile ? (
+        <Drawer
+          opened={Boolean(effectiveAsideDrawerOpened) && Boolean(asideContent)}
+          onClose={handleAsideDrawerClose}
+          title={asideDrawerTitle}
+          position="bottom"
+          size="80%"
+          styles={{
+            body: {
+              paddingTop: 0,
+              paddingLeft: 0,
+              paddingRight: 0,
+              paddingBottom:
+                'max(env(safe-area-inset-bottom), var(--mantine-spacing-md))',
+            },
+          }}
+        >
+          {asideContent}
+        </Drawer>
+      ) : null}
     </Stack>
   )
 

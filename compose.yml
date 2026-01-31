@@ -32,8 +32,8 @@ services:
     container_name: db-dev
     image: postgres:18
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
       POSTGRES_DB: app
     volumes:
       - db_data:/var/lib/postgresql

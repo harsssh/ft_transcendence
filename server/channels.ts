@@ -5,7 +5,7 @@ import { processRefineRequest } from '../3D/api/refine'
 import { resume3DGeneration } from '../3D/jobs/processor'
 import { checkRateLimit, releaseJobLock } from '../3D/ratelimit'
 import { db } from '../app/contexts/db'
-import { STORAGE_PUBLIC_ENDPOINT } from '../app/contexts/storage'
+import { resolveStoragePublicEndpoint } from '../app/contexts/storage'
 import { getSession } from '../app/routes/_auth+/_shared/session.server'
 import {
   type MessageType,
@@ -47,6 +47,10 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         let connectedUserId: number | undefined
         // Fix: Use a promise to track authentication state
         let authPromise: Promise<number | undefined>
+
+        const storagePublicEndpoint = resolveStoragePublicEndpoint(
+          new Request(c.req.url, { headers: c.req.raw.headers }),
+        )
 
         return {
           async onOpen(_event, ws) {
@@ -198,7 +202,9 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   createdAt: insertedMessage.createdAt,
                   sender: {
                     ...sender,
-                    avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${sender.avatarUrl}`,
+                    avatarUrl: sender.avatarUrl
+                      ? `${storagePublicEndpoint}/${sender.avatarUrl}`
+                      : null,
                   },
                 }
 
@@ -346,6 +352,10 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
         let connectedUserId: number | undefined
         // Fix: Use a promise to track authentication state
         let authPromise: Promise<number | undefined>
+
+        const storagePublicEndpoint = resolveStoragePublicEndpoint(
+          new Request(c.req.url, { headers: c.req.raw.headers }),
+        )
 
         return {
           async onOpen(_event, ws) {
@@ -522,7 +532,9 @@ export const channels = (upgradeWebSocket: UpgradeWebSocket) =>
                   createdAt: insertedMessage.createdAt,
                   sender: {
                     ...sender,
-                    avatarUrl: `${STORAGE_PUBLIC_ENDPOINT}/${sender.avatarUrl}`,
+                    avatarUrl: sender.avatarUrl
+                      ? `${storagePublicEndpoint}/${sender.avatarUrl}`
+                      : null,
                     roles: sender.roles.map((role) => ({
                       id: role.id,
                       name: role.name,
